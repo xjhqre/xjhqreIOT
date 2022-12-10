@@ -68,9 +68,9 @@ public class SwaggerConfig {
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
             // 设置文档标题(API名称)
-            .title("xjhqreBBS接口文档")
+            .title("xjhqreIOT接口文档")
             // 文档描述
-            .description("xjhqreBBS后台管理系统")
+            .description("xjhqreIOT物联网平台")
             // 作者信息
             .contact(new Contact("xjhqre", null, null))
             // 版本号

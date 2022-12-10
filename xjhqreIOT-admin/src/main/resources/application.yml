@@ -104,3 +104,8 @@ xss:
   excludes: /admin/system/notice/*
   # 匹配链接
   urlPatterns: /admin/*,/monitor/*
+
+# Swagger配置
+swagger:
+  # 是否开启swagger
+  enabled: true

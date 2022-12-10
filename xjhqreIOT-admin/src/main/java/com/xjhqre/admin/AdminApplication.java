@@ -11,7 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author xjhqre
  * @since 11月 10, 2022
  */
-@SpringBootApplication(scanBasePackages = {"com.xjhqre.common.*", "com.xjhqre.system.*", "com.xjhqre.framework.*"})
+@SpringBootApplication(
+    scanBasePackages = {"com.xjhqre.common.*", "com.xjhqre.system.*", "com.xjhqre.framework.*", "com.xjhqre.admin.*"})
 public class AdminApplication {
 
     public static void main(String[] args) {
