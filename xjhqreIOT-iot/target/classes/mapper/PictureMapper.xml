@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xjhqre.system.mapper.PictureMapper">
+
+    <!-- 根据ids批量更新图片-->
+    <update id="updateBatchByIds">
+        <!-- 优化后的逻辑 -->
+        update t_picture
+        <set>
+            <trim prefix="pic_name = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.picName}
+                </foreach>
+            </trim>
+            <trim prefix="url = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.url}
+                </foreach>
+            </trim>
+            <trim prefix="description = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.description}
+                </foreach>
+            </trim>
+            <trim prefix="uploader = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.uploader}
+                </foreach>
+            </trim>
+            <trim prefix="upload_time = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.uploadTime}
+                </foreach>
+            </trim>
+            <trim prefix="approver = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.approver}
+                </foreach>
+            </trim>
+            <trim prefix="approval_time = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.approvalTime}
+                </foreach>
+            </trim>
+            <trim prefix="status = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    when picture_id=#{item.pictureId} then #{item.status}
+                </foreach>
+            </trim>
+        </set>
+        <where>
+            picture_id in
+            <foreach collection="list" separator="," item="item" open="(" close=")">
+                #{item.pictureId}
+            </foreach>
+        </where>
+
+    </update>
+</mapper>

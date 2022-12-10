@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AjcSettings">
+    <option name="ajcPath" value="D:/maven/repository/org/aspectj/aspectjtools/1.8.13/aspectjtools-1.8.13.jar" />
+    <option name="delegateToJavac" value="true" />
+    <option name="aptOptionsEnabled" value="true" />
+  </component>
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="xjhqreIOT-common" />
+        <module name="xjhqreIOT-iot" />
+        <module name="xjhqreIOT-framework" />
+        <module name="xjhqreIOT-admin" />
+        <module name="xjhqreIOT-system" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="xjhqreIOT-admin" options="-parameters" />
+      <module name="xjhqreIOT-common" options="-parameters" />
+      <module name="xjhqreIOT-framework" options="-parameters" />
+      <module name="xjhqreIOT-iot" options="-parameters" />
+      <module name="xjhqreIOT-system" options="-parameters" />
+    </option>
+  </component>
+</project>
