@@ -14,7 +14,7 @@
     <modules>
         <module>xjhqreIOT-admin</module>
         <module>xjhqreIOT-common</module>
-        <module>xjhqreIOT-iot</module>
+        <!--        <module>xjhqreIOT-iot</module>-->
         <module>xjhqreIOT-framework</module>
         <module>xjhqreIOT-system</module>
     </modules>

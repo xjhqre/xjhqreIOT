@@ -2,8 +2,9 @@ package com.xjhqre.iot.domain;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.ruoyi.common.annotation.Excel;
-import com.ruoyi.common.core.domain.BaseEntity;
+import com.xjhqre.common.base.BaseEntity;
 
 /**
  * 设备告警对象 iot_alert_log
@@ -11,8 +12,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * @author kerwincui
  * @date 2022-01-13
  */
-public class AlertLog extends BaseEntity
-{
+public class AlertLog extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /** 告警ID */
@@ -63,7 +63,7 @@ public class AlertLog extends BaseEntity
     private String tenantName;
 
     public Long getUserId() {
-        return userId;
+        return this.userId;
     }
 
     public void setUserId(Long userId) {
@@ -71,7 +71,7 @@ public class AlertLog extends BaseEntity
     }
 
     public String getUserName() {
-        return userName;
+        return this.userName;
     }
 
     public void setUserName(String userName) {
@@ -79,7 +79,7 @@ public class AlertLog extends BaseEntity
     }
 
     public Long getTenantId() {
-        return tenantId;
+        return this.tenantId;
     }
 
     public void setTenantId(Long tenantId) {
@@ -87,102 +87,84 @@ public class AlertLog extends BaseEntity
     }
 
     public String getTenantName() {
-        return tenantName;
+        return this.tenantName;
     }
 
     public void setTenantName(String tenantName) {
         this.tenantName = tenantName;
     }
 
-    public void setAlertLogId(Long alertLogId)
-    {
+    public void setAlertLogId(Long alertLogId) {
         this.alertLogId = alertLogId;
     }
 
-    public Long getAlertLogId() 
-    {
-        return alertLogId;
+    public Long getAlertLogId() {
+        return this.alertLogId;
     }
-    public void setAlertName(String alertLogName)
-    {
+
+    public void setAlertName(String alertLogName) {
         this.alertName = alertLogName;
     }
 
-    public String getAlertName()
-    {
-        return alertName;
+    public String getAlertName() {
+        return this.alertName;
     }
-    public void setAlertLevel(Long alertLevel) 
-    {
+
+    public void setAlertLevel(Long alertLevel) {
         this.alertLevel = alertLevel;
     }
 
-    public Long getAlertLevel() 
-    {
-        return alertLevel;
+    public Long getAlertLevel() {
+        return this.alertLevel;
     }
-    public void setStatus(Long status) 
-    {
+
+    public void setStatus(Long status) {
         this.status = status;
     }
 
-    public Long getStatus() 
-    {
-        return status;
+    public Long getStatus() {
+        return this.status;
     }
-    public void setProductId(Long productId) 
-    {
+
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
-    public Long getProductId() 
-    {
-        return productId;
+    public Long getProductId() {
+        return this.productId;
     }
-    public void setProductName(String productName) 
-    {
+
+    public void setProductName(String productName) {
         this.productName = productName;
     }
 
-    public String getProductName() 
-    {
-        return productName;
+    public String getProductName() {
+        return this.productName;
     }
-    public void setDeviceId(Long deviceId) 
-    {
+
+    public void setDeviceId(Long deviceId) {
         this.deviceId = deviceId;
     }
 
-    public Long getDeviceId() 
-    {
-        return deviceId;
+    public Long getDeviceId() {
+        return this.deviceId;
     }
-    public void setDeviceName(String deviceName) 
-    {
+
+    public void setDeviceName(String deviceName) {
         this.deviceName = deviceName;
     }
 
-    public String getDeviceName() 
-    {
-        return deviceName;
+    public String getDeviceName() {
+        return this.deviceName;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("alertLogId", getAlertLogId())
-            .append("alertName", getAlertName())
-            .append("alertLevel", getAlertLevel())
-            .append("status", getStatus())
-            .append("productId", getProductId())
-            .append("productName", getProductName())
-            .append("deviceId", getDeviceId())
-            .append("deviceName", getDeviceName())
-            .append("createBy", getCreateBy())
-            .append("createTime", getCreateTime())
-            .append("updateBy", getUpdateBy())
-            .append("updateTime", getUpdateTime())
-            .append("remark", getRemark())
-            .toString();
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE).append("alertLogId", this.getAlertLogId())
+            .append("alertName", this.getAlertName()).append("alertLevel", this.getAlertLevel()).append("status", this.getStatus())
+            .append("productId", this.getProductId()).append("productName", this.getProductName())
+            .append("deviceId", this.getDeviceId()).append("deviceName", this.getDeviceName()).append("createBy", this.getCreateBy())
+            .append("createTime", this.getCreateTime()).append("updateBy", this.getUpdateBy())
+            .append("updateTime", this.getUpdateTime()).append("remark", this.getRemark()).toString();
     }
 }
