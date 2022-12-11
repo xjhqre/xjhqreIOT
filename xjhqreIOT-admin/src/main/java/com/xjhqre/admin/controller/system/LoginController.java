@@ -4,9 +4,8 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.xjhqre.common.base.BaseController;
@@ -44,8 +43,8 @@ public class LoginController extends BaseController {
      * @return token
      */
     @ApiOperation(value = "登陆方法")
-    @PostMapping("/login")
-    public R<String> login(@RequestBody LoginBody loginBody) {
+    @RequestMapping(value = "/login", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> login(LoginBody loginBody) {
         // 生成令牌
         String token = this.loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode(),
             loginBody.getUuid());
