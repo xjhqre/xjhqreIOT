@@ -3,8 +3,12 @@ FROM openjdk:8-jdk-alpine
 RUN mkdir -p /home/xjhqreIOT
 WORKDIR /home/xjhqreIOT
 #captcher 字体包
-RUN set -xe \
-&& apk --no-cache add ttf-dejavu fontconfig
+#RUN set -xe \
+RUN echo -e 'https://mirrors.aliyun.com/alpine/v3.6/main/\nhttps://mirrors.aliyun.com/alpine/v3.6/community/' > /etc/apk/repositories \
+    && apk update \
+    && apk upgrade \
+    && apk --no-cache add ttf-dejavu fontconfig
+
 # 将targer目录下的jar包复制到docker容器/home/springboot目录下面目录下面
 ADD ./target/xjhqreIOT-admin-0.0.1-SNAPSHOT.jar /home/xjhqreIOT/xjhqreIOT-admin.jar
 EXPOSE 8080

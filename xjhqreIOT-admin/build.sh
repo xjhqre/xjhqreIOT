@@ -23,7 +23,7 @@ if [ "$IMG_SERVER" != "" ] && [ "$IMG_NAME" != "" ] && [ "$IMG_VERSION" != "" ] 
 
    echo " .......进入删除  Container & Images 操作 ......."
     # 清理虚悬镜像,释放磁盘空间
-    #docker images|grep none|awk '{print $3 }'|xargs docker rmi
+    docker images|grep none|awk '{print $3 }'|xargs docker rmi
 
     # 获取容器ID
     CONTAINER_ID=`docker ps -a | grep $IMG_NAME | awk '{ print $1 }'`
