@@ -1,20 +1,22 @@
 package com.xjhqre.iot.service.impl;
 
-import com.ruoyi.common.core.domain.entity.SysRole;
-import com.ruoyi.common.core.domain.entity.SysUser;
-import com.ruoyi.common.utils.DateUtils;
-import com.ruoyi.iot.domain.Group;
-import com.ruoyi.iot.mapper.GroupMapper;
-import com.ruoyi.iot.model.DeviceGroupInput;
-import com.ruoyi.iot.model.IdOutput;
-import com.ruoyi.iot.service.IGroupService;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static com.ruoyi.common.utils.SecurityUtils.getLoginUser;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xjhqre.common.domain.model.LoginUser;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Group;
+import com.xjhqre.iot.mapper.GroupMapper;
+import com.xjhqre.iot.service.GroupService;
 
 /**
  * 设备分组Service业务层处理
@@ -23,136 +25,83 @@ import static com.ruoyi.common.utils.SecurityUtils.getLoginUser;
  * @date 2021-12-16
  */
 @Service
-public class GroupServiceImpl implements IGroupService 
-{
-    @Autowired
+@Transactional(rollbackFor = Exception.class)
+public class GroupServiceImpl implements GroupService {
+    @Resource
     private GroupMapper groupMapper;
+
+    @Override
+    public IPage<Group> find(Group group, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(group.getGroupId() != null, Group::getGroupId, group.getGroupId())
+            .like(group.getGroupName() != null, Group::getGroupName, group.getGroupName())
+            .eq(group.getUserId() != null, Group::getUserId, group.getUserId())
+            .like(group.getUserName() != null, Group::getUserName, group.getUserName());
+        return this.groupMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
 
     /**
      * 查询设备分组
      * 
-     * @param groupId 设备分组主键
-     * @return 设备分组
-     */
-    @Override
-    public Group selectGroupByGroupId(Long groupId)
-    {
-        return groupMapper.selectGroupByGroupId(groupId);
-    }
-
-    /**
-     * 通过分组ID查询关联的设备ID数组
      * @param groupId
-     * @return
-     */
-    @Override
-    public Long[]  selectDeviceIdsByGroupId(Long groupId){
-        List<IdOutput> list=groupMapper.selectDeviceIdsByGroupId(groupId);
-        Long[] ids=new Long[list.size()];
-        for(int i=0;i<list.size();i++){
-            ids[i]=list.get(i).getId();
-        }
-        return ids;
-    }
-
-    /**
-     * 查询设备分组列表
-     * 
-     * @param group 设备分组
+     *            设备分组主键
      * @return 设备分组
      */
     @Override
-    public List<Group> selectGroupList(Group group)
-    {
-        SysUser user = getLoginUser().getUser();
-        List<SysRole> roles=user.getRoles();
-        if(group.getUserId()!=null && group.getUserId()!=0){
-            // 筛选自己分组（主要针对管理员）
-            group.setUserId(group.getUserId());
-        }else {
-            for (int i = 0; i < roles.size(); i++) {
-                // 租户和用户，只查看自己分组
-                if (roles.get(i).getRoleKey().equals("tenant") || roles.get(i).getRoleKey().equals("general")) {
-                    group.setUserId(user.getUserId());
-                    break;
-                }
-            }
-        }
-        return groupMapper.selectGroupList(group);
+    public Group getDetail(Long groupId) {
+        return this.groupMapper.selectById(groupId);
     }
 
     /**
-     * 新增设备分组
-     * 
-     * @param group 设备分组
-     * @return 结果
+     * 获取分组下所有关联的设备ID数组
      */
     @Override
-    public int insertGroup(Group group)
-    {
-        SysUser user = getLoginUser().getUser();
+    public List<Long> getDeviceIds(Long groupId) {
+        return this.groupMapper.getDeviceIds(groupId);
+    }
+
+    /**
+     * 新增分组
+     */
+    @Override
+    public void add(Group group) {
+        LoginUser user = SecurityUtils.getLoginUser();
         group.setUserId(user.getUserId());
-        group.setUserName(user.getUserName());
+        group.setUserName(user.getUsername());
         group.setCreateTime(DateUtils.getNowDate());
-        return groupMapper.insertGroup(group);
+        group.setCreateBy(user.getUsername());
+        this.groupMapper.insert(group);
     }
 
     /**
-     * 修改设备分组
-     * 
-     * @param group 设备分组
-     * @return 结果
+     * 修改分组
+     *
      */
     @Override
-    public int updateGroup(Group group)
-    {
+    public void update(Group group) {
         group.setUpdateTime(DateUtils.getNowDate());
-        return groupMapper.updateGroup(group);
+        group.setUpdateBy(SecurityUtils.getUsername());
+        this.groupMapper.updateById(group);
     }
 
-    /**
-     * 分组下批量添加设备分组
-     * @return
-     */
-    @Transactional(rollbackFor = Exception.class)
     @Override
-    public int updateDeviceGroups(DeviceGroupInput input){
-        //删除分组下的所有关联设备
-        groupMapper.deleteDeviceGroupByGroupIds(new Long[]{input.getGroupId()});
+    public void updateDeviceGroups(Long groupId, List<Long> deviceIdList) {
+        // 删除分组下的所有关联设备
+        this.groupMapper.deleteDeviceGroupByGroupIds(Collections.singletonList(groupId));
         // 分组下添加关联设备
-        if(input.getDeviceIds().length>0){
-            groupMapper.insertDeviceGroups(input);
-        }
-        return 1;
+        this.groupMapper.insertDeviceGroups(deviceIdList);
+
     }
 
     /**
      * 批量删除分组和设备分组
-     * 
-     * @param groupIds 需要删除的设备分组主键
-     * @return 结果
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int deleteGroupByGroupIds(Long[] groupIds)
-    {
+    public void delete(List<Long> groupIds) {
         // 删除设备分组
-        groupMapper.deleteDeviceGroupByGroupIds(groupIds);
+        this.groupMapper.deleteDeviceGroupByGroupIds(groupIds);
         // 删除分组
-        return groupMapper.deleteGroupByGroupIds(groupIds);
-    }
-
-    /**
-     * 删除分组信息
-     * 
-     * @param groupId 设备分组主键
-     * @return 结果
-     */
-    @Override
-    public int deleteGroupByGroupId(Long groupId)
-    {
-
-        return groupMapper.deleteGroupByGroupId(groupId);
+        this.groupMapper.deleteBatchIds(groupIds);
     }
 
 }

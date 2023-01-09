@@ -1,28 +1,32 @@
 package com.xjhqre.admin;
 
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import java.util.Map;
+
+import com.alibaba.fastjson2.JSON;
+import com.xjhqre.common.utils.BaiduMapUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>
- * PasswordTest
+ * Test
  * </p>
  *
  * @author xjhqre
- * @since 12月 11, 2022
+ * @since 1月 04, 2023
  */
-@SpringBootTest
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = AdminApplication.class)
+@Slf4j
 public class Test {
 
     @org.junit.Test
+    public void test2() {
+        Map<String, Double> map = BaiduMapUtils.getLngAndLat("北京市海淀区上地十街10号");
+        log.info("map --> {}", JSON.toJSONString(map));
+    }
+
+    @org.junit.Test
     public void test1() {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        System.out.println(passwordEncoder.encode("123456"));
+        log.info("city --> {}");
     }
 
 }

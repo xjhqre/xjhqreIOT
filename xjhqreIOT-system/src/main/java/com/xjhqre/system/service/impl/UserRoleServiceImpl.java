@@ -1,6 +1,7 @@
 package com.xjhqre.system.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +19,7 @@ import com.xjhqre.system.service.UserRoleService;
 @Transactional(rollbackFor = Exception.class)
 public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> implements UserRoleService {
 
-    @Autowired
+    @Resource
     UserRoleMapper userRoleMapper;
 
     /**

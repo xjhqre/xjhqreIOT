@@ -25,4 +25,12 @@ public class IdUtils {
         return UUID.fastUUID().toString();
     }
 
+    /**
+     * 简化的UUID，去掉了横线，使用性能更好的ThreadLocalRandom生成UUID
+     *
+     * @return 简化的UUID，去掉了横线
+     */
+    public static String fastSimpleUUID() {
+        return UUID.fastUUID().toString(true);
+    }
 }

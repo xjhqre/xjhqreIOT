@@ -1,12 +1,19 @@
 package com.xjhqre.iot.service.impl;
 
 import java.util.List;
-import com.ruoyi.common.utils.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
-import com.ruoyi.iot.mapper.AlertMapper;
-import com.ruoyi.iot.domain.Alert;
-import com.ruoyi.iot.service.IAlertService;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Alert;
+import com.xjhqre.iot.mapper.AlertMapper;
+import com.xjhqre.iot.service.AlertService;
 
 /**
  * 设备告警Service业务层处理
@@ -15,82 +22,56 @@ import com.ruoyi.iot.service.IAlertService;
  * @date 2022-01-13
  */
 @Service
-public class AlertServiceImpl implements IAlertService 
-{
-    @Autowired
+public class AlertServiceImpl implements AlertService {
+    @Resource
     private AlertMapper alertMapper;
 
-    /**
-     * 查询设备告警
-     * 
-     * @param alertId 设备告警主键
-     * @return 设备告警
-     */
     @Override
-    public Alert selectAlertByAlertId(Long alertId)
-    {
-        return alertMapper.selectAlertByAlertId(alertId);
+    public IPage<Alert> find(Alert alert, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<Alert> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(alert.getAlertLevel() != null, Alert::getAlertLevel, alert.getAlertLevel())
+            .eq(alert.getAlertId() != null, Alert::getAlertId, alert.getAlertId())
+            .eq(alert.getAlertName() != null, Alert::getAlertName, alert.getAlertName())
+            .eq(alert.getStatus() != null, Alert::getStatus, alert.getStatus());
+        return this.alertMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
     /**
-     * 查询设备告警列表
-     * 
-     * @param alert 设备告警
-     * @return 设备告警
+     * 获取产品告警设置详情
+     *
      */
     @Override
-    public List<Alert> selectAlertList(Alert alert)
-    {
-        return alertMapper.selectAlertList(alert);
+    public Alert getDetail(Long alertId) {
+        return this.alertMapper.selectById(alertId);
     }
 
     /**
-     * 新增设备告警
-     * 
-     * @param alert 设备告警
-     * @return 结果
+     * 添加产品告警设置
      */
     @Override
-    public int insertAlert(Alert alert)
-    {
+    public void add(Alert alert) {
         alert.setCreateTime(DateUtils.getNowDate());
-        return alertMapper.insertAlert(alert);
+        alert.setCreateBy(SecurityUtils.getUsername());
+        this.alertMapper.insert(alert);
     }
 
     /**
-     * 修改设备告警
-     * 
-     * @param alert 设备告警
-     * @return 结果
+     * 修改产品告警设置
+     *
      */
     @Override
-    public int updateAlert(Alert alert)
-    {
+    public void update(Alert alert) {
         alert.setUpdateTime(DateUtils.getNowDate());
-        return alertMapper.updateAlert(alert);
+        alert.setUpdateBy(SecurityUtils.getUsername());
+        this.alertMapper.updateById(alert);
     }
 
     /**
-     * 批量删除设备告警
-     * 
-     * @param alertIds 需要删除的设备告警主键
-     * @return 结果
+     * 删除产品告警设置
+     *
      */
     @Override
-    public int deleteAlertByAlertIds(Long[] alertIds)
-    {
-        return alertMapper.deleteAlertByAlertIds(alertIds);
-    }
-
-    /**
-     * 删除设备告警信息
-     * 
-     * @param alertId 设备告警主键
-     * @return 结果
-     */
-    @Override
-    public int deleteAlertByAlertId(Long alertId)
-    {
-        return alertMapper.deleteAlertByAlertId(alertId);
+    public void delete(List<Long> alertIds) {
+        this.alertMapper.deleteBatchIds(alertIds);
     }
 }

@@ -1,140 +1,124 @@
-// package com.xjhqre.iot.controller;
-//
-// import java.util.ArrayList;
-// import java.util.List;
-// import javax.servlet.http.HttpServletResponse;
-//
-// import com.ruoyi.iot.domain.DeviceGroup;
-// import com.ruoyi.iot.model.DeviceGroupInput;
-// import io.swagger.annotations.Api;
-// import io.swagger.annotations.ApiOperation;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.PutMapping;
-// import org.springframework.web.bind.annotation.DeleteMapping;
-// import org.springframework.web.bind.annotation.PathVariable;
-// import org.springframework.web.bind.annotation.RequestBody;
-// import org.springframework.web.bind.annotation.RequestMapping;
-// import org.springframework.web.bind.annotation.RestController;
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.iot.domain.Group;
-// import com.ruoyi.iot.service.IGroupService;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.common.core.page.TableDataInfo;
-//
-/// **
-// * 设备分组Controller
-// *
-// * @author kerwincui
-// * @date 2021-12-16
-// */
-// @Api(tags = "设备分组")
-// @RestController
-// @RequestMapping("/iot/group")
-// public class GroupController extends BaseController
-// {
-// @Autowired
-// private IGroupService groupService;
-//
-// /**
-// * 查询设备分组列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:list')")
-// @GetMapping("/list")
-// @ApiOperation("分组分页列表")
-// public TableDataInfo list(Group group)
-// {
-// startPage();
-// return getDataTable(groupService.selectGroupList(group));
-// }
-//
-// /**
-// * 导出设备分组列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:export')")
-// @Log(title = "分组", businessType = BusinessType.EXPORT)
-// @PostMapping("/export")
-// @ApiOperation("导出分组")
-// public void export(HttpServletResponse response, Group group)
-// {
-// List<Group> list = groupService.selectGroupList(group);
-// ExcelUtil<Group> util = new ExcelUtil<Group>(Group.class);
-// util.exportExcel(response, list, "设备分组数据");
-// }
-//
-// /**
-// * 获取设备分组详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:query')")
-// @GetMapping(value = "/{groupId}")
-// @ApiOperation("获取分组详情")
-// public AjaxResult getInfo(@PathVariable("groupId") Long groupId)
-// {
-// return AjaxResult.success(groupService.selectGroupByGroupId(groupId));
-// }
-//
-// /**
-// * 获取分组下的所有关联设备ID数组
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:query')")
-// @GetMapping(value = "/getDeviceIds/{groupId}")
-// @ApiOperation("获取分组下的所有关联设备ID数组")
-// public AjaxResult getDeviceIds(@PathVariable("groupId") Long groupId)
-// {
-// return AjaxResult.success(groupService.selectDeviceIdsByGroupId(groupId));
-// }
-//
-// /**
-// * 新增设备分组
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:add')")
-// @Log(title = "分组", businessType = BusinessType.INSERT)
-// @PostMapping
-// @ApiOperation("添加分组")
-// public AjaxResult add(@RequestBody Group group)
-// {
-// return toAjax(groupService.insertGroup(group));
-// }
-//
-// /**
-// * 更新分组下的关联设备
-// * @param input
-// * @return
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:edit')")
-// @Log(title = "设备分组", businessType = BusinessType.UPDATE)
-// @PutMapping("/updateDeviceGroups")
-// @ApiOperation("更新分组下的关联设备")
-// public AjaxResult updateDeviceGroups(@RequestBody DeviceGroupInput input){
-// return toAjax(groupService.updateDeviceGroups(input));
-// }
-//
-// /**
-// * 修改设备分组
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:edit')")
-// @Log(title = "分组", businessType = BusinessType.UPDATE)
-// @PutMapping
-// @ApiOperation("修改分组")
-// public AjaxResult edit(@RequestBody Group group)
-// {
-// return toAjax(groupService.updateGroup(group));
-// }
-//
-// /**
-// * 删除设备分组
-// */
-// @PreAuthorize("@ss.hasPermi('iot:group:remove')")
-// @Log(title = "分组", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{groupIds}")
-// @ApiOperation("批量删除设备分组")
-// public AjaxResult remove(@PathVariable Long[] groupIds)
-// {
-// return toAjax(groupService.deleteGroupByGroupIds(groupIds));
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.iot.domain.entity.Group;
+import com.xjhqre.iot.service.GroupService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * 分组接口
+ *
+ * @author xjhqre
+ * @since 2023-1-5
+ */
+@Api(tags = "设备分组接口")
+@RestController
+@RequestMapping("/iot/group")
+public class GroupController extends BaseController {
+    @Resource
+    private GroupService groupService;
+
+    /**
+     * 分页查询分组列表
+     */
+    @ApiOperation(value = "分页查询分组列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:group:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<Group>> find(Group group, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.groupService.find(group, pageNum, pageSize));
+    }
+
+    /**
+     * 获取分组详细信息
+     */
+    @PreAuthorize("@ss.hasPermission('iot:group:query')")
+    @GetMapping(value = "/{groupId}")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("获取分组详情")
+    public R<Group> getDetail(@RequestParam Long groupId) {
+        return R.success(this.groupService.getDetail(groupId));
+    }
+
+    /**
+     * 获取分组下的所有关联设备ID数组
+     */
+    @ApiOperation("获取分组下所有关联的设备ID数组")
+    @PreAuthorize("@ss.hasPermission('iot:group:query')")
+    @RequestMapping(value = "/getDeviceIds", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<List<Long>> getDeviceIds(@RequestParam Long groupId) {
+        return R.success(this.groupService.getDeviceIds(groupId));
+    }
+
+    /**
+     * 新增分组
+     */
+    @ApiOperation("添加分组")
+    @PreAuthorize("@ss.hasPermission('iot:group:add')")
+    @Log(title = "分组", businessType = BusinessType.INSERT)
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> add(Group group) {
+        this.groupService.add(group);
+        return R.success("添加分组成功");
+    }
+
+    /**
+     * 更新分组下的关联设备
+     */
+    @ApiOperation("更新分组下的关联设备")
+    @PreAuthorize("@ss.hasPermission('iot:group:edit')")
+    @Log(title = "设备分组", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/updateDeviceGroups", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> updateDeviceGroups(@RequestParam Long groupId, @RequestParam List<Long> deviceIdList) {
+        this.groupService.updateDeviceGroups(groupId, deviceIdList);
+        return R.success("更新成功");
+    }
+
+    /**
+     * 修改分组
+     */
+    @ApiOperation("修改分组")
+    @PreAuthorize("@ss.hasPermission('iot:group:update')")
+    @Log(title = "分组", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(Group group) {
+        this.groupService.update(group);
+        return R.success("修改成功");
+    }
+
+    /**
+     * 删除设备分组
+     */
+    @PreAuthorize("@ss.hasPermission('iot:group:delete')")
+    @Log(title = "分组", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("批量删除设备分组")
+    public R<String> delete(@RequestParam List<Long> groupIds) {
+        this.groupService.delete(groupIds);
+        return R.success("删除分组成功");
+    }
+}

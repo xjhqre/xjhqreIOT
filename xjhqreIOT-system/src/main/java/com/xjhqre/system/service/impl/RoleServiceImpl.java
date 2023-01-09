@@ -3,6 +3,7 @@ package com.xjhqre.system.service.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,23 +45,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     // TokenService tokenService;
 
     /**
-     * 根据条件查询角色列表
-     * 
-     * @param role
-     *            角色信息
-     * @return 角色数据集合信息
-     */
-    @Override
-    public List<Role> selectRoleList(Role role) {
-        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(role.getRoleId() != null, Role::getRoleId, role.getRoleId())
-            .like(role.getRoleName() != null, Role::getRoleName, role.getRoleName())
-            .eq(role.getStatus() != null, Role::getStatus, role.getStatus())
-            .like(role.getRoleKey() != null, Role::getRoleKey, role.getRoleKey());
-        return this.roleMapper.selectList(queryWrapper);
-    }
-
-    /**
      * 分页查询角色列表
      * 
      * @param role
@@ -80,6 +64,28 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     /**
+     * 通过角色ID查询角色
+     *
+     * @param roleId
+     *            角色ID
+     * @return 角色对象信息
+     */
+    @Override
+    public Role getDetail(Long roleId) {
+        return this.roleMapper.selectById(roleId);
+    }
+
+    /**
+     * 返回除管理员之外的所有角色
+     * 
+     */
+    @Override
+    public List<Role> getRoleOptions() {
+        return this.roleMapper.selectList(null).stream().filter(role -> role.getRoleId() != 100)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * 根据用户ID查询角色
      * 
      * @param userId
@@ -89,18 +95,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     @Override
     public List<Role> selectRolesByUserId(Long userId) {
         return this.roleMapper.selectRolesByUserId(userId);
-    }
-
-    /**
-     * 通过角色ID查询角色
-     * 
-     * @param roleId
-     *            角色ID
-     * @return 角色对象信息
-     */
-    @Override
-    public Role selectRoleById(Long roleId) {
-        return this.roleMapper.selectById(roleId);
     }
 
     /**
@@ -145,7 +139,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     public void checkRoleAllowed(Long roleId) {
-        if (StringUtils.isNotNull(roleId) && SecurityUtils.isSuperAdmin(roleId)) {
+        if (StringUtils.isNotNull(roleId) && SecurityUtils.isAdmin(roleId)) {
             throw new ServiceException("不允许操作超级管理员角色");
         }
     }
@@ -245,6 +239,23 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     }
 
     /**
+     * 根据条件查询角色列表
+     *
+     * @param role
+     *            角色信息
+     * @return 角色数据集合信息
+     */
+    @Override
+    public List<Role> selectRoleList(Role role) {
+        LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(role.getRoleId() != null, Role::getRoleId, role.getRoleId())
+            .like(role.getRoleName() != null, Role::getRoleName, role.getRoleName())
+            .eq(role.getStatus() != null, Role::getStatus, role.getStatus())
+            .like(role.getRoleKey() != null, Role::getRoleKey, role.getRoleKey());
+        return this.roleMapper.selectList(queryWrapper);
+    }
+
+    /**
      * 批量删除角色信息
      * 
      * @param roleIds
@@ -255,7 +266,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     public void deleteRoleByIds(Long[] roleIds) {
         for (Long roleId : roleIds) {
             this.checkRoleAllowed(roleId);
-            Role role = this.selectRoleById(roleId);
+            Role role = this.getDetail(roleId);
             if (this.userRoleService.countUserRoleByRoleId(roleId) > 0) {
                 throw new ServiceException(String.format("%1$s已分配,不能删除", role.getRoleName()));
             }

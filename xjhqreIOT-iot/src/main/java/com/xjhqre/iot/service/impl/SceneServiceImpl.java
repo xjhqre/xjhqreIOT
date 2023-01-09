@@ -1,12 +1,19 @@
 package com.xjhqre.iot.service.impl;
 
 import java.util.List;
-import com.ruoyi.common.utils.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
-import com.ruoyi.iot.mapper.SceneMapper;
-import com.ruoyi.iot.domain.Scene;
-import com.ruoyi.iot.service.ISceneService;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Scene;
+import com.xjhqre.iot.mapper.SceneMapper;
+import com.xjhqre.iot.service.SceneService;
 
 /**
  * 场景联动Service业务层处理
@@ -15,82 +22,58 @@ import com.ruoyi.iot.service.ISceneService;
  * @date 2022-01-13
  */
 @Service
-public class SceneServiceImpl implements ISceneService 
-{
-    @Autowired
+public class SceneServiceImpl implements SceneService {
+
+    @Resource
     private SceneMapper sceneMapper;
 
-    /**
-     * 查询场景联动
-     * 
-     * @param sceneId 场景联动主键
-     * @return 场景联动
-     */
     @Override
-    public Scene selectSceneBySceneId(Long sceneId)
-    {
-        return sceneMapper.selectSceneBySceneId(sceneId);
+    public IPage<Scene> find(Scene scene, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<Scene> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(scene.getSceneId() != null, Scene::getSceneId, scene.getSceneId())
+            .like(scene.getSceneName() != null, Scene::getSceneName, scene.getSceneName())
+            .eq(scene.getUserId() != null, Scene::getUserId, scene.getUserId())
+            .like(scene.getUserName() != null, Scene::getUserName, scene.getUserName());
+        return this.sceneMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
     /**
-     * 查询场景联动列表
-     * 
-     * @param scene 场景联动
-     * @return 场景联动
+     * 获取场景联动详情
+     *
      */
     @Override
-    public List<Scene> selectSceneList(Scene scene)
-    {
-        return sceneMapper.selectSceneList(scene);
+    public Scene getDetail(Long sceneId) {
+        return this.sceneMapper.selectById(sceneId);
     }
 
     /**
      * 新增场景联动
-     * 
-     * @param scene 场景联动
-     * @return 结果
+     *
      */
     @Override
-    public int insertScene(Scene scene)
-    {
+    public void add(Scene scene) {
         scene.setCreateTime(DateUtils.getNowDate());
-        return sceneMapper.insertScene(scene);
+        scene.setCreateBy(SecurityUtils.getUsername());
+        this.sceneMapper.insert(scene);
     }
 
     /**
      * 修改场景联动
-     * 
-     * @param scene 场景联动
-     * @return 结果
+     *
      */
     @Override
-    public int updateScene(Scene scene)
-    {
+    public void update(Scene scene) {
         scene.setUpdateTime(DateUtils.getNowDate());
-        return sceneMapper.updateScene(scene);
+        scene.setUpdateBy(SecurityUtils.getUsername());
+        this.sceneMapper.updateById(scene);
     }
 
     /**
      * 批量删除场景联动
-     * 
-     * @param sceneIds 需要删除的场景联动主键
-     * @return 结果
+     *
      */
     @Override
-    public int deleteSceneBySceneIds(Long[] sceneIds)
-    {
-        return sceneMapper.deleteSceneBySceneIds(sceneIds);
-    }
-
-    /**
-     * 删除场景联动信息
-     * 
-     * @param sceneId 场景联动主键
-     * @return 结果
-     */
-    @Override
-    public int deleteSceneBySceneId(Long sceneId)
-    {
-        return sceneMapper.deleteSceneBySceneId(sceneId);
+    public void remove(List<Long> sceneIdList) {
+        this.sceneMapper.deleteBatchIds(sceneIdList);
     }
 }

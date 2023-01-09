@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.xjhqre.common.constant.HttpStatus;
 import com.xjhqre.common.domain.R;
+import com.xjhqre.common.exception.EmqxException;
 import com.xjhqre.common.exception.ServiceException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +68,14 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * EMQX服务异常
+     */
+    @ExceptionHandler(EmqxException.class)
+    public ResponseEntity<String> handleEmqxException(EmqxException ex) {
+        return ResponseEntity.status(ex.getCode()).body(ex.getMessage());
+    }
+
+    /**
      * 权限校验异常
      */
     @ExceptionHandler(AccessDeniedException.class)
@@ -75,9 +85,9 @@ public class GlobalExceptionHandler {
         return R.error(HttpStatus.FORBIDDEN, "没有权限，请联系管理员授权");
     }
 
-    // @ExceptionHandler(Exception.class)
-    // public R<String> exceptionHandler(Exception ex) {
-    // log.error(ex.getMessage());
-    // return R.error("系统未知异常");
-    // }
+    @ExceptionHandler(Exception.class)
+    public R<String> exceptionHandler(Exception ex) {
+        log.error(ex.getMessage());
+        return R.error("系统未知异常");
+    }
 }

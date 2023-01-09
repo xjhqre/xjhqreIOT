@@ -17,7 +17,7 @@ import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectResult;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.xjhqre.common.exception.ServiceException;
-import com.xjhqre.common.utils.FileUtils;
+import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.file.MimeTypeUtils;
 import com.xjhqre.framework.config.properties.OssProperties;
 
@@ -133,7 +133,7 @@ public class OSSUtil {
             objectMetadata.setContentLength(inputStream.available());
             objectMetadata.setCacheControl("no-cache");
             objectMetadata.setHeader("Pragma", "no-cache");
-            objectMetadata.setContentType(getContentType(FileUtils.getExtension(file.getOriginalFilename())));
+            objectMetadata.setContentType(getContentType(FileTypeUtils.getExtension(file.getOriginalFilename())));
             objectMetadata.setContentDisposition("inline;filename=" + pictureId);
             // 上传文件
             PutObjectResult putResult = OSSUtil.getOSSClient().putObject(OSS_BUCKET_NAME, fileDir.getDir() + pictureId,

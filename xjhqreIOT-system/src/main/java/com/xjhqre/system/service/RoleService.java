@@ -12,14 +12,6 @@ import com.xjhqre.common.domain.entity.Role;
  * @author xjhqre
  */
 public interface RoleService extends IService<Role> {
-    /**
-     * 根据条件分页查询角色数据
-     * 
-     * @param role
-     *            角色信息
-     * @return 角色数据集合信息
-     */
-    List<Role> selectRoleList(Role role);
 
     /**
      * 根据条件分页查询角色数据
@@ -32,6 +24,17 @@ public interface RoleService extends IService<Role> {
     IPage<Role> findRole(Role role, Integer pageNum, Integer pageSize);
 
     /**
+     * 通过角色ID查询角色
+     *
+     * @param roleId
+     *            角色ID
+     * @return 角色对象信息
+     */
+    Role getDetail(Long roleId);
+
+    List<Role> getRoleOptions();
+
+    /**
      * 根据用户ID查询角色列表
      * 
      * @param userId
@@ -39,15 +42,6 @@ public interface RoleService extends IService<Role> {
      * @return 角色列表
      */
     List<Role> selectRolesByUserId(Long userId);
-
-    /**
-     * 通过角色ID查询角色
-     * 
-     * @param roleId
-     *            角色ID
-     * @return 角色对象信息
-     */
-    Role selectRoleById(Long roleId);
 
     /**
      * 校验角色名称是否唯一
@@ -110,6 +104,15 @@ public interface RoleService extends IService<Role> {
      * @return 结果
      */
     void deleteRoleById(Long roleId);
+
+    /**
+     * 根据条件分页查询角色数据
+     *
+     * @param role
+     *            角色信息
+     * @return 角色数据集合信息
+     */
+    List<Role> selectRoleList(Role role);
 
     /**
      * 批量删除角色信息

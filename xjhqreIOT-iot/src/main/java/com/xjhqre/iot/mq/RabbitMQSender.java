@@ -1,7 +1,8 @@
 package com.xjhqre.iot.mq;
 
+import javax.annotation.Resource;
+
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.xjhqre.framework.config.RabbitMQConfig;
@@ -17,7 +18,7 @@ import com.xjhqre.framework.config.RabbitMQConfig;
 @Component
 public class RabbitMQSender {
 
-    @Autowired
+    @Resource
     RabbitTemplate rabbitTemplate;
 
     /**

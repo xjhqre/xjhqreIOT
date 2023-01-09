@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -37,7 +39,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @RestController
 @Api(value = "角色操作接口", tags = "角色操作接口")
-@RequestMapping("/admin/system/role")
+@RequestMapping("/system/role")
 public class RoleController extends BaseController {
     @Autowired
     private RoleService roleService;
@@ -48,7 +50,7 @@ public class RoleController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @GetMapping("findRole/{pageNum}/{pageSize}")
     @PreAuthorize("@ss.hasPermission('system:role:list')")
     public R<IPage<Role>> findRole(Role role, @PathVariable("pageNum") Integer pageNum,
@@ -61,10 +63,20 @@ public class RoleController extends BaseController {
      */
     @ApiOperation(value = "根据角色编号获取详细信息")
     @PreAuthorize("@ss.hasPermission('system:role:query')")
-    @GetMapping(value = "/{roleId}")
-    public R<Role> getInfo(@PathVariable Long roleId) {
-        Role role = this.roleService.selectRoleById(roleId);
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<Role> getDetail(@RequestParam Long roleId) {
+        Role role = this.roleService.getDetail(roleId);
         return R.success(role);
+    }
+
+    /**
+     * 查询可选角色，返回除管理员以外的所有角色
+     */
+    @ApiOperation(value = "查询可选角色")
+    @PreAuthorize("@ss.hasPermission('system:user:query')")
+    @RequestMapping(value = "/getRoleOptions", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<List<Role>> getDetail() {
+        return R.success(this.roleService.getRoleOptions());
     }
 
     /**
@@ -145,7 +157,7 @@ public class RoleController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @GetMapping("/authUser/allocatedList/{pageNum}/{pageSize}")
     @PreAuthorize("@ss.hasPermission('system:role:list')")
     public R<IPage<User>> allocatedList(User user, @PathVariable("pageNum") Integer pageNum,

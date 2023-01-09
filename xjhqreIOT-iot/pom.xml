@@ -26,6 +26,11 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.xjhqre.xjhqreIOT</groupId>
+            <artifactId>xjhqreIOT-quartz</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
         <!-- mqtt-->
         <dependency>

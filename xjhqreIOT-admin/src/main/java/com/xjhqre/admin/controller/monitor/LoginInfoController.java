@@ -41,7 +41,7 @@ public class LoginInfoController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @PreAuthorize("@ss.hasPermission('monitor:logininfor:list')")
     @GetMapping("list/{pageNum}/{pageSize}")
     public R<IPage<LoginInfo>> listLoginInfo(LoginInfo loginInfo, @PathVariable("pageNum") Integer pageNum,

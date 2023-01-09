@@ -1,110 +1,94 @@
-// package com.xjhqre.iot.controller;
-//
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.core.page.TableDataInfo;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.iot.domain.DeviceLog;
-// import com.ruoyi.iot.model.MonitorModel;
-// import com.ruoyi.iot.service.IDeviceLogService;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.web.bind.annotation.*;
-//
-// import javax.servlet.http.HttpServletResponse;
-// import java.util.List;
-//
-/// **
-// * 设备日志Controller
-// *
-// * @author kerwincui
-// * @date 2022-01-13
-// */
-// @RestController
-// @RequestMapping("/iot/deviceLog")
-// public class DeviceLogController extends BaseController
-// {
-// @Autowired
-// private IDeviceLogService deviceLogService;
-//
-// /**
-// * 查询设备日志列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/list")
-// public TableDataInfo list(DeviceLog deviceLog)
-// {
-// startPage();
-// List<DeviceLog> list = deviceLogService.selectDeviceLogList(deviceLog);
-// return getDataTable(list);
-// }
-//
-// /**
-// * 查询设备的监测数据
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/monitor")
-// public TableDataInfo monitorList(DeviceLog deviceLog)
-// {
-// List<MonitorModel> list = deviceLogService.selectMonitorList(deviceLog);
-// return getDataTable(list);
-// }
-//
-// /**
-// * 导出设备日志列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:export')")
-// @Log(title = "设备日志", businessType = BusinessType.EXPORT)
-// @PostMapping("/export")
-// public void export(HttpServletResponse response, DeviceLog deviceLog)
-// {
-// List<DeviceLog> list = deviceLogService.selectDeviceLogList(deviceLog);
-// ExcelUtil<DeviceLog> util = new ExcelUtil<DeviceLog>(DeviceLog.class);
-// util.exportExcel(response, list, "设备日志数据");
-// }
-//
-// /**
-// * 获取设备日志详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/{logId}")
-// public AjaxResult getInfo(@PathVariable("logId") Long logId)
-// {
-// return AjaxResult.success(deviceLogService.selectDeviceLogByLogId(logId));
-// }
-//
-// /**
-// * 新增设备日志
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:add')")
-// @Log(title = "设备日志", businessType = BusinessType.INSERT)
-// @PostMapping
-// public AjaxResult add(@RequestBody DeviceLog deviceLog)
-// {
-// return toAjax(deviceLogService.insertDeviceLog(deviceLog));
-// }
-//
-// /**
-// * 修改设备日志
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "设备日志", businessType = BusinessType.UPDATE)
-// @PutMapping
-// public AjaxResult edit(@RequestBody DeviceLog deviceLog)
-// {
-// return toAjax(deviceLogService.updateDeviceLog(deviceLog));
-// }
-//
-// /**
-// * 删除设备日志
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:remove')")
-// @Log(title = "设备日志", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{logIds}")
-// public AjaxResult remove(@PathVariable Long[] logIds)
-// {
-// return toAjax(deviceLogService.deleteDeviceLogByLogIds(logIds));
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.iot.domain.entity.DeviceLog;
+import com.xjhqre.iot.service.DeviceLogService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * 设备日志接口
+ *
+ * @author kerwincui
+ * @since 2023-01-6
+ */
+@Api(tags = "设备日志接口")
+@RestController
+@RequestMapping("/iot/deviceLog")
+public class DeviceLogController extends BaseController {
+    @Resource
+    private DeviceLogService deviceLogService;
+
+    @ApiOperation(value = "分页查询设备日志列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<DeviceLog>> find(DeviceLog deviceLog, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.deviceLogService.find(deviceLog, pageNum, pageSize));
+    }
+
+    /**
+     * 获取设备日志详情
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<DeviceLog> getDetail(@RequestParam Long logId) {
+        return R.success(this.deviceLogService.getDetail(logId));
+    }
+
+    /**
+     * 新增设备日志
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:add')")
+    @Log(title = "设备日志", businessType = BusinessType.INSERT)
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> add(DeviceLog deviceLog) {
+        this.deviceLogService.add(deviceLog);
+        return R.success("新增设备日志成功");
+    }
+
+    /**
+     * 修改设备日志
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @Log(title = "设备日志", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(DeviceLog deviceLog) {
+        this.deviceLogService.update(deviceLog);
+        return R.success("修改设备日志成功");
+    }
+
+    /**
+     * 删除设备日志
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:delete')")
+    @Log(title = "设备日志", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@RequestParam List<Long> logIds) {
+        this.deviceLogService.delete(logIds);
+        return R.success("删除设备日志");
+    }
+}

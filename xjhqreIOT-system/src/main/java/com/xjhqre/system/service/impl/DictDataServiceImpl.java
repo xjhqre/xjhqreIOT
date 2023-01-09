@@ -34,12 +34,21 @@ public class DictDataServiceImpl implements DictDataService {
      * @return
      */
     @Override
-    public IPage<DictData> findDictData(DictData dictData, Integer pageNum, Integer pageSize) {
+    public IPage<DictData> find(DictData dictData, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(dictData.getDictCode() != null, DictData::getDictCode, dictData.getDictCode())
             .eq(dictData.getDictLabel() != null, DictData::getDictLabel, dictData.getDictLabel())
-            .eq(dictData.getDictType() != null, DictData::getDictType, dictData.getDictType());
+            .like(dictData.getDictType() != null, DictData::getDictType, dictData.getDictType());
         return this.dictDataMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    @Override
+    public List<DictData> list(DictData dictData) {
+        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(dictData.getDictCode() != null, DictData::getDictCode, dictData.getDictCode())
+            .eq(dictData.getDictLabel() != null, DictData::getDictLabel, dictData.getDictLabel())
+            .like(dictData.getDictType() != null, DictData::getDictType, dictData.getDictType());
+        return this.dictDataMapper.selectList(wrapper);
     }
 
     /// **
@@ -64,7 +73,7 @@ public class DictDataServiceImpl implements DictDataService {
      * @return 字典数据
      */
     @Override
-    public DictData selectDictDataById(Long dictCode) {
+    public DictData getDetail(Long dictCode) {
         return this.dictDataMapper.selectById(dictCode);
     }
 
@@ -78,7 +87,7 @@ public class DictDataServiceImpl implements DictDataService {
     public void deleteDictDataByIds(Long[] dictCodes) {
         for (Long dictCode : dictCodes) {
             // 根据 dictCode 删除对应字典数据
-            DictData data = this.selectDictDataById(dictCode);
+            DictData data = this.getDetail(dictCode);
             this.dictDataMapper.deleteById(dictCode);
             // 每次删除字典数据后查询对应的字典类型，更新缓存
             LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();

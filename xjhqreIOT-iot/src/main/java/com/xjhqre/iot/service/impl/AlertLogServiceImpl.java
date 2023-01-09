@@ -2,96 +2,96 @@ package com.xjhqre.iot.service.impl;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.utils.DateUtils;
-import com.xjhqre.iot.domain.AlertLog;
+import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.AlertLog;
 import com.xjhqre.iot.mapper.AlertLogMapper;
-import com.xjhqre.iot.service.IAlertLogService;
+import com.xjhqre.iot.service.AlertLogService;
 
 /**
- * 设备告警Service业务层处理
+ * AlertLogServiceImpl
  * 
- * @author kerwincui
- * @date 2022-01-13
+ * @author xjhqre
+ * @date 2023-01-2
  */
 @Service
-public class AlertLogServiceImpl implements IAlertLogService {
-    @Autowired
+public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> implements AlertLogService {
+
+    @Resource
     private AlertLogMapper alertLogMapper;
 
     /**
-     * 查询设备告警
-     * 
-     * @param alertLogId
-     *            设备告警主键
-     * @return 设备告警
+     * 分页查询设备告警日志列表
      */
     @Override
-    public AlertLog selectAlertLogByAlertLogId(Long alertLogId) {
-        return this.alertLogMapper.selectAlertLogByAlertLogId(alertLogId);
+    public IPage<AlertLog> find(AlertLog alertLog, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<AlertLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(alertLog.getAlertLogId() != null, AlertLog::getAlertLogId, alertLog.getAlertLogId())
+            .like(alertLog.getAlertName() != null, AlertLog::getAlertName, alertLog.getAlertName())
+            .eq(alertLog.getAlertLevel() != null, AlertLog::getAlertLevel, alertLog.getAlertLevel())
+            .eq(alertLog.getStatus() != null, AlertLog::getStatus, alertLog.getStatus())
+            .like(alertLog.getUserName() != null, AlertLog::getUserName, alertLog.getUserName())
+            .eq(alertLog.getUserId() != null, AlertLog::getUserId, alertLog.getUserId())
+            .like(alertLog.getProductName() != null, AlertLog::getProductName, alertLog.getProductName())
+            .eq(alertLog.getProductId() != null, AlertLog::getProductId, alertLog.getProductId());
+        return this.alertLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
     /**
-     * 查询设备告警列表
-     * 
-     * @param alertLog
-     *            设备告警
-     * @return 设备告警
+     * 获取设备告警详细信息
+     *
      */
     @Override
-    public List<AlertLog> selectAlertLogList(AlertLog alertLog) {
-        return this.alertLogMapper.selectAlertLogList(alertLog);
+    public AlertLog getDetail(Long alertLogId) {
+        return this.alertLogMapper.selectById(alertLogId);
     }
 
     /**
      * 新增设备告警
-     * 
-     * @param alertLog
-     *            设备告警
-     * @return 结果
+     *
      */
     @Override
-    public int insertAlertLog(AlertLog alertLog) {
+    public void add(AlertLog alertLog) {
         alertLog.setCreateTime(DateUtils.getNowDate());
-        return this.alertLogMapper.insertAlertLog(alertLog);
+        alertLog.setCreateBy(SecurityUtils.getUsername());
+        this.alertLogMapper.insert(alertLog);
     }
 
     /**
      * 修改设备告警
-     * 
-     * @param alertLog
-     *            设备告警
-     * @return 结果
+     *
      */
     @Override
-    public int updateAlertLog(AlertLog alertLog) {
+    public void update(AlertLog alertLog) {
         alertLog.setUpdateTime(DateUtils.getNowDate());
-        return this.alertLogMapper.updateAlertLog(alertLog);
+        alertLog.setUpdateBy(SecurityUtils.getUsername());
+        this.alertLogMapper.updateById(alertLog);
     }
 
     /**
      * 批量删除设备告警
-     * 
-     * @param alertLogIds
-     *            需要删除的设备告警主键
-     * @return 结果
+     *
      */
     @Override
-    public int deleteAlertLogByAlertLogIds(Long[] alertLogIds) {
-        return this.alertLogMapper.deleteAlertLogByAlertLogIds(alertLogIds);
+    public void delete(List<Long> alertLogIds) {
+        this.alertLogMapper.deleteBatchIds(alertLogIds);
     }
 
     /**
-     * 删除设备告警信息
-     * 
-     * @param alertLogId
-     *            设备告警主键
-     * @return 结果
+     * 根据设备ID删除告警日志
      */
     @Override
-    public int deleteAlertLogByAlertLogId(Long alertLogId) {
-        return this.alertLogMapper.deleteAlertLogByAlertLogId(alertLogId);
+    public void deleteByDeviceId(Long deviceId) {
+        LambdaQueryWrapper<AlertLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AlertLog::getDeviceId, deviceId);
+        this.alertLogMapper.delete(wrapper);
     }
 }

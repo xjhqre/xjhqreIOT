@@ -1,10 +1,12 @@
 package com.xjhqre.iot.mapper;
 
 import java.util.List;
-import com.ruoyi.iot.domain.Group;
-import com.ruoyi.iot.model.DeviceGroupInput;
-import com.ruoyi.iot.model.IdOutput;
-import org.springframework.stereotype.Repository;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.xjhqre.iot.domain.entity.Group;
 
 /**
  * 设备分组Mapper接口
@@ -12,76 +14,22 @@ import org.springframework.stereotype.Repository;
  * @author kerwincui
  * @date 2021-12-16
  */
-@Repository
-public interface GroupMapper 
-{
-    /**
-     * 查询设备分组
-     * 
-     * @param groupId 设备分组主键
-     * @return 设备分组
-     */
-    public Group selectGroupByGroupId(Long groupId);
+@Mapper
+public interface GroupMapper extends BaseMapper<Group> {
 
     /**
-     * 通过分组ID查询关联的设备ID数组
-     * @param groupId
-     * @return
+     * 获取分组下所有关联的设备ID数组
      */
-    public List<IdOutput> selectDeviceIdsByGroupId(Long groupId);
-
-    /**
-     * 查询设备分组列表
-     * 
-     * @param group 设备分组
-     * @return 设备分组集合
-     */
-    public List<Group> selectGroupList(Group group);
-
-    /**
-     * 新增设备分组
-     * 
-     * @param group 设备分组
-     * @return 结果
-     */
-    public int insertGroup(Group group);
+    List<Long> getDeviceIds(Long groupId);
 
     /**
      * 分组下批量增加设备分组
-     * @param input
-     * @return
      */
-    public int insertDeviceGroups(DeviceGroupInput input);
+    void insertDeviceGroups(@Param("deviceIdList") List<Long> deviceIdList);
 
     /**
-     * 修改设备分组
-     * 
-     * @param group 设备分组
-     * @return 结果
+     * 批量删除分组中的设备
      */
-    public int updateGroup(Group group);
-
-    /**
-     * 删除设备分组
-     * 
-     * @param groupId 设备分组主键
-     * @return 结果
-     */
-    public int deleteGroupByGroupId(Long groupId);
-
-    /**
-     * 批量删除分组
-     * 
-     * @param groupIds 需要删除的数据主键集合
-     * @return 结果
-     */
-    public int deleteGroupByGroupIds(Long[] groupIds);
-
-    /**
-     * 批量删除设备分组
-     * @param groupIds
-     * @return
-     */
-    public int deleteDeviceGroupByGroupIds(Long[] groupIds);
+    int deleteDeviceGroupByGroupIds(@Param("groupIds") List<Long> groupIds);
 
 }

@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,10 +32,10 @@ import com.xjhqre.system.service.DictTypeService;
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class DictTypeServiceImpl implements DictTypeService {
-    @Autowired
+    @Resource
     private DictTypeMapper dictTypeMapper;
 
-    @Autowired
+    @Resource
     private DictDataMapper dictDataMapper;
 
     /**
@@ -48,14 +48,10 @@ public class DictTypeServiceImpl implements DictTypeService {
 
     /**
      * 根据条件分页查询字典类型
-     * 
-     * @param dictType
-     * @param pageNum
-     * @param pageSize
-     * @return
+     *
      */
     @Override
-    public IPage<DictType> listDictType(DictType dictType, Integer pageNum, Integer pageSize) {
+    public IPage<DictType> findDictType(DictType dictType, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(dictType.getDictId() != null, DictType::getDictId, dictType.getDictId())
             .eq(dictType.getDictType() != null, DictType::getDictType, dictType.getDictType())
@@ -177,7 +173,6 @@ public class DictTypeServiceImpl implements DictTypeService {
      * 
      * @param dict
      *            字典类型信息
-     * @return 结果
      */
     @Override
     public void insertDictType(DictType dict) {
@@ -190,7 +185,6 @@ public class DictTypeServiceImpl implements DictTypeService {
      * 
      * @param dict
      *            字典类型信息
-     * @return 结果
      */
     @Override
     public void updateDictType(DictType dict) {
@@ -212,9 +206,9 @@ public class DictTypeServiceImpl implements DictTypeService {
      */
     @Override
     public Boolean checkDictTypeUnique(DictType dict) {
-        Long dictId = StringUtils.isNull(dict.getDictId()) ? -1L : dict.getDictId();
+        long dictId = StringUtils.isNull(dict.getDictId()) ? -1L : dict.getDictId();
         DictType dictType = this.dictTypeMapper.checkDictTypeUnique(dict.getDictType());
-        if (StringUtils.isNotNull(dictType) && dictType.getDictId().longValue() != dictId.longValue()) {
+        if (StringUtils.isNotNull(dictType) && dictType.getDictId() != dictId) {
             return Constants.NOT_UNIQUE;
         }
         return Constants.UNIQUE;

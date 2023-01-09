@@ -1,104 +1,100 @@
-// package com.xjhqre.iot.controller;
-//
-// import java.util.List;
-// import javax.servlet.http.HttpServletResponse;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.PutMapping;
-// import org.springframework.web.bind.annotation.DeleteMapping;
-// import org.springframework.web.bind.annotation.PathVariable;
-// import org.springframework.web.bind.annotation.RequestBody;
-// import org.springframework.web.bind.annotation.RequestMapping;
-// import org.springframework.web.bind.annotation.RestController;
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.iot.domain.Scene;
-// import com.ruoyi.iot.service.ISceneService;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.common.core.page.TableDataInfo;
-//
-/// **
-// * 场景联动Controller
-// *
-// * @author kerwincui
-// * @date 2022-01-13
-// */
-// @RestController
-// @RequestMapping("/iot/scene")
-// public class SceneController extends BaseController
-// {
-// @Autowired
-// private ISceneService sceneService;
-//
-// /**
-// * 查询场景联动列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:scene:list')")
-// @GetMapping("/list")
-// public TableDataInfo list(Scene scene)
-// {
-// startPage();
-// List<Scene> list = sceneService.selectSceneList(scene);
-// return getDataTable(list);
-// }
-//
-// /**
-// * 导出场景联动列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:scene:export')")
-// @Log(title = "场景联动", businessType = BusinessType.EXPORT)
-// @PostMapping("/export")
-// public void export(HttpServletResponse response, Scene scene)
-// {
-// List<Scene> list = sceneService.selectSceneList(scene);
-// ExcelUtil<Scene> util = new ExcelUtil<Scene>(Scene.class);
-// util.exportExcel(response, list, "场景联动数据");
-// }
-//
-// /**
-// * 获取场景联动详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:scene:query')")
-// @GetMapping(value = "/{sceneId}")
-// public AjaxResult getInfo(@PathVariable("sceneId") Long sceneId)
-// {
-// return AjaxResult.success(sceneService.selectSceneBySceneId(sceneId));
-// }
-//
-// /**
-// * 新增场景联动
-// */
-// @PreAuthorize("@ss.hasPermi('iot:scene:add')")
-// @Log(title = "场景联动", businessType = BusinessType.INSERT)
-// @PostMapping
-// public AjaxResult add(@RequestBody Scene scene)
-// {
-// return toAjax(sceneService.insertScene(scene));
-// }
-//
-// /**
-// * 修改场景联动
-// */
-// @PreAuthorize("@ss.hasPermi('iot:scene:edit')")
-// @Log(title = "场景联动", businessType = BusinessType.UPDATE)
-// @PutMapping
-// public AjaxResult edit(@RequestBody Scene scene)
-// {
-// return toAjax(sceneService.updateScene(scene));
-// }
-//
-// /**
-// * 删除场景联动
-// */
-// @PreAuthorize("@ss.hasPermi('iot:scene:remove')")
-// @Log(title = "场景联动", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{sceneIds}")
-// public AjaxResult remove(@PathVariable Long[] sceneIds)
-// {
-// return toAjax(sceneService.deleteSceneBySceneIds(sceneIds));
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.iot.domain.entity.Scene;
+import com.xjhqre.iot.service.SceneService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * 场景联动接口
+ *
+ * @author xjhqre
+ * @since 2023-01-7
+ */
+@Api(tags = "场景联动接口")
+@RestController
+@RequestMapping("/iot/scene")
+public class SceneController extends BaseController {
+
+    @Resource
+    private SceneService sceneService;
+
+    @ApiOperation(value = "分页查询场景联动列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:scene:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<Scene>> find(Scene scene, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.sceneService.find(scene, pageNum, pageSize));
+    }
+
+    /**
+     * 获取场景联动详情
+     */
+    @ApiOperation(value = "获取场景联动详情")
+    @PreAuthorize("@ss.hasPermission('iot:scene:query')")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<Scene> getDetail(@RequestParam Long sceneId) {
+        return R.success(this.sceneService.getDetail(sceneId));
+    }
+
+    /**
+     * 新增场景联动
+     */
+    @ApiOperation(value = "新增场景联动")
+    @PreAuthorize("@ss.hasPermission('iot:scene:add')")
+    @Log(title = "场景联动", businessType = BusinessType.INSERT)
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> add(Scene scene) {
+        this.sceneService.add(scene);
+        return R.success("新增场景联动成功");
+    }
+
+    /**
+     * 修改场景联动
+     */
+    @ApiOperation(value = "修改场景联动")
+    @PreAuthorize("@ss.hasPermission('iot:scene:update')")
+    @Log(title = "场景联动", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(@RequestBody Scene scene) {
+        this.sceneService.update(scene);
+        return R.success("修改场景联动成功");
+    }
+
+    /**
+     * 删除场景联动
+     */
+    @ApiOperation(value = "删除场景联动")
+    @PreAuthorize("@ss.hasPermission('iot:scene:delete')")
+    @Log(title = "场景联动", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> remove(@RequestParam List<Long> sceneIdList) {
+        this.sceneService.remove(sceneIdList);
+        return R.success("删除场景联动成功");
+    }
+}

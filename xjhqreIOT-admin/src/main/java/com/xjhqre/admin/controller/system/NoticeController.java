@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @RestController
 @Api(value = "公告操作接口", tags = "公告操作接口")
-@RequestMapping("/admin/system/notice")
+@RequestMapping("/system/notice")
 public class NoticeController extends BaseController {
     @Autowired
     private NoticeService noticeService;
@@ -41,8 +41,8 @@ public class NoticeController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
-    @GetMapping("list/{pageNum}/{pageSize}")
+            example = "10")})
+    @GetMapping("findNotice/{pageNum}/{pageSize}")
     @PreAuthorize("@ss.hasPermission('system:notice:list')")
     public R<IPage<Notice>> findNotice(Notice notice, @PathVariable("pageNum") Integer pageNum,
         @PathVariable("pageSize") Integer pageSize) {

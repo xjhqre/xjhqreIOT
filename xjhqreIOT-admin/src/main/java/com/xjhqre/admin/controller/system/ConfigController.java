@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xjhqre
  */
 @RestController
-@RequestMapping("/admin/system/config")
+@RequestMapping("/system/config")
 @Api(value = "配置操作接口", tags = "配置操作接口")
 public class ConfigController extends BaseController {
     @Autowired
@@ -42,10 +42,10 @@ public class ConfigController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @PreAuthorize("@ss.hasPermission('system:config:list')")
-    @GetMapping("list/{pageNum}/{pageSize}")
-    public R<IPage<Config>> listConfig(Config config, @PathVariable("pageNum") Integer pageNum,
+    @GetMapping("findConfig/{pageNum}/{pageSize}")
+    public R<IPage<Config>> findConfig(Config config, @PathVariable("pageNum") Integer pageNum,
         @PathVariable("pageSize") Integer pageSize) {
         return R.success(this.configService.findConfig(config, pageNum, pageSize));
     }

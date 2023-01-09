@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xjhqre
  */
 @RestController
-@RequestMapping("/admin/system/menu")
+@RequestMapping("/system/menu")
 @Api(value = "菜单操作接口", tags = "菜单操作接口")
 public class MenuController extends BaseController {
     @Autowired
@@ -45,7 +45,7 @@ public class MenuController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @GetMapping("findMenu/{pageNum}/{pageSize}")
     @PreAuthorize("@ss.hasPermission('system:menu:list')")
     public R<IPage<Menu>> findMenu(Menu menu, @PathVariable("pageNum") Integer pageNum,
@@ -71,7 +71,7 @@ public class MenuController extends BaseController {
     @GetMapping("/treeSelect")
     public R<List<TreeSelect>> treeSelect(Menu menu) {
         // 查询当前用户的权限信息
-        List<Menu> menus = this.menuService.selectMenuList(menu, this.getUserId());
+        List<Menu> menus = this.menuService.selectMenuTreeByUserId(this.getUserId());
         List<TreeSelect> treeSelects = this.menuService.buildMenuTreeSelect(menus);
         return R.success(treeSelects);
     }
@@ -82,9 +82,10 @@ public class MenuController extends BaseController {
     @ApiOperation(value = "加载对应角色菜单列表树")
     @GetMapping(value = "/roleMenuTreeSelect/{roleId}")
     public R<String> roleMenuTreeSelect(@PathVariable("roleId") Long roleId) {
-        List<Menu> menus = this.menuService.selectMenuListByRoleId(roleId);
-        menus = this.menuService.buildMenuTree(menus);
-        return R.success("加载对应角色菜单列表树成功").add("menus", menus);
+        List<Menu> menus = this.menuService.selectMenuList(this.getUserId());
+        return R.success("加载对应角色菜单列表树成功").add("menus", menus)
+            .add("checkedKeys", this.menuService.selectMenuListByRoleId(roleId))
+            .add("menus", this.menuService.buildMenuTreeSelect(menus));
     }
 
     /**

@@ -1,104 +1,95 @@
-// package com.xjhqre.iot.controller;
-//
-// import java.util.List;
-// import javax.servlet.http.HttpServletResponse;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.PutMapping;
-// import org.springframework.web.bind.annotation.DeleteMapping;
-// import org.springframework.web.bind.annotation.PathVariable;
-// import org.springframework.web.bind.annotation.RequestBody;
-// import org.springframework.web.bind.annotation.RequestMapping;
-// import org.springframework.web.bind.annotation.RestController;
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.iot.domain.AlertLog;
-// import com.ruoyi.iot.service.IAlertLogService;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.common.core.page.TableDataInfo;
-//
-/// **
-// * 设备告警Controller
-// *
-// * @author kerwincui
-// * @date 2022-01-13
-// */
-// @RestController
-// @RequestMapping("/iot/alertLog")
-// public class AlertLogController extends BaseController
-// {
-// @Autowired
-// private IAlertLogService alertLogService;
-//
-// /**
-// * 查询设备告警列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:alert:list')")
-// @GetMapping("/list")
-// public TableDataInfo list(AlertLog alertLog)
-// {
-// startPage();
-// List<AlertLog> list = alertLogService.selectAlertLogList(alertLog);
-// return getDataTable(list);
-// }
-//
-// /**
-// * 导出设备告警列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:alert:export')")
-// @Log(title = "设备告警", businessType = BusinessType.EXPORT)
-// @PostMapping("/export")
-// public void export(HttpServletResponse response, AlertLog alertLog)
-// {
-// List<AlertLog> list = alertLogService.selectAlertLogList(alertLog);
-// ExcelUtil<AlertLog> util = new ExcelUtil<AlertLog>(AlertLog.class);
-// util.exportExcel(response, list, "设备告警数据");
-// }
-//
-// /**
-// * 获取设备告警详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:alert:query')")
-// @GetMapping(value = "/{alertLogId}")
-// public AjaxResult getInfo(@PathVariable("alertLogId") Long alertLogId)
-// {
-// return AjaxResult.success(alertLogService.selectAlertLogByAlertLogId(alertLogId));
-// }
-//
-// /**
-// * 新增设备告警
-// */
-// @PreAuthorize("@ss.hasPermi('iot:alert:add')")
-// @Log(title = "设备告警", businessType = BusinessType.INSERT)
-// @PostMapping
-// public AjaxResult add(@RequestBody AlertLog alertLog)
-// {
-// return toAjax(alertLogService.insertAlertLog(alertLog));
-// }
-//
-// /**
-// * 修改设备告警
-// */
-// @PreAuthorize("@ss.hasPermi('iot:alert:edit')")
-// @Log(title = "设备告警", businessType = BusinessType.UPDATE)
-// @PutMapping
-// public AjaxResult edit(@RequestBody AlertLog alertLog)
-// {
-// return toAjax(alertLogService.updateAlertLog(alertLog));
-// }
-//
-// /**
-// * 删除设备告警
-// */
-// @PreAuthorize("@ss.hasPermi('iot:alert:remove')")
-// @Log(title = "设备告警", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{alertLogIds}")
-// public AjaxResult remove(@PathVariable Long[] alertLogIds)
-// {
-// return toAjax(alertLogService.deleteAlertLogByAlertLogIds(alertLogIds));
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.iot.domain.entity.AlertLog;
+import com.xjhqre.iot.service.AlertLogService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * 设备告警日志接口
+ *
+ * @author xjhqre
+ * @since 2023-01-6
+ */
+@Api(tags = "设备告警日志接口")
+@RestController
+@RequestMapping("/iot/alertLog")
+public class AlertLogController extends BaseController {
+    @Resource
+    private AlertLogService alertLogService;
+
+    @ApiOperation(value = "分页查询设备告警日志列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:alert:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<AlertLog>> find(AlertLog alertLog, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.alertLogService.find(alertLog, pageNum, pageSize));
+    }
+
+    /**
+     * 获取设备告警详细信息
+     */
+    @PreAuthorize("@ss.hasPermission('iot:alert:query')")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<AlertLog> getDetail(@RequestParam Long alertLogId) {
+        return R.success(this.alertLogService.getDetail(alertLogId));
+    }
+
+    /**
+     * 新增设备告警
+     */
+    @PreAuthorize("@ss.hasPermission('iot:alert:add')")
+    @Log(title = "设备告警", businessType = BusinessType.INSERT)
+    @PostMapping
+    public R<String> add(AlertLog alertLog) {
+        this.alertLogService.add(alertLog);
+        return R.success("新增设备告警成功");
+    }
+
+    /**
+     * 修改设备告警
+     */
+    @PreAuthorize("@ss.hasPermission('iot:alert:update')")
+    @Log(title = "设备告警", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(AlertLog alertLog) {
+        this.alertLogService.update(alertLog);
+        return R.success("修改设备告警成功");
+    }
+
+    /**
+     * 删除设备告警
+     */
+    @PreAuthorize("@ss.hasPermission('iot:alert:delete')")
+    @Log(title = "设备告警", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@RequestParam List<Long> alertLogIds) {
+        this.alertLogService.delete(alertLogIds);
+        return R.success("删除设备告警成功");
+    }
+}

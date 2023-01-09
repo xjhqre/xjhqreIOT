@@ -35,8 +35,27 @@ public class UserConstants {
     /** 菜单类型（菜单） */
     public static final String TYPE_MENU = "C";
 
+    /**
+     * 是否菜单外链（是）
+     */
+    public static final Integer YES_FRAME = 1;
+
+    /**
+     * 是否菜单外链（否）
+     */
+    public static final Integer NO_FRAME = 0;
+
     /** 菜单类型（按钮） */
     public static final String TYPE_BUTTON = "F";
+
+    /** InnerLink组件标识 */
+    public final static String INNER_LINK = "InnerLink";
+
+    /** Layout组件标识 */
+    public final static String LAYOUT = "Layout";
+
+    /** ParentView组件标识 */
+    public final static String PARENT_VIEW = "ParentView";
 
     /**
      * 用户名长度限制

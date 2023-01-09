@@ -4,7 +4,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.xjhqre.common.domain.entity.picture.Picture;
+import com.xjhqre.common.domain.entity.Picture;
 
 /**
  * 图片 业务层
@@ -19,7 +19,7 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      * @param mFile
      */
-    void savePicture(Picture picture, MultipartFile mFile);
+    void add(Picture picture, MultipartFile mFile);
 
     /**
      * 分页查询图片列表
@@ -29,7 +29,7 @@ public interface PictureService extends IService<Picture> {
      * @param pageSize
      * @return
      */
-    IPage<Picture> findPicture(Picture picture, Integer pageNum, Integer pageSize);
+    IPage<Picture> find(Picture picture, Integer pageNum, Integer pageSize);
 
     void audit(String pictureId, Integer result);
 

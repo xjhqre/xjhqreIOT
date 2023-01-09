@@ -20,7 +20,7 @@ public interface DictTypeService {
      * @param pageSize
      * @return
      */
-    IPage<DictType> listDictType(DictType dictType, Integer pageNum, Integer pageSize);
+    IPage<DictType> findDictType(DictType dictType, Integer pageNum, Integer pageSize);
 
     /**
      * 根据所有字典类型

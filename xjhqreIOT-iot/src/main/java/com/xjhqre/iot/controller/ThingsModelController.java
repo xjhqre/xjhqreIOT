@@ -1,138 +1,120 @@
-// package com.xjhqre.iot.controller;
-//
-// import java.util.List;
-// import javax.servlet.http.HttpServletResponse;
-//
-// import com.ruoyi.iot.model.ImportThingsModelInput;
-// import io.swagger.annotations.Api;
-// import io.swagger.annotations.ApiOperation;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.PutMapping;
-// import org.springframework.web.bind.annotation.DeleteMapping;
-// import org.springframework.web.bind.annotation.PathVariable;
-// import org.springframework.web.bind.annotation.RequestBody;
-// import org.springframework.web.bind.annotation.RequestMapping;
-// import org.springframework.web.bind.annotation.RestController;
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.iot.domain.ThingsModel;
-// import com.ruoyi.iot.service.IThingsModelService;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.common.core.page.TableDataInfo;
-//
-/// **
-// * 物模型Controller
-// *
-// * @author kerwincui
-// * @date 2021-12-16
-// */
-// @RestController
-// @RequestMapping("/iot/model")
-// @Api(tags="产品物模型")
-// public class ThingsModelController extends BaseController
-// {
-// @Autowired
-// private IThingsModelService thingsModelService;
-//
-// /**
-// * 查询物模型列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/list")
-// @ApiOperation("产品物模型分页列表")
-// public TableDataInfo list(ThingsModel thingsModel)
-// {
-// startPage();
-// List<ThingsModel> list = thingsModelService.selectThingsModelList(thingsModel);
-// return getDataTable(list);
-// }
-//
-// /**
-// * 获取物模型详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/{modelId}")
-// @ApiOperation("获取产品物模型详情")
-// public AjaxResult getInfo(@PathVariable("modelId") Long modelId)
-// {
-// return AjaxResult.success(thingsModelService.selectThingsModelByModelId(modelId));
-// }
-//
-// /**
-// * 新增物模型
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:add')")
-// @Log(title = "物模型", businessType = BusinessType.INSERT)
-// @PostMapping
-// @ApiOperation("添加产品物模型")
-// public AjaxResult add(@RequestBody ThingsModel thingsModel)
-// {
-// int result=thingsModelService.insertThingsModel(thingsModel);
-// if(result==1){
-// return AjaxResult.success();
-// }else if(result==2){
-// return AjaxResult.error("产品下的标识符不能重复");
-// }else{
-// return AjaxResult.error();
-// }
-// }
-//
-// @Log(title = "导入物模型",businessType = BusinessType.INSERT)
-// @PostMapping("/import")
-// @ApiOperation("导入通用物模型")
-// public AjaxResult ImportByTemplateIds(@RequestBody ImportThingsModelInput input){
-// int repeatCount=thingsModelService.importByTemplateIds(input);
-// if(repeatCount==0){
-// return AjaxResult.success("数据导入成功");
-// }else{
-// return AjaxResult.success(repeatCount+"条数据未导入，标识符重复");
-// }
-// }
-//
-// /**
-// * 修改物模型
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "物模型", businessType = BusinessType.UPDATE)
-// @PutMapping
-// @ApiOperation("修改产品物模型")
-// public AjaxResult edit(@RequestBody ThingsModel thingsModel)
-// {
-// int result=thingsModelService.updateThingsModel(thingsModel);
-// if(result==1){
-// return AjaxResult.success();
-// }else if(result==2){
-// return AjaxResult.error("产品下的标识符不能重复");
-// }else{
-// return AjaxResult.error();
-// }
-// }
-//
-// /**
-// * 删除物模型
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:remove')")
-// @Log(title = "物模型", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{modelIds}")
-// @ApiOperation("批量删除产品物模型")
-// public AjaxResult remove(@PathVariable Long[] modelIds)
-// {
-// return toAjax(thingsModelService.deleteThingsModelByModelIds(modelIds));
-// }
-//
-// /**
-// * 获取缓存的JSON物模型
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/cache/{productId}")
-// @ApiOperation("获取缓存的JSON物模型")
-// public AjaxResult getCacheThingsModelByProductId(@PathVariable("productId") Long productId)
-// {
-// return AjaxResult.success("操作成功",thingsModelService.getCacheThingsModelByProductId(productId));
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.group.Insert;
+import com.xjhqre.common.group.Update;
+import com.xjhqre.iot.domain.entity.ThingsModel;
+import com.xjhqre.iot.service.ThingsModelService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * <p>
+ * 物模型操作接口
+ * </p>
+ *
+ * @author xjhqre
+ * @since 12月 20, 2022
+ */
+@RestController
+@RequestMapping("/iot/model")
+@Api(tags = "产品物模型接口")
+public class ThingsModelController extends BaseController {
+    @Resource
+    private ThingsModelService thingsModelService;
+
+    @ApiOperation(value = "分页查询产品物模型列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:model:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<ThingsModel>> find(ThingsModel thingsModel, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.thingsModelService.find(thingsModel, pageNum, pageSize));
+    }
+
+    @PreAuthorize("@ss.hasPermission('iot:model:list')")
+    @RequestMapping(value = "/list", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("查询产品物模型列表")
+    public R<List<ThingsModel>> list(ThingsModel thingsModel) {
+        return R.success(this.thingsModelService.list(thingsModel));
+    }
+
+    /**
+     * 获取物模型详细信息
+     */
+    @PreAuthorize("@ss.hasPermission('iot:model:query')")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("查询产品物模型详情")
+    public R<ThingsModel> getInfo(@RequestParam Long modelId) {
+        return R.success(this.thingsModelService.getDetail(modelId));
+    }
+
+    /**
+     * 添加产品物模型
+     */
+    @PreAuthorize("@ss.hasPermission('iot:model:add')")
+    @Log(title = "物模型", businessType = BusinessType.INSERT)
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("添加产品物模型")
+    public R<String> add(@Validated(Insert.class) ThingsModel thingsModel) {
+        this.thingsModelService.add(thingsModel);
+        return R.success("添加产品物模型成功");
+    }
+
+    /**
+     * 修改物模型
+     */
+    @PreAuthorize("@ss.hasPermission('iot:model:update')")
+    @Log(title = "物模型", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("修改产品物模型")
+    public R<String> update(@Validated(Update.class) ThingsModel thingsModel) {
+        this.thingsModelService.update(thingsModel);
+        return R.success("修改产品物模型成功");
+    }
+
+    /**
+     * 删除物模型
+     */
+    @PreAuthorize("@ss.hasPermission('iot:model:delete')")
+    @Log(title = "物模型", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("批量删除产品物模型")
+    public R<String> delete(@RequestParam List<Long> modelIds) {
+        this.thingsModelService.delete(modelIds);
+        return R.success("删除产品物模型成功");
+    }
+
+    /**
+     * 获取缓存的JSON物模型
+     */
+    @PreAuthorize("@ss.hasPermission('iot:model:query')")
+    @RequestMapping(value = "/getCache", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("获取缓存的产品物模型(JSON格式)")
+    public R<String> getThingsModelCache(@RequestParam Long productId) {
+        return R.success(this.thingsModelService.getThingsModelCache(productId));
+    }
+}

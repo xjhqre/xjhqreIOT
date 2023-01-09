@@ -46,7 +46,7 @@ public class UserOnlineController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @PreAuthorize("@ss.hasPermission('monitor:online:list')")
     @GetMapping("list/{pageNum}/{pageSize}")
     public R<IPage<UserOnline>> listUserOnline(String ipaddr, String userName, @PathVariable("pageNum") Integer pageNum,

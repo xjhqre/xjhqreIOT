@@ -1,3 +1,20 @@
+# 项目相关配置
+ruoyi:
+  # 名称
+  name: ruoyi
+  # 版本
+  version: 3.8.0
+  # 版权年份
+  copyrightYear: 2021
+  # 实例演示开关
+  demoEnabled: true
+  # 文件路径，以uploadPath结尾 示例（ Windows配置 D:/uploadPath，Linux配置 /uploadPath）
+  profile: /var/data/java/uploadPath
+  # 获取ip地址开关
+  addressEnabled: true
+  # 验证码类型 math 数组计算 char 字符验证
+  captchaType: math
+
 spring:
   profiles:
     active: druid
@@ -46,6 +63,16 @@ spring:
     user:
       name: ENC(3RFP9UyB8GFped3pc4AFSQ==)
       password: ENC(aCnej7rWZ1AUhl+X1aLc3w==)
+  # mqtt 配置
+  mqtt:
+    username: admin                            # 账号
+    password: xjhqre                           # 密码
+    host-url: tcp://1.15.88.204:1883           # mqtt连接tcp地址
+    client-id: ${random.int}                   # 客户端Id，不能相同，采用随机数 ${random.value}
+    default-topic: test                        # 默认主题
+    timeout: 30                                # 超时时间
+    keepalive: 30                              # 保持连接
+    clearSession: true                         # 清除会话(设置为false,断开连接，重连后使用原来的会话 保留订阅的主题，能接收离线期间的消息)
 
 # MyBatis-plus配置
 mybatis-plus:

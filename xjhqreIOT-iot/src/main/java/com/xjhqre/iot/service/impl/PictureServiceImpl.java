@@ -13,17 +13,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xjhqre.admin.mq.RabbitMQSender;
 import com.xjhqre.common.constant.PictureConstant;
 import com.xjhqre.common.domain.entity.Picture;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.DateUtils;
-import com.xjhqre.common.utils.FileUtils;
 import com.xjhqre.common.utils.ImageUtil;
-import com.xjhqre.common.utils.OSSUtil;
 import com.xjhqre.common.utils.SecurityUtils;
-import com.xjhqre.common.utils.OSSUtil.FileDirType;
+import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.uuid.IdUtils;
+import com.xjhqre.framework.utils.OSSUtil;
+import com.xjhqre.framework.utils.OSSUtil.FileDirType;
+import com.xjhqre.iot.mq.RabbitMQSender;
 import com.xjhqre.iot.service.PictureService;
 import com.xjhqre.system.mapper.PictureMapper;
 
@@ -50,14 +50,31 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     RabbitMQSender rabbitMQSender;
 
     /**
+     * 分页查询图片列表
+     *
+     * @param picture
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    @Override
+    public IPage<Picture> find(Picture picture, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(picture.getUploader() != null, Picture::getUploader, picture.getUploader());
+        queryWrapper.eq(picture.getPicName() != null, Picture::getPicName, picture.getPicName());
+        queryWrapper.eq(picture.getStatus() != null, Picture::getStatus, picture.getStatus());
+        return this.pictureMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
+    }
+
+    /**
      * 上传图片，管理员上传无需审核
      *
      * @param picture
      * @param mFile
      */
     @Override
-    public void savePicture(Picture picture, MultipartFile mFile) {
-        String extension = FileUtils.getExtension(mFile.getOriginalFilename());
+    public void add(Picture picture, MultipartFile mFile) {
+        String extension = FileTypeUtils.getExtension(mFile.getOriginalFilename());
 
         if (!ImageUtil.SUFFIXS.contains(extension)) {
             throw new ServiceException("上传图片格式不支持！");
@@ -80,23 +97,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
         // 存入数据库
         this.pictureMapper.insert(picture);
-    }
-
-    /**
-     * 分页查询图片列表
-     *
-     * @param picture
-     * @param pageNum
-     * @param pageSize
-     * @return
-     */
-    @Override
-    public IPage<Picture> findPicture(Picture picture, Integer pageNum, Integer pageSize) {
-        LambdaQueryWrapper<Picture> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(picture.getUploader() != null, Picture::getUploader, picture.getUploader());
-        queryWrapper.eq(picture.getPicName() != null, Picture::getPicName, picture.getPicName());
-        queryWrapper.eq(picture.getStatus() != null, Picture::getStatus, picture.getStatus());
-        return this.pictureMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
     }
 
     /**

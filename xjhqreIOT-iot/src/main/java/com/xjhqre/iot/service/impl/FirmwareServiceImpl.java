@@ -1,17 +1,20 @@
 package com.xjhqre.iot.service.impl;
 
+import java.util.Arrays;
 import java.util.List;
 
-import com.ruoyi.common.core.domain.entity.SysRole;
-import com.ruoyi.common.core.domain.entity.SysUser;
-import com.ruoyi.common.utils.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.ruoyi.iot.mapper.FirmwareMapper;
-import com.ruoyi.iot.domain.Firmware;
-import com.ruoyi.iot.service.IFirmwareService;
+import javax.annotation.Resource;
 
-import static com.ruoyi.common.utils.SecurityUtils.getLoginUser;
+import org.springframework.stereotype.Service;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Firmware;
+import com.xjhqre.iot.mapper.FirmwareMapper;
+import com.xjhqre.iot.service.FirmwareService;
 
 /**
  * 产品固件Service业务层处理
@@ -20,112 +23,76 @@ import static com.ruoyi.common.utils.SecurityUtils.getLoginUser;
  * @date 2021-12-16
  */
 @Service
-public class FirmwareServiceImpl implements IFirmwareService 
-{
-    @Autowired
+public class FirmwareServiceImpl implements FirmwareService {
+    @Resource
     private FirmwareMapper firmwareMapper;
 
     /**
-     * 查询产品固件
-     * 
-     * @param firmwareId 产品固件主键
-     * @return 产品固件
+     * 产品固件分页列表
      */
     @Override
-    public Firmware selectFirmwareByFirmwareId(Long firmwareId)
-    {
-        return firmwareMapper.selectFirmwareByFirmwareId(firmwareId);
+    public IPage<Firmware> find(Firmware firmware, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<Firmware> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(firmware.getFirmwareId() != null, Firmware::getFirmwareId, firmware.getFirmwareId())
+            .like(firmware.getFirmwareName() != null, Firmware::getFirmwareName, firmware.getFirmwareName())
+            .eq(firmware.getProductId() != null, Firmware::getProductId, firmware.getProductId())
+            .like(firmware.getProductName() != null, Firmware::getProductName, firmware.getProductName());
+        return this.firmwareMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    /**
+     * 产品固件列表
+     */
+    @Override
+    public List<Firmware> list(Firmware firmware) {
+        LambdaQueryWrapper<Firmware> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(firmware.getFirmwareId() != null, Firmware::getFirmwareId, firmware.getFirmwareId())
+            .like(firmware.getFirmwareName() != null, Firmware::getFirmwareName, firmware.getFirmwareName())
+            .eq(firmware.getProductId() != null, Firmware::getProductId, firmware.getProductId())
+            .like(firmware.getProductName() != null, Firmware::getProductName, firmware.getProductName());
+        return this.firmwareMapper.selectList(wrapper);
+    }
+
+    @Override
+    public Firmware getDetail(Long firmwareId) {
+        return this.firmwareMapper.selectById(firmwareId);
     }
 
     /**
      * 查询设备最新固件
-     *
-     * @param deviceId 产品固件主键
-     * @return 产品固件
      */
     @Override
-    public Firmware selectLatestFirmware(Long deviceId)
-    {
-        return firmwareMapper.selectLatestFirmware(deviceId);
-    }
-
-    /**
-     * 查询产品固件列表
-     * 
-     * @param firmware 产品固件
-     * @return 产品固件
-     */
-    @Override
-    public List<Firmware> selectFirmwareList(Firmware firmware)
-    {
-        SysUser user = getLoginUser().getUser();
-        List<SysRole> roles=user.getRoles();
-        // 租户
-        if(roles.stream().anyMatch(a->a.getRoleKey().equals("tenant"))){
-            firmware.setTenantId(user.getUserId());
-        }
-        return firmwareMapper.selectFirmwareList(firmware);
+    public Firmware getLatest(Long deviceId) {
+        return this.firmwareMapper.selectLatestFirmware(deviceId);
     }
 
     /**
      * 新增产品固件
-     * 
-     * @param firmware 产品固件
-     * @return 结果
      */
     @Override
-    public int insertFirmware(Firmware firmware)
-    {
+    public void add(Firmware firmware) {
         // 判断是否为管理员
         firmware.setIsSys(1);
-        SysUser user = getLoginUser().getUser();
-        List<SysRole> roles=user.getRoles();
-        for(int i=0;i<roles.size();i++){
-            if(roles.get(i).getRoleKey().equals("tenant") || roles.get(i).getRoleKey().equals("general")){
-                firmware.setIsSys(0);
-                break;
-            }
-        }
-        firmware.setTenantId(user.getUserId());
-        firmware.setTenantName(user.getUserName());
+        firmware.setCreateBy(SecurityUtils.getUsername());
         firmware.setCreateTime(DateUtils.getNowDate());
-        return firmwareMapper.insertFirmware(firmware);
+        this.firmwareMapper.insert(firmware);
     }
 
     /**
-     * 修改产品固件
-     * 
-     * @param firmware 产品固件
-     * @return 结果
+     * 更新产品固件
      */
     @Override
-    public int updateFirmware(Firmware firmware)
-    {
+    public void update(Firmware firmware) {
+        firmware.setUpdateBy(SecurityUtils.getUsername());
         firmware.setUpdateTime(DateUtils.getNowDate());
-        return firmwareMapper.updateFirmware(firmware);
+        this.firmwareMapper.updateById(firmware);
     }
 
     /**
      * 批量删除产品固件
-     * 
-     * @param firmwareIds 需要删除的产品固件主键
-     * @return 结果
      */
     @Override
-    public int deleteFirmwareByFirmwareIds(Long[] firmwareIds)
-    {
-        return firmwareMapper.deleteFirmwareByFirmwareIds(firmwareIds);
-    }
-
-    /**
-     * 删除产品固件信息
-     * 
-     * @param firmwareId 产品固件主键
-     * @return 结果
-     */
-    @Override
-    public int deleteFirmwareByFirmwareId(Long firmwareId)
-    {
-        return firmwareMapper.deleteFirmwareByFirmwareId(firmwareId);
+    public void delete(Long[] firmwareIds) {
+        this.firmwareMapper.deleteBatchIds(Arrays.asList(firmwareIds));
     }
 }

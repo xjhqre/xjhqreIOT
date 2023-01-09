@@ -5,13 +5,14 @@
 
 package com.xjhqre.common.translator;
 
+import java.util.List;
+import java.util.function.BiConsumer;
+
+import org.springframework.beans.BeanUtils;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.xjhqre.common.utils.BeanUtils;
-
-import java.util.List;
-import java.util.function.BiConsumer;
 
 public class ComplexNameTranslator {
 
@@ -30,8 +31,8 @@ public class ComplexNameTranslator {
      */
     public <E, T> IPage<T> translate(IPage<E> page, BiConsumer<ComplexNameTranslator, T> translator) {
         IPage<T> ePage = new Page<>();
-        BeanUtils.copyBeanProp(ePage, page);
-        if (page != null && !CollectionUtils.isEmpty(page.getRecords())) {
+        BeanUtils.copyProperties(page, ePage);
+        if (!CollectionUtils.isEmpty(page.getRecords())) {
             ePage.getRecords().forEach(d -> translator.accept(this, d));
         }
         return ePage;
@@ -52,7 +53,7 @@ public class ComplexNameTranslator {
         return datas;
     }
 
-    ///**
+    /// **
     // * 翻译自定义类型
     // *
     // * @param data
@@ -60,11 +61,11 @@ public class ComplexNameTranslator {
     // * @param <T>
     // * @return
     // */
-    //public <T> T translate(T data, BiConsumer<ComplexNameTranslator, T> translator) {
-    //    if (data != null) {
-    //        translator.accept(this, data);
-    //    }
-    //    return data;
-    //}
+    // public <T> T translate(T data, BiConsumer<ComplexNameTranslator, T> translator) {
+    // if (data != null) {
+    // translator.accept(this, data);
+    // }
+    // return data;
+    // }
 
 }

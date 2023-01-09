@@ -47,9 +47,21 @@ public class Menu extends BaseEntity implements Serializable {
     @ApiModelProperty(name = "组件路径")
     private String component;
 
+    @ApiModelProperty(name = "路由参数")
+    private String query;
+
+    @ApiModelProperty(name = "是否为外链（1是 0否）")
+    private Integer isFrame;
+
+    @ApiModelProperty(name = "是否缓存（1缓存 0不缓存）")
+    private Integer isCache;
+
     @NotBlank(message = "菜单类型不能为空")
     @ApiModelProperty(name = "菜单类型（M目录 C菜单 F按钮）")
     private String menuType;
+
+    @ApiModelProperty(name = "显示状态（1显示 0隐藏）")
+    private String visible;
 
     @ApiModelProperty(name = "菜单状态（1正常 0停用）")
     private String status;
@@ -57,6 +69,9 @@ public class Menu extends BaseEntity implements Serializable {
     @Size(max = 100, message = "权限标识长度不能超过100个字符")
     @ApiModelProperty(name = "权限标识")
     private String perms;
+
+    @ApiModelProperty(name = "菜单图标")
+    private String icon;
 
     /**
      * 子菜单

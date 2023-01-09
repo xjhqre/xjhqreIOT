@@ -2,85 +2,55 @@ package com.xjhqre.iot.service;
 
 import java.util.List;
 
-import com.ruoyi.common.core.domain.AjaxResult;
-import com.ruoyi.iot.domain.Product;
-import com.ruoyi.iot.model.ChangeProductStatusModel;
-import com.ruoyi.iot.model.IdAndName;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.xjhqre.iot.domain.entity.Product;
 
 /**
- * 产品Service接口
+ * ProductService
  * 
- * @author kerwincui
- * @date 2021-12-16
+ * @author xjhqre
+ * @date 2022-12-18
  */
-public interface ProductService {
-    /**
-     * 查询产品
-     * 
-     * @param productId
-     *            产品主键
-     * @return 产品
-     */
-    public Product selectProductByProductId(Long productId);
+public interface ProductService extends IService<Product> {
 
     /**
-     * 查询产品列表
+     * 分页查询产品
      * 
      * @param product
-     *            产品
-     * @return 产品集合
+     * @param pageNum
+     * @param pageSize
+     * @return
      */
-    public List<Product> selectProductList(Product product);
+    IPage<Product> find(Product product, Integer pageNum, Integer pageSize);
+
+    List<Product> list(Product product);
 
     /**
-     * 查询产品简短列表
+     * 获取产品详情
      *
-     * @return 产品集合
      */
-    public List<IdAndName> selectProductShortList();
+    Product getDetail(Long productId);
 
     /**
-     * 新增产品
+     * 添加产品
      * 
-     * @param product
-     *            产品
-     * @return 结果
      */
-    public Product insertProduct(Product product);
+    void add(Product product);
 
     /**
      * 修改产品
      * 
-     * @param product
-     *            产品
-     * @return 结果
      */
-    public int updateProduct(Product product);
+    void update(Product product);
 
     /**
      * 更新产品状态，1-未发布，2-已发布
-     *
-     * @param model
-     * @return 结果
      */
-    public AjaxResult changeProductStatus(ChangeProductStatusModel model);
+    void changeProductStatus(Long productId, Integer status);
 
     /**
      * 批量删除产品
-     * 
-     * @param productIds
-     *            需要删除的产品主键集合
-     * @return 结果
      */
-    public AjaxResult deleteProductByProductIds(Long[] productIds);
-
-    /**
-     * 删除产品信息
-     * 
-     * @param productId
-     *            产品主键
-     * @return 结果
-     */
-    public int deleteProductByProductId(Long productId);
-
+    void delete(Long[] productIds);
 }

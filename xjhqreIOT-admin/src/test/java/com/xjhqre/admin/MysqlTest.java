@@ -1,7 +1,5 @@
 package com.xjhqre.admin;
 
-import java.util.List;
-
 import javax.annotation.Resource;
 
 import org.junit.Test;
@@ -10,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.xjhqre.common.domain.entity.Menu;
 import com.xjhqre.system.service.MenuService;
 
 /**
@@ -31,7 +28,7 @@ public class MysqlTest {
 
     @Test
     public void test1() {
-        List<Menu> list = this.menuService.list();
-        list.forEach(System.out::println);
+        // List<Menu> list = this.menuService.list();
+        // list.forEach(System.out::println);
     }
 }

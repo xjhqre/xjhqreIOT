@@ -5,7 +5,7 @@ spring:
     driverClassName: com.mysql.cj.jdbc.Driver
     druid:
       url: jdbc:mysql://1.15.88.204:3306/xjhqre_iot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-      username: ENC(RSSBtJfceg1SStaGPVmRDQ==)
+      username: root
       password: ENC(RSSBtJfceg1SStaGPVmRDQ==)
       # 初始连接数
       initialSize: 5

@@ -1,250 +1,191 @@
-// package com.xjhqre.iot.controller;
-//
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.core.page.TableDataInfo;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.iot.domain.Device;
-// import com.ruoyi.iot.model.DeviceAllShortOutput;
-// import com.ruoyi.iot.model.DeviceRelateUserInput;
-// import com.ruoyi.iot.model.DeviceShortOutput;
-// import com.ruoyi.iot.mqtt.EmqxService;
-// import com.ruoyi.iot.service.IDeviceService;
-// import io.swagger.annotations.Api;
-// import io.swagger.annotations.ApiOperation;
-// import org.quartz.SchedulerException;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.context.annotation.Lazy;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.web.bind.annotation.*;
-//
-// import javax.servlet.http.HttpServletResponse;
-// import java.util.ArrayList;
-// import java.util.List;
-//
-/// **
-// * 设备Controller
-// *
-// * @author kerwincui
-// * @date 2021-12-16
-// */
-// @Api(tags = "设备管理")
-// @RestController
-// @RequestMapping("/iot/device")
-// public class DeviceController extends BaseController
-// {
-// @Autowired
-// private IDeviceService deviceService;
-//
-// @Lazy
-// @Autowired
-// private EmqxService emqxService;
-//
-// /**
-// * 查询设备列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/list")
-// @ApiOperation("设备分页列表")
-// public TableDataInfo list(Device device)
-// {
-// startPage();
-// return getDataTable(deviceService.selectDeviceList(device));
-// }
-//
-// /**
-// * 查询未分配授权码设备列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/unAuthlist")
-// @ApiOperation("设备分页列表")
-// public TableDataInfo unAuthlist(Device device)
-// {
-// startPage();
-// return getDataTable(deviceService.selectUnAuthDeviceList(device));
-// }
-//
-// /**
-// * 查询分组可添加设备
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/listByGroup")
-// @ApiOperation("查询分组可添加设备分页列表")
-// public TableDataInfo listByGroup(Device device)
-// {
-// startPage();
-// return getDataTable(deviceService.selectDeviceListByGroup(device));
-// }
-//
-// /**
-// * 查询设备简短列表，主页列表数据
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/shortList")
-// @ApiOperation("设备分页简短列表")
-// public TableDataInfo shortList(Device device)
-// {
-// startPage();
-// return getDataTable(deviceService.selectDeviceShortList(device));
-// }
-//
-// /**
-// * 查询所有设备简短列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/all")
-// @ApiOperation("查询所有设备简短列表")
-// public TableDataInfo allShortList()
-// {
-// return getDataTable(deviceService.selectAllDeviceShortList());
-// }
-//
-// /**
-// * 导出设备列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:export')")
-// @Log(title = "设备", businessType = BusinessType.EXPORT)
-// @PostMapping("/export")
-// @ApiOperation("导出设备")
-// public void export(HttpServletResponse response, Device device)
-// {
-// List<Device> list = deviceService.selectDeviceList(device);
-// ExcelUtil<Device> util = new ExcelUtil<Device>(Device.class);
-// util.exportExcel(response, list, "设备数据");
-// }
-//
-// /**
-// * 获取设备详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/{deviceId}")
-// @ApiOperation("获取设备详情")
-// public AjaxResult getInfo(@PathVariable("deviceId") Long deviceId)
-// {
-// return AjaxResult.success(deviceService.selectDeviceByDeviceId(deviceId));
-// }
-//
-// /**
-// * 设备数据同步
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/synchronization/{serialNumber}")
-// @ApiOperation("设备数据同步")
-// public AjaxResult deviceSynchronization(@PathVariable("serialNumber") String serialNumber)
-// {
-// return AjaxResult.success(emqxService.deviceSynchronization(serialNumber));
-// }
-//
-// /**
-// * 根据设备编号详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/getDeviceBySerialNumber/{serialNumber}")
-// @ApiOperation("根据设备编号获取设备详情")
-// public AjaxResult getInfoBySerialNumber(@PathVariable("serialNumber") String serialNumber)
-// {
-// return AjaxResult.success(deviceService.selectDeviceBySerialNumber(serialNumber));
-// }
-//
-// /**
-// * 获取设备统计信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/statistic")
-// @ApiOperation("获取设备统计信息")
-// public AjaxResult getDeviceStatistic()
-// {
-// return AjaxResult.success(deviceService.selectDeviceStatistic());
-// }
-//
-// /**
-// * 获取设备详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/runningStatus/{deviceId}")
-// @ApiOperation("获取设备详情和运行状态")
-// public AjaxResult getRunningStatusInfo(@PathVariable("deviceId") Long deviceId)
-// {
-// return AjaxResult.success(deviceService.selectDeviceRunningStatusByDeviceId(deviceId));
-// }
-//
-// /**
-// * 新增设备
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:add')")
-// @Log(title = "添加设备", businessType = BusinessType.INSERT)
-// @PostMapping
-// @ApiOperation("添加设备")
-// public AjaxResult add(@RequestBody Device device)
-// {
-// return AjaxResult.success(deviceService.insertDevice(device));
-// }
-//
-// /**
-// * 设备关联用户
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:add')")
-// @Log(title = "设备关联用户", businessType = BusinessType.UPDATE)
-// @PostMapping("/relateUser")
-// @ApiOperation("设备关联用户")
-// public AjaxResult relateUser(@RequestBody DeviceRelateUserInput deviceRelateUserInput)
-// {
-// if(deviceRelateUserInput.getUserId()==0 || deviceRelateUserInput.getUserId()==null){
-// return AjaxResult.error("用户ID不能为空");
-// }
-// if(deviceRelateUserInput.getDeviceNumberAndProductIds()==null ||
-// deviceRelateUserInput.getDeviceNumberAndProductIds().size()==0){
-// return AjaxResult.error("设备编号和产品ID不能为空");
-// }
-// return deviceService.deviceRelateUser(deviceRelateUserInput);
-// }
-//
-// /**
-// * 修改设备
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "修改设备", businessType = BusinessType.UPDATE)
-// @PutMapping
-// @ApiOperation("修改设备")
-// public AjaxResult edit(@RequestBody Device device)
-// {
-// return deviceService.updateDevice(device);
-// }
-//
-// /**
-// * 重置设备状态
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "重置设备状态", businessType = BusinessType.UPDATE)
-// @PutMapping("/reset/{serialNumber}")
-// @ApiOperation("重置设备状态")
-// public AjaxResult resetDeviceStatus(@PathVariable String serialNumber)
-// {
-// Device device=new Device();
-// device.setSerialNumber(serialNumber);
-// return toAjax(deviceService.resetDeviceStatus(device.getSerialNumber()));
-// }
-//
-// /**
-// * 删除设备
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:remove')")
-// @Log(title = "删除设备", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{deviceIds}")
-// @ApiOperation("批量删除设备")
-// public AjaxResult remove(@PathVariable Long[] deviceIds) throws SchedulerException {
-// return toAjax(deviceService.deleteDeviceByDeviceId(deviceIds[0]));
-// }
-//
-// /**
-// * 生成设备编号
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @GetMapping("/generator")
-// @ApiOperation("生成设备编号")
-// public AjaxResult generatorDeviceNum(){
-// return AjaxResult.success("操作成功",deviceService.generationDeviceNum());
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.group.Insert;
+import com.xjhqre.common.group.Update;
+import com.xjhqre.iot.domain.entity.Device;
+import com.xjhqre.iot.domain.model.DeviceStatistic;
+import com.xjhqre.iot.domain.vo.DeviceVO;
+import com.xjhqre.iot.mqtt.EmqxService;
+import com.xjhqre.iot.service.DeviceService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * <p>
+ * 设备操作接口
+ * </p>
+ *
+ * @author xjhqre
+ * @since 12月 19, 2022
+ */
+@Api(tags = "设备操作接口")
+@RestController
+@RequestMapping("/iot/device")
+public class DeviceController extends BaseController {
+    @Resource
+    private DeviceService deviceService;
+    @Resource
+    private EmqxService emqxService;
+
+    @ApiOperation(value = "分页查询设备列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<DeviceVO>> find(Device device, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.deviceService.find(device, pageNum, pageSize));
+    }
+
+    /**
+     * 查询分组可添加设备，设备分组添加设备时用
+     */
+    @ApiOperation(value = "查询分组可添加设备分页列表")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @GetMapping("findByGroup/{pageNum}/{pageSize}")
+    public R<IPage<Device>> findByGroup(Device device, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.deviceService.findByGroup(device, pageNum, pageSize));
+    }
+
+    /**
+     * 查询所有设备
+     */
+    @ApiOperation(value = "查询所有设备")
+
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @GetMapping("/all/{pageNum}/{pageSize}")
+    public R<IPage<Device>> all(Device device, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.deviceService.selectAllDevice(device, pageNum, pageSize));
+    }
+
+    /**
+     * 获取设备详细信息
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("获取设备详情")
+    public R<DeviceVO> getDetail(@RequestParam Long deviceId) {
+        return R.success(this.deviceService.getDetail(deviceId));
+    }
+
+    /**
+     * 设备数据同步
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @GetMapping(value = "/synchronization/{deviceNumber}")
+    @ApiOperation("设备数据同步")
+    public R<Device> deviceSynchronization(@PathVariable("deviceNumber") String deviceNumber) {
+        return R.success(this.emqxService.deviceSynchronization(deviceNumber));
+    }
+
+    /**
+     * 根据设备编号详细信息
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @GetMapping(value = "/getDetailByDeviceNumber/{deviceNumber}")
+    @ApiOperation("根据设备编号获取设备详情")
+    public R<Device> getDetailByDeviceNumber(@PathVariable("deviceNumber") String deviceNumber) {
+        return R.success(this.deviceService.getByDeviceNumber(deviceNumber));
+    }
+
+    /**
+     * 获取设备统计信息
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @GetMapping(value = "/statistic")
+    @ApiOperation("获取设备统计信息")
+    public R<DeviceStatistic> getStatisticInfo() {
+        return R.success(this.deviceService.getStatisticInfo());
+    }
+
+    /**
+     * 新增设备
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:add')")
+    @Log(title = "添加设备", businessType = BusinessType.INSERT)
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("添加设备")
+    public R<String> add(@Validated(Insert.class) Device device) {
+        this.deviceService.add(device);
+        return R.success("添加设备成功");
+    }
+
+    /**
+     * 修改设备
+     */
+    @ApiOperation("修改设备")
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @Log(title = "修改设备", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(@Validated(Update.class) Device device) {
+        this.deviceService.update(device);
+        return R.success("修改设备成功");
+    }
+
+    /**
+     * 重置设备状态
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @Log(title = "重置设备状态", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/reset", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("重置设备状态")
+    public R<String> resetDeviceStatus(@RequestParam String deviceNumber) {
+        this.deviceService.resetDeviceStatus(deviceNumber);
+        return R.success("重置设备状态成功");
+    }
+
+    /**
+     * 删除设备
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:delete')")
+    @Log(title = "删除设备", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("批量删除设备")
+    public R<String> delete(@RequestParam List<Long> deviceIds) {
+        this.deviceService.delete(deviceIds);
+        return R.success("删除设备成功");
+    }
+
+    /**
+     * 生成设备编号
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @RequestMapping(value = "/generator", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("生成设备编号")
+    public R<String> generatorDeviceNum() {
+        return R.success(this.deviceService.generationDeviceNum());
+    }
+}

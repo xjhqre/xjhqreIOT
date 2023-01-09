@@ -91,7 +91,7 @@ public class SecurityUtils {
      *            用户ID
      * @return 结果
      */
-    public static boolean isSuperAdmin(Long userId) {
+    public static boolean isAdmin(Long userId) {
         return userId != null && 100L == userId;
     }
 }

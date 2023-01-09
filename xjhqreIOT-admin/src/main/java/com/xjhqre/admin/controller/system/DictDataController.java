@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -36,7 +38,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xjhqre
  */
 @RestController
-@RequestMapping("/admin/system/dictData")
+@RequestMapping("/system/dictData")
 @Api(value = "字典数据操作接口", tags = "字典数据操作接口")
 public class DictDataController extends BaseController {
     @Autowired
@@ -49,12 +51,19 @@ public class DictDataController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @PreAuthorize("@ss.hasPermission('system:dict:list')")
-    @GetMapping("list/{pageNum}/{pageSize}")
-    public R<IPage<DictData>> listDictData(DictData dictData, @PathVariable("pageNum") Integer pageNum,
+    @GetMapping("findDictData/{pageNum}/{pageSize}")
+    public R<IPage<DictData>> find(DictData dictData, @PathVariable("pageNum") Integer pageNum,
         @PathVariable("pageSize") Integer pageSize) {
-        return R.success(this.dictDataService.findDictData(dictData, pageNum, pageSize));
+        return R.success(this.dictDataService.find(dictData, pageNum, pageSize));
+    }
+
+    @ApiOperation(value = "查询字典数据列表")
+    @PreAuthorize("@ss.hasPermission('system:dict:list')")
+    @RequestMapping(value = "/list", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<List<DictData>> list(DictData dictData) {
+        return R.success(this.dictDataService.list(dictData));
     }
 
     /**
@@ -62,16 +71,16 @@ public class DictDataController extends BaseController {
      */
     @ApiOperation(value = "查询字典数据详情")
     @PreAuthorize("@ss.hasPermission('system:dict:query')")
-    @GetMapping(value = "/{dictCode}")
-    public R<DictData> getInfo(@PathVariable Long dictCode) {
-        return R.success(this.dictDataService.selectDictDataById(dictCode));
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<DictData> getDetail(@RequestParam Long dictCode) {
+        return R.success(this.dictDataService.getDetail(dictCode));
     }
 
     /**
      * 根据字典类型查询字典数据信息
      */
     @ApiOperation(value = "根据字典类型查询字典数据信息")
-    @GetMapping(value = "/type/{dictType}")
+    @GetMapping(value = "/{dictType}")
     public R<List<DictData>> dictType(@PathVariable String dictType) {
         List<DictData> data = this.dictTypeService.selectDictDataByType(dictType);
         if (StringUtils.isNull(data)) {

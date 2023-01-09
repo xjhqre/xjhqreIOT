@@ -22,7 +22,9 @@ public interface UserService extends IService<User> {
      * @param pageSize
      * @return
      */
-    IPage<User> findUser(User user, Integer pageNum, Integer pageSize);
+    IPage<User> find(User user, Integer pageNum, Integer pageSize);
+
+    User getDetail(Long userId);
 
     /**
      * 根据条件分页查询已分配用户角色列表
@@ -50,15 +52,6 @@ public interface UserService extends IService<User> {
      * @return 用户对象信息
      */
     User selectUserByUserName(String userName);
-
-    /**
-     * 通过用户ID查询用户
-     * 
-     * @param userId
-     *            用户ID
-     * @return 用户对象信息
-     */
-    User selectUserById(Long userId);
 
     /**
      * 根据用户ID查询用户所属角色组

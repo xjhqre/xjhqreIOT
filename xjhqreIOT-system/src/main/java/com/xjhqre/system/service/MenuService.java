@@ -4,19 +4,19 @@ import java.util.List;
 import java.util.Set;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.xjhqre.common.domain.entity.Menu;
 import com.xjhqre.common.domain.model.TreeSelect;
+import com.xjhqre.system.domain.vo.RouterVo;
 
 /**
  * 菜单 业务层
- * 
- * @author xjhqre
+ *
+ * @author ruoyi
  */
-public interface MenuService extends IService<Menu> {
+public interface MenuService {
 
     /**
-     * 根据用户查询系统菜单列表
+     * 分页查询
      * 
      * @param menu
      * @param pageNum
@@ -27,32 +27,32 @@ public interface MenuService extends IService<Menu> {
 
     /**
      * 根据用户查询系统菜单列表
-     * 
+     *
+     * @param userId
+     *            用户ID
+     * @return 菜单列表
+     */
+    public List<Menu> selectMenuList(Long userId);
+
+    /**
+     * 根据用户查询系统菜单列表
+     *
      * @param menu
      *            菜单信息
      * @param userId
      *            用户ID
      * @return 菜单列表
      */
-    List<Menu> selectMenuList(Menu menu, Long userId);
+    public List<Menu> selectMenuList(Menu menu, Long userId);
 
     /**
      * 根据用户ID查询权限
-     * 
+     *
      * @param userId
      *            用户ID
      * @return 权限列表
      */
-    Set<String> selectMenuPermsByUserId(Long userId);
-
-    /**
-     * 根据角色ID查询权限
-     * 
-     * @param roleId
-     *            角色ID
-     * @return 权限列表
-     */
-    Set<String> selectMenuPermSetByRoleId(Long roleId);
+    public Set<String> selectMenuPermsByUserId(Long userId);
 
     /**
      * 根据角色ID查询权限
@@ -61,7 +61,43 @@ public interface MenuService extends IService<Menu> {
      *            角色ID
      * @return 权限列表
      */
-    List<Menu> selectMenuListByRoleId(Long roleId);
+    public Set<String> selectMenuPermsByRoleId(Long roleId);
+
+    /**
+     * 根据用户ID查询菜单树信息
+     *
+     * @param userId
+     *            用户ID
+     * @return 菜单列表
+     */
+    public List<Menu> selectMenuTreeByUserId(Long userId);
+
+    /**
+     * 根据角色ID查询菜单树信息
+     *
+     * @param roleId
+     *            角色ID
+     * @return 选中菜单列表
+     */
+    public List<Long> selectMenuListByRoleId(Long roleId);
+
+    /**
+     * 构建前端路由所需要的菜单
+     *
+     * @param menus
+     *            菜单列表
+     * @return 路由列表
+     */
+    public List<RouterVo> buildMenus(List<Menu> menus);
+
+    /**
+     * 构建前端所需要树结构
+     *
+     * @param menus
+     *            菜单列表
+     * @return 树结构列表
+     */
+    public List<Menu> buildMenuTree(List<Menu> menus);
 
     /**
      * 构建前端所需要下拉树结构
@@ -70,77 +106,69 @@ public interface MenuService extends IService<Menu> {
      *            菜单列表
      * @return 下拉树结构列表
      */
-    List<TreeSelect> buildMenuTreeSelect(List<Menu> menus);
-
-    /**
-     * 构建前端所需要树结构
-     * 
-     * @param menus
-     *            菜单列表
-     * @return 树结构列表
-     */
-    List<Menu> buildMenuTree(List<Menu> menus);
+    public List<TreeSelect> buildMenuTreeSelect(List<Menu> menus);
 
     /**
      * 根据菜单ID查询信息
-     * 
+     *
      * @param menuId
      *            菜单ID
      * @return 菜单信息
      */
-    Menu selectMenuById(Long menuId);
+    public Menu selectMenuById(Long menuId);
 
     /**
      * 是否存在菜单子节点
-     * 
+     *
      * @param menuId
      *            菜单ID
      * @return 结果 true 存在 false 不存在
      */
-    boolean hasChildByMenuId(Long menuId);
+    public boolean hasChildByMenuId(Long menuId);
 
     /**
      * 查询菜单是否存在角色
-     * 
+     *
      * @param menuId
      *            菜单ID
      * @return 结果 true 存在 false 不存在
      */
-    boolean checkMenuExistRole(Long menuId);
+    public boolean checkMenuExistRole(Long menuId);
 
     /**
      * 新增保存菜单信息
-     * 
+     *
      * @param menu
      *            菜单信息
      * @return 结果
      */
-    int insertMenu(Menu menu);
+    public int insertMenu(Menu menu);
 
     /**
      * 修改保存菜单信息
-     * 
+     *
      * @param menu
      *            菜单信息
      * @return 结果
      */
-    int updateMenu(Menu menu);
+    public int updateMenu(Menu menu);
 
     /**
      * 删除菜单管理信息
-     * 
+     *
      * @param menuId
      *            菜单ID
      * @return 结果
      */
-    int deleteMenuById(Long menuId);
+    public int deleteMenuById(Long menuId);
 
     /**
      * 校验菜单名称是否唯一
-     * 
+     *
      * @param menu
      *            菜单信息
      * @return 结果
      */
-    Boolean checkMenuNameUnique(Menu menu);
+    public Boolean checkMenuNameUnique(Menu menu);
+
 }

@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xjhqre
  */
 @RestController
-@RequestMapping("/admin/system/dictType")
+@RequestMapping("/system/dictType")
 @Api(value = "字典类型操作接口", tags = "字典类型操作接口")
 public class DictTypeController extends BaseController {
     @Autowired
@@ -44,12 +44,12 @@ public class DictTypeController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
+            example = "10")})
     @PreAuthorize("@ss.hasPermission('system:dict:list')")
-    @GetMapping("list/{pageNum}/{pageSize}")
-    public R<IPage<DictType>> listDictType(DictType dictType, @PathVariable("pageNum") Integer pageNum,
+    @GetMapping("findDictType/{pageNum}/{pageSize}")
+    public R<IPage<DictType>> findDictType(DictType dictType, @PathVariable("pageNum") Integer pageNum,
         @PathVariable("pageSize") Integer pageSize) {
-        return R.success(this.dictTypeService.listDictType(dictType, pageNum, pageSize));
+        return R.success(this.dictTypeService.findDictType(dictType, pageNum, pageSize));
     }
 
     /**

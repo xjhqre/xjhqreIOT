@@ -1,23 +1,29 @@
 package com.xjhqre.iot.service.impl;
 
-import com.ruoyi.common.core.domain.AjaxResult;
-import com.ruoyi.common.core.domain.entity.SysRole;
-import com.ruoyi.common.core.domain.entity.SysUser;
-import com.ruoyi.common.core.redis.RedisCache;
-import com.ruoyi.common.utils.DateUtils;
-import com.ruoyi.iot.domain.Product;
-import com.ruoyi.iot.mapper.ProductAuthorizeMapper;
-import com.ruoyi.iot.mapper.ProductMapper;
-import com.ruoyi.iot.model.ChangeProductStatusModel;
-import com.ruoyi.iot.model.IdAndName;
-import com.ruoyi.iot.service.IProductService;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xjhqre.common.domain.model.LoginUser;
+import com.xjhqre.common.exception.ServiceException;
+import com.xjhqre.common.utils.AssertUtils;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.common.utils.redis.RedisCache;
+import com.xjhqre.common.utils.uuid.RandomUtils;
+import com.xjhqre.iot.domain.entity.Product;
+import com.xjhqre.iot.mapper.ProductMapper;
+import com.xjhqre.iot.service.ProductService;
 
-import static com.ruoyi.common.utils.SecurityUtils.getLoginUser;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 产品Service业务层处理
@@ -26,198 +32,114 @@ import static com.ruoyi.common.utils.SecurityUtils.getLoginUser;
  * @date 2021-12-16
  */
 @Service
-public class ProductServiceImpl implements IProductService 
-{
-    private String tslPreKey ="tsl";
+@Slf4j
+@Transactional(rollbackFor = Exception.class)
+public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
+    // 物模型缓存前缀
+    private final String TSL_PRE_KEY = "tsl:";
 
-    @Autowired
+    @Resource
     private ProductMapper productMapper;
 
-    @Autowired
-    private ProductAuthorizeMapper productAuthorizeMapper;
-
-    @Autowired
+    @Resource
     private RedisCache redisCache;
 
-    @Autowired
-    private ToolServiceImpl toolService;
-
-    /**
-     * 查询产品
-     * 
-     * @param productId 产品主键
-     * @return 产品
-     */
     @Override
-    public Product selectProductByProductId(Long productId)
-    {
-        return productMapper.selectProductByProductId(productId);
-    }
+    public IPage<Product> find(Product product, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(product.getProductId() != null, Product::getProductId, product.getProductId())
+            .like(product.getProductName() != null, Product::getProductName, product.getProductName())
+            .eq(product.getStatus() != null, Product::getStatus, product.getStatus())
+            .eq(product.getDeviceType() != null, Product::getDeviceType, product.getDeviceType());
 
-    /**
-     * 查询产品列表
-     * 
-     * @param product 产品
-     * @return 产品
-     */
-    @Override
-    public List<Product> selectProductList(Product product)
-    {
-        SysUser user = getLoginUser().getUser();
-        List<SysRole> roles=user.getRoles();
-        // 租户
-        if(roles.stream().anyMatch(a->a.getRoleKey().equals("tenant"))){
-            product.setTenantId(user.getUserId());
+        LoginUser user = SecurityUtils.getLoginUser();
+        if (!SecurityUtils.isAdmin(user.getUserId())) {
+            wrapper.eq(Product::getUserId, SecurityUtils.getUserId());
         }
-        return productMapper.selectProductList(product);
+
+        return this.productMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
-    /**
-     * 查询产品简短列表
-     *
-     * @return 产品
-     */
     @Override
-    public List<IdAndName> selectProductShortList()
-    {
-        Product product =new Product();
-        SysUser user = getLoginUser().getUser();
-        List<SysRole> roles=user.getRoles();
-        // 租户
-        if(roles.stream().anyMatch(a->a.getRoleKey().equals("tenant"))){
-            product.setTenantId(user.getUserId());
+    public List<Product> list(Product product) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(product.getProductId() != null, Product::getProductId, product.getProductId())
+            .like(product.getProductName() != null, Product::getProductName, product.getProductName())
+            .eq(product.getStatus() != null, Product::getStatus, product.getStatus())
+            .eq(product.getDeviceType() != null, Product::getDeviceType, product.getDeviceType());
+
+        LoginUser user = SecurityUtils.getLoginUser();
+        if (!SecurityUtils.isAdmin(user.getUserId())) {
+            wrapper.eq(Product::getUserId, SecurityUtils.getUserId());
         }
-        return productMapper.selectProductShortList(product);
+
+        return this.productMapper.selectList(wrapper);
     }
 
     /**
-     * 新增产品
-     * 
-     * @param product 产品
-     * @return 结果
+     * 获取产品详情
      */
     @Override
-    public Product insertProduct(Product product)
-    {
+    public Product getDetail(Long productId) {
+        return this.productMapper.selectById(productId);
+    }
+
+    /**
+     * 添加产品
+     */
+    @Override
+    public void add(Product product) {
         // 判断是否为管理员
-        product.setIsSys(1);
-        SysUser user = getLoginUser().getUser();
-        List<SysRole> roles=user.getRoles();
-        for(int i=0;i<roles.size();i++){
-            if(roles.get(i).getRoleKey().equals("tenant") || roles.get(i).getRoleKey().equals("general")){
-                product.setIsSys(0);
-                break;
-            }
-        }
-        // mqtt账号密码
-        product.setMqttAccount("wumei-smart");
-        product.setMqttPassword("P"+toolService.getStringRandom(15));
-        product.setMqttSecret("K"+toolService.getStringRandom(15));
-        product.setStatus(product.getStatus()==null?1:product.getStatus());
-        product.setTenantId(user.getUserId());
-        product.setTenantName(user.getUserName());
+        product.setProductSecret("K" + RandomUtils.randomString(15));
+        product.setStatus(product.getStatus() == null ? 1 : product.getStatus());
         product.setCreateTime(DateUtils.getNowDate());
-        productMapper.insertProduct(product);
-        return product;
+        product.setCreateBy(SecurityUtils.getUsername());
+        this.productMapper.insert(product);
     }
 
     /**
      * 修改产品
-     * 
-     * @param product 产品
-     * @return 结果
      */
     @Override
-    public int updateProduct(Product product)
-    {
+    public void update(Product product) {
+        product.setUpdateBy(SecurityUtils.getUsername());
         product.setUpdateTime(DateUtils.getNowDate());
-        return productMapper.updateProduct(product);
+        this.productMapper.updateById(product);
     }
 
-    /**
-     * 更新产品状态,1-未发布，2-已发布
-     *
-     * @param model
-     * @return 结果
-     */
     @Override
-    public AjaxResult changeProductStatus(ChangeProductStatusModel model)
-    {
-        if(model.getStatus()==1){
+    public void changeProductStatus(Long productId, Integer status) {
+        if (status == 1) {
             // 产品下不能有设备
             Long[] productIds = new Long[1];
-            productIds[0]=model.getProductId();
-            int deviceCount=productMapper.deviceCountInProducts(productIds);
-            if(deviceCount>0){
-                return AjaxResult.error("取消发布失败，请先删除产品下的设备");
-            }
-        }else if(model.getStatus()==2){
+            productIds[0] = productId;
+            int deviceCount = this.productMapper.deviceCountInProducts(productIds);
+            AssertUtils.isTrue(deviceCount == 0, "取消发布失败，请先删除产品下的设备");
+        } else if (status == 2) {
             // 产品下必须包含物模型
-            int thingsCount=productMapper.thingsCountInProduct(model.getProductId());
-            if(thingsCount==0){
-                return AjaxResult.error("发布失败，请先添加产品的物模型");
-            }
-            // 产品下物模型的标识符必须唯一
-            int repeatCount=productMapper.thingsRepeatCountInProduct(model.getProductId());
-            if(repeatCount>1){
-                return AjaxResult.error("发布失败，产品物模型的标识符必须唯一");
-            }
-        }else{
-            return AjaxResult.error("状态更新失败,状态值有误");
+            int thingsCount = this.productMapper.thingsCountInProduct(productId);
+            AssertUtils.isTrue(thingsCount != 0, "发布失败，请先添加产品的物模型");
+        } else {
+            throw new ServiceException("状态更新失败,状态值有误");
         }
-        if(productMapper.changeProductStatus(model)>0){
-            return AjaxResult.success("操作成功");
-        }
-        return AjaxResult.error("状态更新失败");
+        this.productMapper.changeProductStatus(productId, status);
     }
 
-    /**
-     * 批量删除产品
-     * 
-     * @param productIds 需要删除的产品主键
-     * @return 结果
-     */
     @Override
-    @Transactional
-    public AjaxResult deleteProductByProductIds(Long[] productIds)
-    {
+    public void delete(Long[] productIds) {
         // 删除物模型JSON缓存
-        for(int i=0;i<productIds.length;i++){
-            redisCache.deleteObject(tslPreKey+productIds[i]);
+        for (Long productId : productIds) {
+            this.redisCache.deleteObject(this.TSL_PRE_KEY + productId);
         }
         // 产品下不能有固件
-        int firmwareCount=productMapper.firmwareCountInProducts(productIds);
-        if(firmwareCount>0){
-            return AjaxResult.error("删除失败，请先删除对应产品下的固件");
-        }
+        int firmwareCount = this.productMapper.firmwareCountInProducts(productIds);
+        AssertUtils.isTrue(!(firmwareCount > 0), "删除失败，请先删除对应产品下的固件");
         // 产品下不能有设备
-        int deviceCount=productMapper.deviceCountInProducts(productIds);
-        if(deviceCount>0){
-            return AjaxResult.error("删除失败，请先删除对应产品下的设备");
-        }
+        int deviceCount = this.productMapper.deviceCountInProducts(productIds);
+        AssertUtils.isTrue(!(deviceCount > 0), "删除失败，请先删除对应产品下的设备");
         // 删除产品物模型
-        productMapper.deleteProductThingsModelByProductIds(productIds);
-        // 删除产品的授权码
-        productAuthorizeMapper.deleteProductAuthorizeByProductIds(productIds);
+        this.productMapper.deleteProductThingsModelByProductIds(productIds);
         // 删除产品
-        if(productMapper.deleteProductByProductIds(productIds)>0){
-            return AjaxResult.success("删除成功");
-        }
-        return AjaxResult.error("删除失败");
-    }
-
-
-    /**
-     * 删除产品信息
-     * 
-     * @param productId 产品主键
-     * @return 结果
-     */
-    @Override
-    public int deleteProductByProductId(Long productId)
-    {
-        // 删除物模型JSON缓存
-        redisCache.deleteObject(tslPreKey+productId);
-        return productMapper.deleteProductByProductId(productId);
+        this.productMapper.deleteBatchIds(Arrays.asList(productIds));
     }
 }

@@ -1,5 +1,7 @@
 package com.xjhqre.system.service;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xjhqre.common.domain.entity.DictData;
 
@@ -18,7 +20,13 @@ public interface DictDataService {
      * @param pageSize
      * @return
      */
-    IPage<DictData> findDictData(DictData dictData, Integer pageNum, Integer pageSize);
+    IPage<DictData> find(DictData dictData, Integer pageNum, Integer pageSize);
+
+    /**
+     * 查询字典条目列表
+     *
+     */
+    List<DictData> list(DictData dictData);
 
     /**
      * 根据字典类型和字典键值查询字典数据信息
@@ -38,7 +46,7 @@ public interface DictDataService {
      *            字典数据ID
      * @return 字典数据
      */
-    DictData selectDictDataById(Long dictCode);
+    DictData getDetail(Long dictCode);
 
     /**
      * 批量删除字典数据信息
@@ -65,5 +73,4 @@ public interface DictDataService {
      * @return 结果
      */
     void updateDictData(DictData dictData);
-
 }

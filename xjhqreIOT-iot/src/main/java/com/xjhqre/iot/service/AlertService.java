@@ -2,7 +2,8 @@ package com.xjhqre.iot.service;
 
 import java.util.List;
 
-import com.xjhqre.iot.domain.Alert;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.iot.domain.entity.Alert;
 
 /**
  * 设备告警Service接口
@@ -11,57 +12,32 @@ import com.xjhqre.iot.domain.Alert;
  * @date 2022-01-13
  */
 public interface AlertService {
-    /**
-     * 查询设备告警
-     * 
-     * @param alertId
-     *            设备告警主键
-     * @return 设备告警
-     */
-    Alert selectAlertByAlertId(Long alertId);
 
     /**
-     * 查询设备告警列表
-     * 
-     * @param alert
-     *            设备告警
-     * @return 设备告警集合
+     * 分页查询产品告警设置列表
      */
-    List<Alert> selectAlertList(Alert alert);
+    IPage<Alert> find(Alert alert, Integer pageNum, Integer pageSize);
 
     /**
-     * 新增设备告警
-     * 
-     * @param alert
-     *            设备告警
-     * @return 结果
+     * 获取产品告警设置详情
+     *
      */
-    int insertAlert(Alert alert);
+    Alert getDetail(Long alertId);
 
     /**
-     * 修改设备告警
-     * 
-     * @param alert
-     *            设备告警
-     * @return 结果
+     * 添加产品告警设置
      */
-    int updateAlert(Alert alert);
+    void add(Alert alert);
 
     /**
-     * 批量删除设备告警
-     * 
-     * @param alertIds
-     *            需要删除的设备告警主键集合
-     * @return 结果
+     * 修改产品告警设置
+     *
      */
-    int deleteAlertByAlertIds(Long[] alertIds);
+    void update(Alert alert);
 
     /**
-     * 删除设备告警信息
-     * 
-     * @param alertId
-     *            设备告警主键
-     * @return 结果
+     * 删除产品告警设置
+     *
      */
-    int deleteAlertByAlertId(Long alertId);
+    void delete(List<Long> alertIds);
 }

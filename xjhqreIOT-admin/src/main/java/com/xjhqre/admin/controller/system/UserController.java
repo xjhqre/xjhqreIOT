@@ -1,19 +1,16 @@
 package com.xjhqre.admin.controller.system;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -42,7 +39,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @RestController
 @Api(value = "用户操作接口", tags = "用户操作接口")
-@RequestMapping("/admin/system/user")
+@RequestMapping("/system/user")
 public class UserController extends BaseController {
     @Autowired
     private UserService userService;
@@ -54,12 +51,12 @@ public class UserController extends BaseController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
         @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "20")})
-    @GetMapping("findUser/{pageNum}/{pageSize}")
+            example = "10")})
+    @GetMapping("find/{pageNum}/{pageSize}")
     @PreAuthorize("@ss.hasPermission('system:user:list')")
-    public R<IPage<User>> findUser(User user, @PathVariable("pageNum") Integer pageNum,
+    public R<IPage<User>> find(User user, @PathVariable("pageNum") Integer pageNum,
         @PathVariable("pageSize") Integer pageSize) {
-        return R.success(this.userService.findUser(user, pageNum, pageSize));
+        return R.success(this.userService.find(user, pageNum, pageSize));
     }
 
     /**
@@ -67,14 +64,9 @@ public class UserController extends BaseController {
      */
     @ApiOperation(value = "根据用户编号获取详细信息")
     @PreAuthorize("@ss.hasPermission('system:user:query')")
-    @GetMapping(value = "/{userId}")
-    public R<User> getInfo(@PathVariable(value = "userId") Long userId) {
-        User user = this.userService.selectUserById(userId);
-        List<Role> roles = this.roleService.selectRolesByUserId(userId);
-        List<Long> roleIds = user.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
-        user.setRoles(roles);
-        user.setRoleIds(roleIds);
-        return R.success(user);
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<User> getDetail(@RequestParam Long userId) {
+        return R.success(this.userService.getDetail(userId));
     }
 
     /**
@@ -83,8 +75,8 @@ public class UserController extends BaseController {
     @ApiOperation(value = "添加用户")
     @PreAuthorize("@ss.hasPermission('system:user:add')")
     @Log(title = "用户管理", businessType = BusinessType.INSERT)
-    @PostMapping
-    public R<String> add(@Validated @RequestBody User user) {
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> add(@Validated User user) {
         if (Constants.NOT_UNIQUE.equals(this.userService.checkUserNameUnique(user))) {
             return R.error("新增用户'" + user.getUserName() + "'失败，登录账号已存在");
         } else if (StringUtils.isNotEmpty(user.getMobile())
@@ -105,10 +97,10 @@ public class UserController extends BaseController {
      * 修改用户
      */
     @ApiOperation(value = "修改用户")
-    @PreAuthorize("@ss.hasPermission('system:user:edit')")
+    @PreAuthorize("@ss.hasPermission('system:user:update')")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
-    @PutMapping
-    public R<String> edit(@Validated @RequestBody User user) {
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(@Validated User user) {
         this.userService.checkUserAllowed(user.getUserId());
         if (Constants.NOT_UNIQUE.equals(this.userService.checkUserNameUnique(user))) {
             return R.error("修改用户'" + user.getUserName() + "'失败，登录账号已存在");
@@ -128,10 +120,10 @@ public class UserController extends BaseController {
      * 删除用户
      */
     @ApiOperation(value = "删除用户")
-    @PreAuthorize("@ss.hasPermission('system:user:remove')")
+    @PreAuthorize("@ss.hasPermission('system:user:delete')")
     @Log(title = "用户管理", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{userIds}")
-    public R<String> remove(@PathVariable Long[] userIds) {
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@RequestParam Long[] userIds) {
         // 不能删除当前登陆用户
         if (ArrayUtils.contains(userIds, this.getUserId())) {
             return R.error("当前用户不能删除");

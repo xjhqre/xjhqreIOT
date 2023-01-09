@@ -1,63 +1,65 @@
 package com.xjhqre.iot.mqtt;
 
-import com.ruoyi.framework.web.domain.server.Sys;
-import org.eclipse.paho.client.mqttv3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import javax.annotation.Resource;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Classname MqttCallback
  * @Description 消费监听类
  */
+@Slf4j
 @Component
 public class EmqxCallback implements MqttCallbackExtended {
-    private static final Logger logger = LoggerFactory.getLogger(EmqxCallback.class);
-
-    @Autowired
-    private EmqxClient emqxClient;
-
-    @Lazy
-    @Autowired
+    @Resource
     private EmqxService emqxService;
 
     @Override
     public void connectionLost(Throwable throwable) {
-            logger.info("mqtt断开连接--");
+        throwable.printStackTrace();
+        log.info("mqtt断开连接--");
 
     }
 
-
-
+    /**
+     * 收到消息调用的方法
+     * 
+     * @param topic
+     *            主题
+     * @param mqttMessage
+     *            消息体
+     */
     @Override
-    public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-        emqxService.subscribeCallback(topic,mqttMessage);
+    public void messageArrived(String topic, MqttMessage mqttMessage) {
+        this.emqxService.subscribeCallback(topic, mqttMessage);
     }
 
     /**
      * 发布消息后，到达MQTT服务器，服务器回调消息接收
-     * @param iMqttDeliveryToken
      */
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
         // 消息到达 MQTT 代理时触发的事件
+        log.info("消息到达EMQX");
     }
 
     /**
      * 监听mqtt连接消息
-     * @param reconnect
-     * @param serverURI
      */
     @Override
     public void connectComplete(boolean reconnect, String serverURI) {
-        logger.info("mqtt已经连接！！");
-        //连接后，可以在此做初始化事件，或订阅
+        log.info("mqtt已经连接！！");
+        // 连接后，可以在此做初始化事件，或订阅
         try {
-            emqxService.subscribe(EmqxClient.client);
+            this.emqxService.subscribe(EmqxClient.asyncClient);
         } catch (MqttException e) {
-            logger.error("======>>>>>订阅主题失败 error={}",e.getMessage());
+            log.error("======>>>>>订阅主题失败 error={}", e.getMessage());
         }
     }
 }

@@ -49,13 +49,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public IPage<User> findUser(User user, Integer pageNum, Integer pageSize) {
+    public IPage<User> find(User user, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(user.getUserId() != null, User::getUserId, user.getUserId())
             .like(user.getUserName() != null, User::getUserName, user.getUserName())
+            .like(user.getNickName() != null, User::getNickName, user.getNickName())
             .eq(user.getStatus() != null, User::getStatus, user.getStatus())
             .like(user.getMobile() != null, User::getMobile, user.getMobile());
         return this.userMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    @Override
+    public User getDetail(Long userId) {
+        User user = this.userMapper.selectById(userId);
+        List<Role> roles = this.roleService.selectRolesByUserId(userId);
+        List<Long> roleIds = user.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
+        user.setRoles(roles);
+        user.setRoleIds(roleIds);
+        return user;
     }
 
     /**
@@ -96,18 +107,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUserName, userName);
         return this.userMapper.selectOne(wrapper);
-    }
-
-    /**
-     * 通过用户ID查询用户
-     * 
-     * @param userId
-     *            用户ID
-     * @return 用户对象信息
-     */
-    @Override
-    public User selectUserById(Long userId) {
-        return this.userMapper.selectById(userId);
     }
 
     /**
@@ -186,7 +185,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public void checkUserAllowed(Long userId) {
         // TODO 管理员不能删除管理员
-        if (StringUtils.isNotNull(userId) && SecurityUtils.isSuperAdmin(userId)) {
+        if (StringUtils.isNotNull(userId) && SecurityUtils.isAdmin(userId)) {
             throw new ServiceException("不允许操作超级管理员用户");
         }
     }

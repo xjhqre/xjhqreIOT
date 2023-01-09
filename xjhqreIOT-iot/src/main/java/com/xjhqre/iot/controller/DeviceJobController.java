@@ -1,136 +1,131 @@
-// package com.xjhqre.iot.controller;
-//
-// import com.ruoyi.common.annotation.Log;
-// import com.ruoyi.common.core.controller.BaseController;
-// import com.ruoyi.common.core.domain.AjaxResult;
-// import com.ruoyi.common.core.page.TableDataInfo;
-// import com.ruoyi.common.enums.BusinessType;
-// import com.ruoyi.common.exception.job.TaskException;
-// import com.ruoyi.common.utils.poi.ExcelUtil;
-// import com.ruoyi.iot.domain.DeviceJob;
-// import com.ruoyi.iot.service.IDeviceJobService;
-// import com.ruoyi.quartz.util.CronUtils;
-// import org.quartz.SchedulerException;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.web.bind.annotation.*;
-//
-// import javax.servlet.http.HttpServletResponse;
-// import java.util.List;
-//
-/// **
-// * 调度任务信息操作处理
-// *
-// * @author kerwincui
-// */
-// @RestController
-// @RequestMapping("/iot/job")
-// public class DeviceJobController extends BaseController
-// {
-// @Autowired
-// private IDeviceJobService jobService;
-//
-// /**
-// * 查询定时任务列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:list')")
-// @GetMapping("/list")
-// public TableDataInfo list(DeviceJob deviceJob)
-// {
-// startPage();
-// List<DeviceJob> list = jobService.selectJobList(deviceJob);
-// return getDataTable(list);
-// }
-//
-// /**
-// * 导出定时任务列表
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:export')")
-// @Log(title = "定时任务", businessType = BusinessType.EXPORT)
-// @PostMapping("/export")
-// public void export(HttpServletResponse response, DeviceJob deviceJob)
-// {
-// List<DeviceJob> list = jobService.selectJobList(deviceJob);
-// ExcelUtil<DeviceJob> util = new ExcelUtil<DeviceJob>(DeviceJob.class);
-// util.exportExcel(response, list, "定时任务");
-// }
-//
-// /**
-// * 获取定时任务详细信息
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:query')")
-// @GetMapping(value = "/{jobId}")
-// public AjaxResult getInfo(@PathVariable("jobId") Long jobId)
-// {
-// return AjaxResult.success(jobService.selectJobById(jobId));
-// }
-//
-// /**
-// * 新增定时任务
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:add')")
-// @Log(title = "定时任务", businessType = BusinessType.INSERT)
-// @PostMapping
-// public AjaxResult add(@RequestBody DeviceJob job) throws SchedulerException, TaskException
-// {
-// if (!CronUtils.isValid(job.getCronExpression()))
-// {
-// return error("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
-// }
-// job.setCreateBy(getUsername());
-// return toAjax(jobService.insertJob(job));
-// }
-//
-// /**
-// * 修改定时任务
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "定时任务", businessType = BusinessType.UPDATE)
-// @PutMapping
-// public AjaxResult edit(@RequestBody DeviceJob job) throws SchedulerException, TaskException
-// {
-// if (!CronUtils.isValid(job.getCronExpression()))
-// {
-// return error("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
-// }
-// job.setUpdateBy(getUsername());
-// return toAjax(jobService.updateJob(job));
-// }
-//
-// /**
-// * 定时任务状态修改
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "定时任务", businessType = BusinessType.UPDATE)
-// @PutMapping("/changeStatus")
-// public AjaxResult changeStatus(@RequestBody DeviceJob job) throws SchedulerException
-// {
-// DeviceJob newJob = jobService.selectJobById(job.getJobId());
-// newJob.setStatus(job.getStatus());
-// return toAjax(jobService.changeStatus(newJob));
-// }
-//
-// /**
-// * 定时任务立即执行一次
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:edit')")
-// @Log(title = "定时任务", businessType = BusinessType.UPDATE)
-// @PutMapping("/run")
-// public AjaxResult run(@RequestBody DeviceJob job) throws SchedulerException
-// {
-// jobService.run(job);
-// return AjaxResult.success();
-// }
-//
-// /**
-// * 删除定时任务
-// */
-// @PreAuthorize("@ss.hasPermi('iot:device:remove')")
-// @Log(title = "定时任务", businessType = BusinessType.DELETE)
-// @DeleteMapping("/{jobIds}")
-// public AjaxResult remove(@PathVariable Long[] jobIds) throws SchedulerException, TaskException
-// {
-// jobService.deleteJobByIds(jobIds);
-// return AjaxResult.success();
-// }
-// }
+package com.xjhqre.iot.controller;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.quartz.SchedulerException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.common.annotation.Log;
+import com.xjhqre.common.base.BaseController;
+import com.xjhqre.common.domain.R;
+import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.exception.TaskException;
+import com.xjhqre.iot.domain.entity.DeviceJob;
+import com.xjhqre.iot.service.DeviceJobService;
+import com.xjhqre.quartz.util.CronUtils;
+
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+
+/**
+ * 调度任务信息操作处理
+ *
+ * @author xjhqre
+ * @since 2023-1-6
+ */
+@RestController
+@RequestMapping("/iot/deviceJob")
+public class DeviceJobController extends BaseController {
+
+    @Resource
+    private DeviceJobService deviceJobService;
+
+    @ApiOperation(value = "分页查询设备定时任务")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
+        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
+            example = "10")})
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @GetMapping("find/{pageNum}/{pageSize}")
+    public R<IPage<DeviceJob>> find(DeviceJob deviceJob, @PathVariable("pageNum") Integer pageNum,
+        @PathVariable("pageSize") Integer pageSize) {
+        return R.success(this.deviceJobService.find(deviceJob, pageNum, pageSize));
+    }
+
+    /**
+     * 获取设备定时任务详情
+     */
+    @ApiOperation(value = "获取设备定时任务详情")
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<DeviceJob> getDetail(@RequestParam Long jobId) {
+        return R.success(this.deviceJobService.getDetail(jobId));
+    }
+
+    /**
+     * 新增设备定时任务
+     */
+    @ApiOperation(value = "新增设备定时任务")
+    @PreAuthorize("@ss.hasPermission('iot:device:add')")
+    @Log(title = "设备定时任务", businessType = BusinessType.INSERT)
+    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> add(DeviceJob job) throws SchedulerException, TaskException {
+        if (!CronUtils.isValid(job.getCronExpression())) {
+            return R.error("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
+        }
+        this.deviceJobService.add(job);
+        return R.success("添加设备定时任务成功");
+    }
+
+    /**
+     * 修改设备定时任务
+     */
+    @ApiOperation(value = "修改设备定时任务")
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> update(DeviceJob job) throws SchedulerException, TaskException {
+        if (!CronUtils.isValid(job.getCronExpression())) {
+            return R.error("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
+        }
+        this.deviceJobService.update(job);
+        return R.success("修改设备定时任务成功");
+    }
+
+    /**
+     * 设备定时任务状态修改
+     */
+    @ApiOperation(value = "设备定时任务状态修改")
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/changeStatus", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> changeStatus(DeviceJob job) throws SchedulerException {
+        this.deviceJobService.changeStatus(job);
+        return R.success("定时任务状态修改成功");
+    }
+
+    /**
+     * 设备定时任务立即执行一次
+     */
+    @ApiOperation(value = "设备定时任务立即执行一次")
+    @PreAuthorize("@ss.hasPermission('iot:device:edit')")
+    @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
+    @RequestMapping(value = "/run", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> run(DeviceJob job) {
+        this.deviceJobService.run(job);
+        return R.success("执行成功");
+    }
+
+    /**
+     * 删除设备定时任务
+     */
+    @ApiOperation(value = "删除设备定时任务")
+    @PreAuthorize("@ss.hasPermission('iot:device:delete')")
+    @Log(title = "设备定时任务", businessType = BusinessType.DELETE)
+    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@RequestParam List<Long> jobIdList) throws SchedulerException, TaskException {
+        this.deviceJobService.delete(jobIdList);
+        return R.success("删除设备定时任务成功");
+    }
+
+}

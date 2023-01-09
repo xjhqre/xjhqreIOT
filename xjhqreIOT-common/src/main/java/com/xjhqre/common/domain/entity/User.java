@@ -105,11 +105,11 @@ public class User extends BaseEntity implements Serializable {
     @TableField(exist = false)
     private List<Long> roleIds;
 
-    public boolean isSuperAdmin() {
-        return isSuperAdmin(this.userId);
+    public boolean isAdmin() {
+        return isAdmin(this.userId);
     }
 
-    public static boolean isSuperAdmin(Long userId) {
+    public static boolean isAdmin(Long userId) {
         return userId != null && 100L == userId;
     }
 

@@ -37,8 +37,8 @@ public class PermissionService {
     public Set<String> getRolePermission(User user) {
         Set<String> roleKeys = new HashSet<>();
         // 管理员拥有所有权限
-        if (user.isSuperAdmin()) {
-            roleKeys.add("superAdmin");
+        if (user.isAdmin()) {
+            roleKeys.add("Admin");
         } else {
             List<Role> roles = this.roleService.selectRolesByUserId(user.getUserId());
             roleKeys = roles.stream().map(Role::getRoleKey).collect(Collectors.toSet());
@@ -56,7 +56,7 @@ public class PermissionService {
     public Set<String> getMenuPermission(User user) {
         Set<String> perms = new HashSet<>();
         // 超级管理员拥有所有权限
-        if (user.isSuperAdmin()) {
+        if (user.isAdmin()) {
             perms.add("*:*:*");
         } else {
             List<Role> roles = user.getRoles();
@@ -64,7 +64,7 @@ public class PermissionService {
                 // 多角色设置permissions属性，以便数据权限匹配权限
                 for (Role role : roles) {
                     // 使用Set对权限进行去重
-                    Set<String> rolePerms = this.menuService.selectMenuPermSetByRoleId(role.getRoleId());
+                    Set<String> rolePerms = this.menuService.selectMenuPermsByRoleId(role.getRoleId());
                     role.setPermissions(rolePerms);
                     perms.addAll(rolePerms);
                 }
