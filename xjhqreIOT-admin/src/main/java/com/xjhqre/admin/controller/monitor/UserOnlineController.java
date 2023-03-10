@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -25,8 +27,6 @@ import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.redis.RedisCache;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -39,18 +39,14 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/monitor/online")
 public class UserOnlineController extends BaseController {
 
-    @Autowired
+    @Resource
     private RedisCache redisCache;
 
     @ApiOperation(value = "分页查询在线用户列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('monitor:online:list')")
-    @GetMapping("list/{pageNum}/{pageSize}")
-    public R<IPage<UserOnline>> listUserOnline(String ipaddr, String userName, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<UserOnline>> find(String ipaddr, String userName, @RequestParam Integer pageNum,
+        @RequestParam Integer pageSize) {
         // 获取所有以 login_tokens: 开头的键
         Collection<String> keys = this.redisCache.keys(CacheConstants.LOGIN_TOKEN_KEY + "*");
         List<UserOnline> userOnlineList = new ArrayList<>();

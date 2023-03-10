@@ -18,7 +18,7 @@ import com.xjhqre.iot.service.SceneService;
 /**
  * 场景联动Service业务层处理
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2022-01-13
  */
 @Service
@@ -31,9 +31,11 @@ public class SceneServiceImpl implements SceneService {
     public IPage<Scene> find(Scene scene, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Scene> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(scene.getSceneId() != null, Scene::getSceneId, scene.getSceneId())
-            .like(scene.getSceneName() != null, Scene::getSceneName, scene.getSceneName())
+            .like(scene.getSceneName() != null && !"".equals(scene.getSceneName()), Scene::getSceneName,
+                scene.getSceneName())
             .eq(scene.getUserId() != null, Scene::getUserId, scene.getUserId())
-            .like(scene.getUserName() != null, Scene::getUserName, scene.getUserName());
+            .like(scene.getUserName() != null && !"".equals(scene.getUserName()), Scene::getUserName,
+                scene.getUserName());
         return this.sceneMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

@@ -8,6 +8,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,8 +27,6 @@ import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.service.ThingsModelService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -44,14 +45,10 @@ public class ThingsModelController extends BaseController {
     private ThingsModelService thingsModelService;
 
     @ApiOperation(value = "分页查询产品物模型列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:model:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<ThingsModel>> find(ThingsModel thingsModel, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<ThingsModel>> find(ThingsModel thingsModel, @RequestParam Integer pageNum,
+        @RequestParam Integer pageSize) {
         return R.success(this.thingsModelService.find(thingsModel, pageNum, pageSize));
     }
 
@@ -68,7 +65,7 @@ public class ThingsModelController extends BaseController {
     @PreAuthorize("@ss.hasPermission('iot:model:query')")
     @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("查询产品物模型详情")
-    public R<ThingsModel> getInfo(@RequestParam Long modelId) {
+    public R<ThingsModel> getDetail(@RequestParam Long modelId) {
         return R.success(this.thingsModelService.getDetail(modelId));
     }
 
@@ -77,9 +74,9 @@ public class ThingsModelController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:model:add')")
     @Log(title = "物模型", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    @PostMapping("/add")
     @ApiOperation("添加产品物模型")
-    public R<String> add(@Validated(Insert.class) ThingsModel thingsModel) {
+    public R<String> add(@Validated(Insert.class) @RequestBody ThingsModel thingsModel) {
         this.thingsModelService.add(thingsModel);
         return R.success("添加产品物模型成功");
     }
@@ -89,9 +86,9 @@ public class ThingsModelController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:model:update')")
     @Log(title = "物模型", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    @PutMapping("/update")
     @ApiOperation("修改产品物模型")
-    public R<String> update(@Validated(Update.class) ThingsModel thingsModel) {
+    public R<String> update(@Validated(Update.class) @RequestBody ThingsModel thingsModel) {
         this.thingsModelService.update(thingsModel);
         return R.success("修改产品物模型成功");
     }
@@ -101,9 +98,9 @@ public class ThingsModelController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:model:delete')")
     @Log(title = "物模型", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/delete/{modelIds}", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("批量删除产品物模型")
-    public R<String> delete(@RequestParam List<Long> modelIds) {
+    public R<String> delete(@PathVariable List<Long> modelIds) {
         this.thingsModelService.delete(modelIds);
         return R.success("删除产品物模型成功");
     }

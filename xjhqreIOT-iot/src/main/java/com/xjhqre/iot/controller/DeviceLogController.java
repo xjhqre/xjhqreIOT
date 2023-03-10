@@ -21,14 +21,12 @@ import com.xjhqre.iot.domain.entity.DeviceLog;
 import com.xjhqre.iot.service.DeviceLogService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
  * 设备日志接口
  *
- * @author kerwincui
+ * @author xjhqre
  * @since 2023-01-6
  */
 @Api(tags = "设备日志接口")
@@ -39,14 +37,10 @@ public class DeviceLogController extends BaseController {
     private DeviceLogService deviceLogService;
 
     @ApiOperation(value = "分页查询设备日志列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:device:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<DeviceLog>> find(DeviceLog deviceLog, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<DeviceLog>> find(DeviceLog deviceLog, @RequestParam Integer pageNum,
+        @RequestParam Integer pageSize) {
         return R.success(this.deviceLogService.find(deviceLog, pageNum, pageSize));
     }
 
@@ -86,8 +80,8 @@ public class DeviceLogController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:device:delete')")
     @Log(title = "设备日志", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> delete(@RequestParam List<Long> logIds) {
+    @RequestMapping(value = "/delete/{logIds}", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@PathVariable List<Long> logIds) {
         this.deviceLogService.delete(logIds);
         return R.success("删除设备日志");
     }

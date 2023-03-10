@@ -3,15 +3,16 @@ package com.xjhqre.iot.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.xjhqre.iot.domain.entity.Alert;
 
 /**
  * 设备告警Service接口
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2022-01-13
  */
-public interface AlertService {
+public interface AlertService extends IService<Alert> {
 
     /**
      * 分页查询产品告警设置列表
@@ -23,6 +24,14 @@ public interface AlertService {
      *
      */
     Alert getDetail(Long alertId);
+
+    /**
+     * 根据 productId 查询告警
+     * 
+     * @param productId
+     * @return
+     */
+    Alert getByProductId(Long productId);
 
     /**
      * 添加产品告警设置
@@ -40,4 +49,11 @@ public interface AlertService {
      *
      */
     void delete(List<Long> alertIds);
+
+    /**
+     * 根据产品id删除告警规则
+     * 
+     * @param productIds
+     */
+    void deleteByProductIds(Long[] productIds);
 }

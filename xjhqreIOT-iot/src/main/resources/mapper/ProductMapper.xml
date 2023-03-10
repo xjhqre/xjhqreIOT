@@ -12,21 +12,21 @@
 
     <delete id="deleteProductThingsModelByProductIds" parameterType="String">
         delete from iot_things_model where product_id in
-        <foreach item="productId" collection="array" open="(" separator="," close=")">
+        <foreach item="productId" collection="productIds" open="(" separator="," close=")">
             #{productId}
         </foreach>
     </delete>
 
-    <select id="firmwareCountInProducts" parameterType="String" resultType="int">
-        select count(*) from iot_firmware where product_id in
-        <foreach item="productId" collection="array" open="(" separator="," close=")">
-            #{productId}
-        </foreach>
-    </select>
+    <!--    <select id="firmwareCountInProducts" parameterType="String" resultType="int">-->
+    <!--        select count(*) from iot_firmware where product_id in-->
+    <!--        <foreach item="productId" collection="array" open="(" separator="," close=")">-->
+    <!--            #{productId}-->
+    <!--        </foreach>-->
+    <!--    </select>-->
 
     <select id="deviceCountInProducts" parameterType="String" resultType="int">
         select count(*) from iot_device where product_id in
-        <foreach item="productId" collection="array" open="(" separator="," close=")">
+        <foreach item="productId" collection="productIds" open="(" separator="," close=")">
             #{productId}
         </foreach>
     </select>

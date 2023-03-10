@@ -11,7 +11,7 @@ import lombok.Data;
 /**
  * 场景联动对象 iot_scene
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2022-01-13
  */
 @Data
@@ -22,37 +22,37 @@ public class Scene extends BaseEntity {
     /**
      * 场景ID
      */
-    @ApiModelProperty(name = "场景ID")
+    @ApiModelProperty(value = "场景ID", hidden = true)
     @TableId(value = "scene_id", type = IdType.AUTO)
     private Long sceneId;
 
     /**
      * 场景名称
      */
-    @ApiModelProperty(name = "场景名称")
+    @ApiModelProperty(value = "场景名称")
     private String sceneName;
 
     /**
      * 用户ID
      */
-    @ApiModelProperty(name = "用户ID")
+    @ApiModelProperty(value = "用户ID")
     private Long userId;
 
     /**
      * 用户名称
      */
-    @ApiModelProperty(name = "用户名称")
+    @ApiModelProperty(value = "用户名称")
     private String userName;
 
     /**
      * 触发器
      */
-    @ApiModelProperty(name = "触发器")
+    @ApiModelProperty(value = "触发器")
     private String triggers;
 
     /**
      * 执行动作
      */
-    @ApiModelProperty(name = "执行动作")
+    @ApiModelProperty(value = "执行动作")
     private String actions;
 }

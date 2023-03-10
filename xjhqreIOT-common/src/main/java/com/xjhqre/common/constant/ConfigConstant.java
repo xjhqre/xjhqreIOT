@@ -11,11 +11,6 @@ package com.xjhqre.common.constant;
 public class ConfigConstant {
 
     /**
-     * 是否开启文章审核
-     */
-    public static final String ARTICLE_AUDIT = "articleAudit";
-
-    /**
      * 验证码开关
      */
     public static final String CAPTCHA_ENABLED = "captchaEnabled";

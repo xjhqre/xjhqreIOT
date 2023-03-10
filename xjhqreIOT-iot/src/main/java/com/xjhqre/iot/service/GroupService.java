@@ -3,6 +3,7 @@ package com.xjhqre.iot.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.xjhqre.iot.domain.dto.UpdateDeviceGroupsDTO;
 import com.xjhqre.iot.domain.entity.Group;
 
 /**
@@ -36,7 +37,7 @@ public interface GroupService {
     /**
      * 更新分组下的关联设备
      */
-    void updateDeviceGroups(Long groupId, List<Long> deviceIdList);
+    void updateDeviceGroups(UpdateDeviceGroupsDTO dto);
 
     /**
      * 修改分组

@@ -3,6 +3,7 @@ package com.xjhqre.iot.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 
 /**
@@ -11,7 +12,7 @@ import com.xjhqre.iot.domain.entity.ThingsModel;
  * @author xjhqre
  * @date 2023-1-1
  */
-public interface ThingsModelService {
+public interface ThingsModelService extends IService<ThingsModel> {
 
     /**
      * 分页查询产品物模型列表

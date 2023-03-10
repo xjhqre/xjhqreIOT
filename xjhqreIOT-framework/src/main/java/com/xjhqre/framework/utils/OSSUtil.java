@@ -61,7 +61,7 @@ public class OSSUtil {
 
     // 文件路径的枚举
     public enum FileDirType {
-        AVATAR("avatar/"), PICTURE("picture/");
+        AVATAR("avatar/"), PRODUCT("product/"), SCREENSHOT("screenshot/"), DEVICE("device/"), PICTURE("picture/");
 
         private final String dir;
 

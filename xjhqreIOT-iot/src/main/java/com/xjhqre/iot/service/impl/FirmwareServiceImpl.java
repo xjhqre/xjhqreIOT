@@ -19,7 +19,7 @@ import com.xjhqre.iot.service.FirmwareService;
 /**
  * 产品固件Service业务层处理
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Service
@@ -34,9 +34,11 @@ public class FirmwareServiceImpl implements FirmwareService {
     public IPage<Firmware> find(Firmware firmware, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Firmware> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(firmware.getFirmwareId() != null, Firmware::getFirmwareId, firmware.getFirmwareId())
-            .like(firmware.getFirmwareName() != null, Firmware::getFirmwareName, firmware.getFirmwareName())
+            .like(firmware.getFirmwareName() != null && !"".equals(firmware.getFirmwareName()),
+                Firmware::getFirmwareName, firmware.getFirmwareName())
             .eq(firmware.getProductId() != null, Firmware::getProductId, firmware.getProductId())
-            .like(firmware.getProductName() != null, Firmware::getProductName, firmware.getProductName());
+            .like(firmware.getProductName() != null && !"".equals(firmware.getProductName()), Firmware::getProductName,
+                firmware.getProductName());
         return this.firmwareMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
@@ -47,9 +49,11 @@ public class FirmwareServiceImpl implements FirmwareService {
     public List<Firmware> list(Firmware firmware) {
         LambdaQueryWrapper<Firmware> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(firmware.getFirmwareId() != null, Firmware::getFirmwareId, firmware.getFirmwareId())
-            .like(firmware.getFirmwareName() != null, Firmware::getFirmwareName, firmware.getFirmwareName())
+            .like(firmware.getFirmwareName() != null && !"".equals(firmware.getFirmwareName()),
+                Firmware::getFirmwareName, firmware.getFirmwareName())
             .eq(firmware.getProductId() != null, Firmware::getProductId, firmware.getProductId())
-            .like(firmware.getProductName() != null, Firmware::getProductName, firmware.getProductName());
+            .like(firmware.getProductName() != null && !"".equals(firmware.getProductName()), Firmware::getProductName,
+                firmware.getProductName());
         return this.firmwareMapper.selectList(wrapper);
     }
 

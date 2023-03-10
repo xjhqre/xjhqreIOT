@@ -5,7 +5,6 @@ import static com.xjhqre.common.utils.SecurityUtils.getUsername;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +26,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.domain.model.LoginUser;
+import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.AssertUtils;
 import com.xjhqre.common.utils.BaiduMapUtils;
 import com.xjhqre.common.utils.DateUtils;
@@ -35,28 +35,26 @@ import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.http.HttpUtils;
 import com.xjhqre.common.utils.ip.IpUtils;
 import com.xjhqre.common.utils.uuid.RandomUtils;
+import com.xjhqre.iot.domain.entity.Alert;
 import com.xjhqre.iot.domain.entity.AlertLog;
+import com.xjhqre.iot.domain.entity.AlertTrigger;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceLog;
+import com.xjhqre.iot.domain.entity.DeviceProp;
 import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
-import com.xjhqre.iot.domain.model.thingsModelItem.ArrayModel;
-import com.xjhqre.iot.domain.model.thingsModelItem.BoolModel;
-import com.xjhqre.iot.domain.model.thingsModelItem.DoubleModel;
-import com.xjhqre.iot.domain.model.thingsModelItem.EnumItem;
-import com.xjhqre.iot.domain.model.thingsModelItem.EnumModel;
-import com.xjhqre.iot.domain.model.thingsModelItem.IntegerModel;
-import com.xjhqre.iot.domain.model.thingsModelItem.ReadOnlyModelOutput;
-import com.xjhqre.iot.domain.model.thingsModelItem.StringModel;
 import com.xjhqre.iot.domain.model.thingsModelItem.ThingsModelItemBase;
 import com.xjhqre.iot.domain.model.thingsModels.ModelIdAndValue;
 import com.xjhqre.iot.domain.model.thingsModels.ThingsModelShadow;
 import com.xjhqre.iot.domain.vo.DeviceVO;
+import com.xjhqre.iot.domain.vo.ThingsModelVO;
 import com.xjhqre.iot.mapper.DeviceMapper;
 import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.AlertLogService;
+import com.xjhqre.iot.service.AlertService;
 import com.xjhqre.iot.service.DeviceLogService;
+import com.xjhqre.iot.service.DevicePropService;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
 
@@ -65,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 设备Service业务层处理
  *
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Service
@@ -84,19 +82,26 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Resource
     private ProductService productService;
     @Resource
+    private DevicePropService devicePropService;
+    @Resource
     private EmqxService emqxService;
     @Resource
     private AlertLogService alertLogService;
+    @Resource
+    private AlertService alertService;
 
     @Override
     public IPage<DeviceVO> find(Device device, Integer pageNum, Integer pageSize) {
         LoginUser user = getLoginUser();
         LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(device.getDeviceId() != null, Device::getDeviceId, device.getDeviceId())
-            .eq(device.getDeviceNumber() != null, Device::getDeviceNumber, device.getDeviceNumber())
-            .like(device.getDeviceName() != null, Device::getDeviceName, device.getDeviceName())
+            .eq(device.getDeviceNumber() != null && !"".equals(device.getDeviceNumber()), Device::getDeviceNumber,
+                device.getDeviceNumber())
+            .like(device.getDeviceName() != null && !"".equals(device.getDeviceName()), Device::getDeviceName,
+                device.getDeviceName())
             .eq(device.getProductId() != null, Device::getProductId, device.getProductId())
-            .like(device.getProductName() != null, Device::getProductName, device.getProductName());
+            .like(device.getProductName() != null && !"".equals(device.getProductName()), Device::getProductName,
+                device.getProductName());
 
         if (!SecurityUtils.isAdmin(user.getUserId())) {
             wrapper.eq(Device::getUserId, SecurityUtils.getUserId());
@@ -107,32 +112,9 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             DeviceVO deviceVO = new DeviceVO();
             BeanUtils.copyProperties(item, deviceVO);
             // 解析物模型值JSON为集合
-            this.setThingsModelValue(deviceVO, false);
+            // this.setThingsModelValue(deviceVO, false);
             return deviceVO;
         });
-    }
-
-    /**
-     * 查询设备列表
-     *
-     * @param device
-     *            设备
-     * @return 设备
-     */
-    @Override
-    public List<Device> selectDeviceList(Device device) {
-        LoginUser user = getLoginUser();
-        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(device.getDeviceId() != null, Device::getDeviceId, device.getDeviceId())
-            .eq(device.getDeviceNumber() != null, Device::getDeviceNumber, device.getDeviceNumber())
-            .like(device.getDeviceName() != null, Device::getDeviceName, device.getDeviceName())
-            .eq(device.getProductId() != null, Device::getProductId, device.getProductId())
-            .like(device.getProductName() != null, Device::getProductName, device.getProductName());
-
-        if (!SecurityUtils.isAdmin(user.getUserId())) {
-            wrapper.eq(Device::getUserId, SecurityUtils.getUserId());
-        }
-        return this.deviceMapper.selectList(wrapper);
     }
 
     @Override
@@ -153,11 +135,33 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     public IPage<Device> selectAllDevice(Device device, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(device.getDeviceId() != null, Device::getDeviceId, device.getDeviceId())
-            .eq(device.getDeviceNumber() != null, Device::getDeviceNumber, device.getDeviceNumber())
-            .like(device.getDeviceName() != null, Device::getDeviceName, device.getDeviceName())
+            .eq(device.getDeviceNumber() != null && !"".equals(device.getDeviceNumber()), Device::getDeviceNumber,
+                device.getDeviceNumber())
+            .like(device.getDeviceName() != null && !"".equals(device.getDeviceName()), Device::getDeviceName,
+                device.getDeviceName())
             .eq(device.getProductId() != null, Device::getProductId, device.getProductId())
-            .like(device.getProductName() != null, Device::getProductName, device.getProductName());
+            .like(device.getProductName() != null && !"".equals(device.getProductName()), Device::getProductName,
+                device.getProductName());
         return this.deviceMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    @Override
+    public List<Device> list(Device device) {
+        LoginUser user = getLoginUser();
+        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(device.getDeviceId() != null, Device::getDeviceId, device.getDeviceId())
+            .eq(device.getDeviceNumber() != null && !"".equals(device.getDeviceNumber()), Device::getDeviceNumber,
+                device.getDeviceNumber())
+            .like(device.getDeviceName() != null && !"".equals(device.getDeviceName()), Device::getDeviceName,
+                device.getDeviceName())
+            .eq(device.getProductId() != null, Device::getProductId, device.getProductId())
+            .like(device.getProductName() != null && !"".equals(device.getProductName()), Device::getProductName,
+                device.getProductName());
+
+        if (!SecurityUtils.isAdmin(user.getUserId())) {
+            wrapper.eq(Device::getUserId, SecurityUtils.getUserId());
+        }
+        return this.deviceMapper.selectList(wrapper);
     }
 
     /**
@@ -169,8 +173,12 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         Device device = this.deviceMapper.selectById(deviceId);
         DeviceVO deviceVO = new DeviceVO();
         BeanUtils.copyProperties(device, deviceVO);
+        Long productId = device.getProductId();
+        Product product = this.productService.getById(productId);
+        deviceVO.setProductSecret(product.getProductSecret());
+        deviceVO.setNetworkMethod(product.getNetworkMethod());
         // 物模型转换为对象中的不同类别集合
-        this.setThingsModelValue(deviceVO, false);
+        // this.setThingsModelValue(deviceVO, false);
         return deviceVO;
     }
 
@@ -241,7 +249,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         // 获取监测数据上报数量
         LambdaQueryWrapper<DeviceLog> monitorWrapper = new LambdaQueryWrapper<>();
-        monitorWrapper.eq(DeviceLog::getLogType, 1).eq(DeviceLog::getIsMonitor, 1);
+        monitorWrapper.eq(DeviceLog::getLogType, 1);
         if (!isAdmin) {
             monitorWrapper.eq(DeviceLog::getUserId, user.getUserId());
         }
@@ -278,7 +286,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         // 添加设备
         device.setCreateTime(DateUtils.getNowDate());
         device.setCreateBy(getUsername());
-        device.setDevicePassword(RandomUtils.randomString(16)); // 32位设备密钥
+        device.setDevicePassword(RandomUtils.randomString(16)); // 16位设备密钥
+        device.setDeviceNumber(RandomUtils.randomString(16)); // 16位设备编号
         // 设置功能和属性的默认值
         /* ThingsModelValue:
         [
@@ -346,6 +355,25 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     }
 
     /**
+     * 启用/禁用设备
+     *
+     */
+    @Override
+    public void updateDeviceStatus(String deviceId, Integer status) {
+        Device device = this.deviceMapper.selectById(deviceId);
+        if (status == 2) { // 禁用设备
+            device.setStatus(2);
+        } else { // 启动设备
+            if (device.getActiveTime() != null) { // 已经激活过，设置为离线状态
+                device.setStatus(3);
+            } else { // 未激活
+                device.setStatus(1);
+            }
+        }
+        this.deviceMapper.updateById(device);
+    }
+
+    /**
      * 重置设备状态，在线状态重置为离线
      */
     @Override
@@ -363,6 +391,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Override
     public void delete(List<Long> deviceIds) {
         List<Device> devices = this.deviceMapper.selectBatchIds(deviceIds);
+        // TODO 校验场景联动是否使用
         for (Device device : devices) {
             // 删除设备分组。 租户、管理员和设备所有者
             this.deviceMapper.deleteDeviceGroupByDeviceId(device.getDeviceId());
@@ -370,7 +399,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             this.deviceJobService.deleteJobByDeviceId(Collections.singletonList(device.getDeviceId()));
             // 批量删除设备日志
             // this.logService.deleteDeviceLogByDeviceNumber(device.getDeviceNumber());
-            this.deviceLogService.deleteDeviceLogByDeviceNumber(device.getDeviceNumber());
+            this.deviceLogService.deleteDeviceLogByDeviceId(device.getDeviceId());
             // 删除设备告警记录
             this.alertLogService.deleteByDeviceId(device.getDeviceId());
             // 删除设备
@@ -397,15 +426,44 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     }
 
     /**
+     * 查询设备属性记录
+     * 
+     * @param deviceId
+     * @return
+     */
+    @Override
+    public List<ThingsModelVO> findDeviceProp(Long deviceId) {
+        Device device = this.deviceMapper.selectById(deviceId);
+        LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ThingsModel::getProductId, device.getProductId());
+        List<ThingsModel> list = this.thingsModelService.list(wrapper);
+        return list.stream().map(thingsModel -> {
+            ThingsModelVO thingsModelVO = new ThingsModelVO();
+            BeanUtils.copyProperties(thingsModel, thingsModelVO);
+            LambdaQueryWrapper<DeviceProp> wrapper2 = new LambdaQueryWrapper<>();
+            wrapper2.eq(DeviceProp::getDeviceId, device.getDeviceId())
+                .eq(DeviceProp::getModelId, thingsModel.getModelId()).orderByDesc(DeviceProp::getReportTime)
+                .last("limit 1");
+            DeviceProp deviceProp = this.devicePropService.getOne(wrapper2);
+            thingsModelVO.setLastValue(deviceProp);
+            return thingsModelVO;
+        }).collect(Collectors.toList());
+    }
+
+    /**
      * 更新设备的物模型
      */
     @Override
-    public void reportDeviceThingsModelValue(Long productId, String deviceNum,
-        List<ThingsModelItemBase> newThingsModelItemBaseList, int type, boolean isShadow) {
+    public void reportDeviceThingsModelValue(Long productKey, String deviceNum,
+        List<ThingsModelItemBase> newThingsModelItemBaseList, int type, boolean isShadow, String message) {
         // 根据设备编号查询设备信息
         LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Device::getDeviceNumber, deviceNum);
         Device device = this.deviceMapper.selectOne(wrapper);
+
+        LambdaQueryWrapper<Product> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.eq(Product::getProductKey, productKey);
+        Product product = this.productService.getOne(wrapper1);
 
         // 设备原物模型值
         List<ThingsModelItemBase> oldThingsModelItemBaseList =
@@ -423,24 +481,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
                     oldThingsModelItemBase.setShadow(newThingsModelItemBase.getValue());
 
                     // TODO 场景联动、告警规则匹配处理
-
-                    // 添加到设备日志，每更新一个物模型值就添加日志
-                    DeviceLog deviceLog = new DeviceLog();
-                    deviceLog.setDeviceId(device.getDeviceId());
-                    deviceLog.setDeviceNumber(device.getDeviceNumber());
-                    deviceLog.setDeviceName(device.getDeviceName());
-                    deviceLog.setLogValue(newThingsModelItemBase.getValue());
-                    deviceLog.setRemark(newThingsModelItemBase.getRemark());
-                    deviceLog.setModelId(newThingsModelItemBase.getModelId());
-                    deviceLog.setIsMonitor(
-                        newThingsModelItemBase.getIsMonitor() == null ? 0 : newThingsModelItemBase.getIsMonitor());
-                    deviceLog.setLogType(type);
-                    deviceLog.setUserId(device.getUserId());
-                    deviceLog.setUserName(device.getUserName());
-                    deviceLog.setCreateTime(DateUtils.getNowDate());
-                    // 1=影子模式，2=在线模式，3=其他
-                    deviceLog.setMode(isShadow ? 1 : 2);
-                    this.deviceLogService.save(deviceLog);
                     break;
                 }
             }
@@ -450,105 +490,200 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         updateWrapper.eq(Device::getDeviceId, device.getDeviceId()).set(Device::getThingsModelValue,
             JSONObject.toJSONString(oldThingsModelItemBaseList));
         this.deviceMapper.update(null, updateWrapper);
+
+        // 添加到设备日志，每更新一个物模型值就添加日志
+        this.recordDeviceLog(type, message, device, product);
+
+        // 告警规则匹配
+        this.alarmRuleMatching(message, device, product, oldThingsModelItemBaseList);
     }
 
     /**
-     * Json物模型集合转换为对象中的分类集合
-     *
+     * 记录设备日志
+     * 
+     * @param type
+     * @param message
      * @param device
-     *            设备
-     * @param isOnlyRead
-     *            是否设置为只读
+     * @param product
      */
-    // @Async
-    public void setThingsModelValue(DeviceVO device, boolean isOnlyRead) {
-        List<ThingsModelItemBase> thingsModelItemBases =
-            JSON.parseArray(device.getThingsModelValue(), ThingsModelItemBase.class);
-        for (ThingsModelItemBase thingsModelItemBase : thingsModelItemBases) {
-            String datatype = thingsModelItemBase.getDatatype();
-            JSONObject specsJson = JSONObject.parseObject(thingsModelItemBase.getSpecs());
-            if ("double".equals(datatype)) {
-                DoubleModel doubleModel = new DoubleModel();
-                BeanUtils.copyProperties(thingsModelItemBase, doubleModel);
-                doubleModel.setMax(specsJson.getDouble("max"));
-                doubleModel.setMin(specsJson.getDouble("min"));
-                doubleModel.setStep(specsJson.getDouble("step"));
-                doubleModel.setUnit(specsJson.getString("unit"));
-                if (doubleModel.getIsMonitor() == 1 || isOnlyRead) {
-                    ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
-                    BeanUtils.copyProperties(doubleModel, readonlyModel);
-                    device.getReadOnlyList().add(readonlyModel);
-                } else {
-                    device.getDoubleList().add(doubleModel);
-                }
-            } else if ("integer".equals(datatype)) {
-                IntegerModel integerModel = new IntegerModel();
-                BeanUtils.copyProperties(thingsModelItemBase, integerModel);
-                integerModel.setMax(specsJson.getInteger("max"));
-                integerModel.setMin(specsJson.getInteger("min"));
-                integerModel.setStep(specsJson.getInteger("step"));
-                integerModel.setUnit(specsJson.getString("unit"));
-                if (integerModel.getIsMonitor() == 1 || isOnlyRead) {
-                    ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
-                    BeanUtils.copyProperties(integerModel, readonlyModel);
-                    device.getReadOnlyList().add(readonlyModel);
-                } else {
-                    device.getIntegerList().add(integerModel);
-                }
-            } else if ("bool".equals(datatype)) {
-                BoolModel boolModel = new BoolModel();
-                BeanUtils.copyProperties(thingsModelItemBase, boolModel);
-                boolModel.setFalseText(specsJson.getString("falseText"));
-                boolModel.setTrueText(specsJson.getString("trueText"));
-                if (boolModel.getIsMonitor() == 1 || isOnlyRead) {
-                    ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
-                    BeanUtils.copyProperties(boolModel, readonlyModel);
-                    device.getReadOnlyList().add(readonlyModel);
-                } else {
-                    device.getBoolList().add(boolModel);
-                }
-            } else if ("string".equals(datatype)) {
-                StringModel stringModel = new StringModel();
-                BeanUtils.copyProperties(thingsModelItemBase, stringModel);
-                stringModel.setMaxLength(specsJson.getInteger("maxLength"));
-                if (stringModel.getIsMonitor() == 1 || isOnlyRead) {
-                    ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
-                    BeanUtils.copyProperties(stringModel, readonlyModel);
-                    device.getReadOnlyList().add(readonlyModel);
-                } else {
-                    device.getStringList().add(stringModel);
-                }
-            } else if ("array".equals(datatype)) {
-                ArrayModel arrayModel = new ArrayModel();
-                BeanUtils.copyProperties(thingsModelItemBase, arrayModel);
-                arrayModel.setArrayType(specsJson.getString("arrayType"));
-                if (arrayModel.getIsMonitor() == 1 || isOnlyRead) {
-                    ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
-                    BeanUtils.copyProperties(arrayModel, readonlyModel);
-                    device.getReadOnlyList().add(readonlyModel);
-                } else {
-                    device.getArrayList().add(arrayModel);
-                }
-            } else if ("enum".equals(datatype)) {
-                EnumModel enumModel = new EnumModel();
-                BeanUtils.copyProperties(thingsModelItemBase, enumModel);
-                List<EnumItem> enumItemList = JSON.parseArray(specsJson.getString("enumList"), EnumItem.class);
-                enumModel.setEnumList(enumItemList);
-                if (enumModel.getIsMonitor() == 1 || isOnlyRead) {
-                    ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
-                    BeanUtils.copyProperties(enumModel, readonlyModel);
-                    device.getReadOnlyList().add(readonlyModel);
-                } else {
-                    device.getEnumList().add(enumModel);
+    private void recordDeviceLog(int type, String message, Device device, Product product) {
+        DeviceLog deviceLog = new DeviceLog();
+        deviceLog.setDeviceId(device.getDeviceId());
+        deviceLog.setDeviceName(device.getDeviceName());
+        deviceLog.setProductId(product.getProductId());
+        deviceLog.setProductName(product.getProductName());
+        deviceLog.setLogValue(message);
+        deviceLog.setLogType(type);
+        deviceLog.setUserId(device.getUserId());
+        deviceLog.setUserName(device.getUserName());
+        deviceLog.setCreateTime(DateUtils.getNowDate());
+        this.deviceLogService.save(deviceLog);
+    }
+
+    private void alarmRuleMatching(String message, Device device, Product product,
+        List<ThingsModelItemBase> oldThingsModelItemBaseList) {
+        Alert alert = this.alertService.getByProductId(product.getProductId());
+        List<Boolean> flagList = new ArrayList<>();
+        for (AlertTrigger trigger : alert.getTriggers()) {
+            for (ThingsModelItemBase thingsModelItemBase : oldThingsModelItemBaseList) {
+                if (Objects.equals(thingsModelItemBase.getModelId(), trigger.getModelId())) {
+                    String operator = trigger.getOperator();
+                    String value = trigger.getValue();
+                    String value2 = thingsModelItemBase.getValue();
+                    switch (operator) {
+                        case ">":
+                            flagList.add(Double.parseDouble(value2) > Double.parseDouble(value));
+                            break;
+                        case ">=":
+                            flagList.add(Double.parseDouble(value2) >= Double.parseDouble(value));
+                            break;
+                        case "=":
+                            flagList.add(value.equals(value2));
+                        case "!=":
+                            flagList.add(!value.equals(value2));
+                        case "<":
+                            flagList.add(Double.parseDouble(value2) < Double.parseDouble(value));
+                            break;
+                        case "<=":
+                            flagList.add(Double.parseDouble(value2) <= Double.parseDouble(value));
+                            break;
+                        default:
+                            throw new ServiceException("运算符错误");
+                    }
+                    break;
                 }
             }
-
-            // 排序
-            device.setReadOnlyList(device.getReadOnlyList().stream()
-                .sorted(Comparator.comparing(ThingsModelItemBase::getIsMonitor).reversed())
-                .collect(Collectors.toList()));
+        }
+        String restriction = alert.getRestriction(); // any or all
+        if ("any".equals(restriction)) {
+            if (flagList.stream().anyMatch(val -> val)) {
+                // 触发告警，添加告警日志
+                this.addAlertLog(message, device, alert);
+            }
+        } else if ("all".equals(restriction)) {
+            if (flagList.stream().allMatch(val -> val)) {
+                // 触发告警，添加告警日志
+                this.addAlertLog(message, device, alert);
+            }
         }
     }
+
+    /**
+     * 添加告警日志
+     * 
+     * @param message
+     * @param device
+     * @param alert
+     */
+    private void addAlertLog(String message, Device device, Alert alert) {
+        AlertLog alertLog = new AlertLog();
+        alertLog.setAlertName(alert.getAlertName());
+        alertLog.setProductId(alert.getProductId());
+        alertLog.setProductName(alert.getProductName());
+        alertLog.setDeviceId(device.getDeviceId());
+        alertLog.setDeviceName(device.getDeviceName());
+        alertLog.setUserId(device.getUserId());
+        alertLog.setUserName(device.getUserName());
+        alertLog.setData(message);
+        alertLog.setCreateTime(DateUtils.getNowDate());
+        this.alertLogService.save(alertLog);
+    }
+
+    /// **
+    // * Json物模型集合转换为对象中的分类集合
+    // *
+    // * @param device
+    // * 设备
+    // * @param isOnlyRead
+    // * 是否设置为只读
+    // */
+    //// @Async
+    // public void setThingsModelValue(DeviceVO device, boolean isOnlyRead) {
+    // List<ThingsModelItemBase> thingsModelItemBases =
+    // JSON.parseArray(device.getThingsModelValue(), ThingsModelItemBase.class);
+    // for (ThingsModelItemBase thingsModelItemBase : thingsModelItemBases) {
+    // JSONObject dataTypeJson = JSONObject.parseObject(thingsModelItemBase.getDataType());
+    // String type = dataTypeJson.getString("type"); // 物模型类型（double， Integer ...）
+    // JSONObject specs = dataTypeJson.getJSONObject("specs");
+    // if ("double".equals(type)) {
+    // DoubleModel doubleModel = new DoubleModel();
+    // BeanUtils.copyProperties(thingsModelItemBase, doubleModel);
+    // doubleModel.setMax(specs.getDouble("max"));
+    // doubleModel.setMin(specs.getDouble("min"));
+    // doubleModel.setStep(specs.getDouble("step"));
+    // doubleModel.setUnit(specs.getString("unit"));
+    // if (doubleModel.getIsMonitor() == 1 || isOnlyRead) {
+    // ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
+    // BeanUtils.copyProperties(doubleModel, readonlyModel);
+    // device.getReadOnlyList().add(readonlyModel);
+    // } else {
+    // device.getDoubleList().add(doubleModel);
+    // }
+    // } else if ("integer".equals(type)) {
+    // IntegerModel integerModel = new IntegerModel();
+    // BeanUtils.copyProperties(thingsModelItemBase, integerModel);
+    // integerModel.setMax(specs.getInteger("max"));
+    // integerModel.setMin(specs.getInteger("min"));
+    // integerModel.setStep(specs.getInteger("step"));
+    // integerModel.setUnit(specs.getString("unit"));
+    // if (integerModel.getIsMonitor() == 1 || isOnlyRead) {
+    // ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
+    // BeanUtils.copyProperties(integerModel, readonlyModel);
+    // device.getReadOnlyList().add(readonlyModel);
+    // } else {
+    // device.getIntegerList().add(integerModel);
+    // }
+    // } else if ("bool".equals(type)) {
+    // BoolModel boolModel = new BoolModel();
+    // BeanUtils.copyProperties(thingsModelItemBase, boolModel);
+    // boolModel.setFalseText(specs.getString("falseText"));
+    // boolModel.setTrueText(specs.getString("trueText"));
+    // if (boolModel.getIsMonitor() == 1 || isOnlyRead) {
+    // ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
+    // BeanUtils.copyProperties(boolModel, readonlyModel);
+    // device.getReadOnlyList().add(readonlyModel);
+    // } else {
+    // device.getBoolList().add(boolModel);
+    // }
+    // } else if ("string".equals(type)) {
+    // StringModel stringModel = new StringModel();
+    // BeanUtils.copyProperties(thingsModelItemBase, stringModel);
+    // stringModel.setMaxLength(specs.getInteger("maxLength"));
+    // if (stringModel.getIsMonitor() == 1 || isOnlyRead) {
+    // ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
+    // BeanUtils.copyProperties(stringModel, readonlyModel);
+    // device.getReadOnlyList().add(readonlyModel);
+    // } else {
+    // device.getStringList().add(stringModel);
+    // }
+    // } else if ("array".equals(type)) {
+    // ArrayModel arrayModel = new ArrayModel();
+    // BeanUtils.copyProperties(thingsModelItemBase, arrayModel);
+    // arrayModel.setArrayType(specs.getString("arrayType"));
+    // if (arrayModel.getIsMonitor() == 1 || isOnlyRead) {
+    // ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
+    // BeanUtils.copyProperties(arrayModel, readonlyModel);
+    // device.getReadOnlyList().add(readonlyModel);
+    // } else {
+    // device.getArrayList().add(arrayModel);
+    // }
+    // } else if ("enum".equals(type)) {
+    // EnumModel enumModel = new EnumModel();
+    // BeanUtils.copyProperties(thingsModelItemBase, enumModel);
+    // List<EnumItem> enumItemList = JSON.parseArray(specs.getString("enumList"), EnumItem.class);
+    // enumModel.setEnumList(enumItemList);
+    // if (enumModel.getIsMonitor() == 1 || isOnlyRead) {
+    // ReadOnlyModelOutput readonlyModel = new ReadOnlyModelOutput();
+    // BeanUtils.copyProperties(enumModel, readonlyModel);
+    // device.getReadOnlyList().add(readonlyModel);
+    // } else {
+    // device.getEnumList().add(enumModel);
+    // }
+    // }
+    //
+    // device.setReadOnlyList(device.getReadOnlyList());
+    // }
+    // }
 
     /**
      * 获取产品物模型值列表
@@ -620,7 +755,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         for (ThingsModelItemBase shadowItem : shadowList) {
             boolean isGetValue = false;
             for (ThingsModel property : properties) {
-                if (property.getIsMonitor() == 0 && property.getModelId().equals(shadowItem.getModelId())) {
+                if (property.getModelId().equals(shadowItem.getModelId())) {
                     ModelIdAndValue item = new ModelIdAndValue(shadowItem.getModelId(), shadowItem.getShadow());
                     shadow.getProperties().add(item);
                     System.out.println("添加影子属性：" + item.getModelId());
@@ -675,14 +810,10 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         DeviceLog deviceLog = new DeviceLog();
         deviceLog.setDeviceId(device.getDeviceId());
         deviceLog.setDeviceName(device.getDeviceName());
-        deviceLog.setDeviceNumber(device.getDeviceNumber());
-        deviceLog.setIsMonitor(0);
         deviceLog.setUserId(device.getUserId());
         deviceLog.setUserName(device.getUserName());
         deviceLog.setCreateTime(DateUtils.getNowDate());
         deviceLog.setCreateBy(getUsername());
-        // 日志模式 1=影子模式，2=在线模式，3=其他
-        deviceLog.setMode(3);
         if (device.getStatus() == 3) {
             deviceLog.setLogValue("1");
             deviceLog.setRemark("设备上线");
@@ -720,32 +851,5 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-    }
-
-    /**
-     * 上报设备信息
-     */
-    @Override
-
-    public void reportDevice(Device newDevice, Device oldDevice) {
-        // 未采用设备定位则清空定位，定位方式(1=ip自动定位，2=设备定位，3=自定义)
-        if (oldDevice.getLocationWay() != 2) {
-            newDevice.setLatitude(null);
-            newDevice.setLongitude(null);
-        }
-        newDevice.setUpdateTime(DateUtils.getNowDate());
-        newDevice.setUpdateBy(getUsername());
-        // 更新激活时间
-        if (oldDevice.getActiveTime() == null) {
-            newDevice.setActiveTime(DateUtils.getNowDate());
-        }
-        // 不更新物模型
-        newDevice.setThingsModelValue(null);
-        // 不更新用户
-        newDevice.setUserId(null);
-        newDevice.setUserName(null);
-        LambdaUpdateWrapper<Device> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Device::getDeviceNumber, newDevice.getDeviceNumber());
-        this.deviceMapper.update(newDevice, wrapper);
     }
 }

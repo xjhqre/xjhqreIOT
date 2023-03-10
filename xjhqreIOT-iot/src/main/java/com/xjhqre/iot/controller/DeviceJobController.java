@@ -6,8 +6,11 @@ import javax.annotation.Resource;
 
 import org.quartz.SchedulerException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,8 +26,6 @@ import com.xjhqre.iot.domain.entity.DeviceJob;
 import com.xjhqre.iot.service.DeviceJobService;
 import com.xjhqre.quartz.util.CronUtils;
 
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -41,14 +42,10 @@ public class DeviceJobController extends BaseController {
     private DeviceJobService deviceJobService;
 
     @ApiOperation(value = "分页查询设备定时任务")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:device:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<DeviceJob>> find(DeviceJob deviceJob, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<DeviceJob>> find(DeviceJob deviceJob, @RequestParam Integer pageNum,
+        @RequestParam Integer pageSize) {
         return R.success(this.deviceJobService.find(deviceJob, pageNum, pageSize));
     }
 
@@ -68,8 +65,8 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "新增设备定时任务")
     @PreAuthorize("@ss.hasPermission('iot:device:add')")
     @Log(title = "设备定时任务", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> add(DeviceJob job) throws SchedulerException, TaskException {
+    @PostMapping("/add")
+    public R<String> add(@RequestBody @Validated DeviceJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return R.error("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         }
@@ -83,8 +80,8 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "修改设备定时任务")
     @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> update(DeviceJob job) throws SchedulerException, TaskException {
+    @PostMapping("/update")
+    public R<String> update(@RequestBody @Validated DeviceJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return R.error("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         }
@@ -98,8 +95,8 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "设备定时任务状态修改")
     @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/changeStatus", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> changeStatus(DeviceJob job) throws SchedulerException {
+    @PostMapping("/changeStatus")
+    public R<String> changeStatus(@RequestBody DeviceJob job) throws SchedulerException {
         this.deviceJobService.changeStatus(job);
         return R.success("定时任务状态修改成功");
     }
@@ -108,7 +105,7 @@ public class DeviceJobController extends BaseController {
      * 设备定时任务立即执行一次
      */
     @ApiOperation(value = "设备定时任务立即执行一次")
-    @PreAuthorize("@ss.hasPermission('iot:device:edit')")
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
     @RequestMapping(value = "/run", method = {RequestMethod.POST, RequestMethod.GET})
     public R<String> run(DeviceJob job) {
@@ -122,8 +119,8 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "删除设备定时任务")
     @PreAuthorize("@ss.hasPermission('iot:device:delete')")
     @Log(title = "设备定时任务", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> delete(@RequestParam List<Long> jobIdList) throws SchedulerException, TaskException {
+    @RequestMapping(value = "/delete/{jobIdList}", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@PathVariable List<Long> jobIdList) throws SchedulerException, TaskException {
         this.deviceJobService.delete(jobIdList);
         return R.success("删除设备定时任务成功");
     }

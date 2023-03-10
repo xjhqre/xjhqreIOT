@@ -19,7 +19,7 @@ public class JasyptTest {
 
         standardPBEStringEncryptor.setConfig(config);
 
-        String plainText = "qovgrteqnsskbdbe";
+        String plainText = "xjhqre859425698";
 
         String encryptedText = standardPBEStringEncryptor.encrypt(plainText);
 
@@ -41,7 +41,7 @@ public class JasyptTest {
 
         standardPBEStringEncryptor.setConfig(config);
 
-        String encryptedText = "RSSBtJfceg1SStaGPVmRDQ==";
+        String encryptedText = "uE2ORVX52Cm/DqB3oGJs+2AUfgKN4hk0";
 
         String plainText = standardPBEStringEncryptor.decrypt(encryptedText);
 

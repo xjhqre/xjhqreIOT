@@ -6,8 +6,10 @@ import javax.annotation.Resource;
 
 import org.quartz.SchedulerException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,13 +23,13 @@ import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
 import com.xjhqre.common.exception.TaskException;
+import com.xjhqre.common.group.Insert;
+import com.xjhqre.common.group.Update;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.quartz.domain.SysJob;
 import com.xjhqre.quartz.service.SysJobService;
 import com.xjhqre.quartz.util.CronUtils;
 
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -42,14 +44,9 @@ public class SysJobController extends BaseController {
     private SysJobService jobService;
 
     @ApiOperation(value = "分页查询定时任务列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('monitor:job:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<SysJob>> find(SysJob sysJob, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<SysJob>> find(SysJob sysJob, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.jobService.find(sysJob, pageNum, pageSize));
     }
 
@@ -69,8 +66,8 @@ public class SysJobController extends BaseController {
     @ApiOperation(value = "新增定时任务")
     @PreAuthorize("@ss.hasPermission('monitor:job:add')")
     @Log(title = "定时任务", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> add(SysJob job) throws SchedulerException, TaskException {
+    @PostMapping("/add")
+    public R<String> add(@Validated(Insert.class) @RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return R.error("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         } else if (StringUtils.containsIgnoreCase(job.getInvokeTarget(), Constants.LOOKUP_RMI)) {
@@ -93,8 +90,8 @@ public class SysJobController extends BaseController {
     @ApiOperation(value = "修改定时任务")
     @PreAuthorize("@ss.hasPermission('monitor:job:update')")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> update(@RequestBody SysJob job) throws SchedulerException, TaskException {
+    @PostMapping("/update")
+    public R<String> update(@Validated(Update.class) @RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return R.error("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         } else if (StringUtils.containsIgnoreCase(job.getInvokeTarget(), Constants.LOOKUP_RMI)) {
@@ -117,8 +114,8 @@ public class SysJobController extends BaseController {
     @ApiOperation(value = "定时任务状态修改")
     @PreAuthorize("@ss.hasPermission('monitor:job:update')")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/changeStatus", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> changeStatus(SysJob job) throws SchedulerException {
+    @PostMapping("/changeStatus")
+    public R<String> changeStatus(@RequestBody SysJob job) throws SchedulerException {
         this.jobService.changeStatus(job);
         return R.success("修改定时任务状态成功");
     }
@@ -129,8 +126,8 @@ public class SysJobController extends BaseController {
     @ApiOperation(value = "删除定时任务")
     @PreAuthorize("@ss.hasPermission('monitor:job:delete')")
     @Log(title = "定时任务", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> delete(@RequestParam List<Long> jobIdList) throws SchedulerException, TaskException {
+    @RequestMapping(value = "/delete/{jobIdList}", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@PathVariable List<Long> jobIdList) throws SchedulerException, TaskException {
         this.jobService.delete(jobIdList);
         return R.success("删除定时任务成功");
     }
@@ -141,8 +138,8 @@ public class SysJobController extends BaseController {
     @ApiOperation(value = "定时任务立即执行一次")
     @PreAuthorize("@ss.hasPermission('monitor:job:update')")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/run", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> run(SysJob job) throws SchedulerException {
+    @PostMapping("/run")
+    public R<String> run(@RequestBody SysJob job) throws SchedulerException {
         this.jobService.run(job);
         return R.success("执行成功");
     }

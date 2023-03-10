@@ -1,5 +1,7 @@
 package com.xjhqre.iot.mqtt;
 
+import static com.xjhqre.common.utils.SecurityUtils.getUsername;
+
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -34,7 +36,7 @@ public class EmqxService {
     protected DeviceLogService deviceLogService;
 
     /**
-     * 订阅的主题，格式：/productId/deviceNum/功能名/请求方式
+     * 设备发布的主题，客户端订阅，格式：/productKey/deviceNumber/功能名/请求方式
      */
     private static final String prefix = "/+/+/";
     String sInfoTopic = prefix + "info/post";
@@ -46,14 +48,20 @@ public class EmqxService {
     String sShadowFunctionTopic = prefix + "function-offline/post";
 
     /**
-     * 发布的主题
+     * 客户端发布的主题，设备订阅
      */
-    String pStatusTopic = "/status/post";
+    String pStatusTopic = "/status/get";
     String pInfoTopic = "/info/get";
     String pNtpTopic = "/ntp/get";
     String pPropertyTopic = "/property/get";
     String pFunctionTopic = "/function/get";
 
+    /**
+     * 订阅主题
+     * 
+     * @param client
+     * @throws MqttException
+     */
     public void subscribe(MqttAsyncClient client) throws MqttException {
         // 订阅设备信息
         client.subscribe(this.sInfoTopic, 1);
@@ -88,67 +96,81 @@ public class EmqxService {
         // 模拟耗时操作
         // Thread.sleep(1000);
         // subscribe后得到的消息会执行到这里面
+        /*
+        message：
+        {
+            "id": "temperature",  物模型标识符
+            "value": "27.43",  // 值
+            "remark": ""
+        }
+         */
         String message = new String(mqttMessage.getPayload());
         log.info("接收消息主题 : " + topic);
         log.info("接收消息Qos : " + mqttMessage.getQos());
         log.info("接收消息内容 : " + message);
 
         String[] topicItem = topic.substring(1).split("/");
-        Long productId = Long.valueOf(topicItem[0]);
+        Long productKey = Long.valueOf(topicItem[0]);
         String deviceNum = topicItem[1];
-        String name = topicItem[2];
+        String name = topicItem[2]; // property、function、event
         switch (name) {
             case "info":
-                this.updateDeviceInfo(productId, deviceNum, message);
+                this.updateDeviceInfo(productKey, deviceNum, message);
                 break;
             case "ntp":
-                this.publishNtp(productId, deviceNum, message);
+                this.publishNtp(productKey, deviceNum, message);
                 break;
             case "property":
-                this.updateProperty(productId, deviceNum, message, false);
+                this.updateProperty(productKey, deviceNum, message, false);
                 break;
             case "function":
-                this.updateFunction(productId, deviceNum, message, false);
+                this.updateFunction(productKey, deviceNum, message, false);
                 break;
             case "event":
                 this.updateEvent(deviceNum, message);
                 break;
             case "property-offline":
-                this.updateProperty(productId, deviceNum, message, true);
+                this.updateProperty(productKey, deviceNum, message, true);
                 break;
             case "function-offline":
-                this.updateFunction(productId, deviceNum, message, true);
+                this.updateFunction(productKey, deviceNum, message, true);
                 break;
         }
     }
 
     /**
-     * 上报设备信息
+     * 设备发布设备信息，客户端接收并更新
      */
-    private void updateDeviceInfo(Long productId, String deviceNum, String message) {
-        try {
-            // 设备实体
-            Device deviceEntity = this.deviceService.getByDeviceNumber(deviceNum);
-            // 上报设备信息
-            Device device = JSON.parseObject(message, Device.class);
-            device.setProductId(productId);
-            device.setDeviceNumber(deviceNum);
-            this.deviceService.reportDevice(device, deviceEntity);
-            // 发布设备状态
-            this.publishStatus(productId, deviceNum, 3, deviceEntity.getIsShadow(), device.getRssi());
-        } catch (Exception e) {
-            log.error("接收设备信息，解析数据时异常 message={}", e.getMessage());
+    private void updateDeviceInfo(Long productKey, String deviceNum, String message) {
+        // 设备实体
+        Device oldDevice = this.deviceService.getByDeviceNumber(deviceNum);
+        // 上报设备信息
+        Device newDevice = JSON.parseObject(message, Device.class);
+
+        // 未采用设备定位则清空定位，定位方式(1=ip自动定位，2=设备上报定位，3=自定义)
+        if (newDevice.getLongitude() != null) {
+            oldDevice.setLongitude(newDevice.getLongitude());
         }
+        if (newDevice.getLatitude() != null) {
+            oldDevice.setLatitude(newDevice.getLatitude());
+        }
+        oldDevice.setUpdateTime(DateUtils.getNowDate());
+        oldDevice.setUpdateBy(getUsername());
+        // 更新激活时间
+        this.deviceService.updateById(oldDevice);
+        // 平台到设备消息
+        this.publishStatus(productKey, deviceNum, 3, oldDevice.getIsShadow(), newDevice.getRssi());
     }
 
     /**
      * 更新后台设备属性
      *
      */
-    private void updateProperty(Long productId, String deviceNum, String message, boolean isShadow) {
+    private void updateProperty(Long productKey, String deviceNum, String message, boolean isShadow) {
         try {
             List<ThingsModelItemBase> thingsModelItemBases = JSON.parseArray(message, ThingsModelItemBase.class);
-            this.deviceService.reportDeviceThingsModelValue(productId, deviceNum, thingsModelItemBases, 1, isShadow);
+            this.deviceService.reportDeviceThingsModelValue(productKey, deviceNum, thingsModelItemBases, 1, isShadow,
+                message);
         } catch (Exception e) {
             log.error("接收属性数据，解析数据时异常 message={}", e.getMessage());
         }
@@ -159,10 +181,11 @@ public class EmqxService {
      *
      * @param message
      */
-    private void updateFunction(Long productId, String deviceNum, String message, boolean isShadow) {
+    private void updateFunction(Long productKey, String deviceNum, String message, boolean isShadow) {
         try {
             List<ThingsModelItemBase> thingsModelItemBases = JSON.parseArray(message, ThingsModelItemBase.class);
-            this.deviceService.reportDeviceThingsModelValue(productId, deviceNum, thingsModelItemBases, 2, isShadow);
+            this.deviceService.reportDeviceThingsModelValue(productKey, deviceNum, thingsModelItemBases, 2, isShadow,
+                message);
         } catch (Exception e) {
             log.error("接收功能，解析数据时异常 message={}", e.getMessage());
         }
@@ -182,15 +205,11 @@ public class EmqxService {
             deviceLog.setDeviceName(device.getDeviceName());
             deviceLog.setLogValue(thingsModelItemBase.getValue());
             deviceLog.setRemark(thingsModelItemBase.getRemark());
-            deviceLog.setDeviceNumber(device.getDeviceNumber());
             deviceLog.setModelId(thingsModelItemBase.getModelId());
             deviceLog.setLogType(3);
-            deviceLog.setIsMonitor(0);
             deviceLog.setUserId(device.getUserId());
             deviceLog.setUserName(device.getUserName());
             deviceLog.setCreateTime(DateUtils.getNowDate());
-            // 1=影子模式，2=在线模式，3=其他
-            deviceLog.setMode(2);
             this.deviceLogService.save(deviceLog);
         }
     }
@@ -198,16 +217,16 @@ public class EmqxService {
     /**
      * 1.发布设备状态
      */
-    public void publishStatus(Long productId, String deviceNum, int deviceStatus, int isShadow, int rssi) {
+    public void publishStatus(Long productKey, String deviceNum, int deviceStatus, int isShadow, int rssi) {
         String message = "{\"status\":" + deviceStatus + ",\"isShadow\":" + isShadow + ",\"rssi\":" + rssi + "}";
-        this.emqxClient.publish(1, false, "/" + productId + "/" + deviceNum + this.pStatusTopic, message);
+        this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pStatusTopic, message);
     }
 
     /**
      * 2.发布设备信息
      */
-    public void publishInfo(Long productId, String deviceNum) {
-        this.emqxClient.publish(1, false, "/" + productId + "/" + deviceNum + this.pInfoTopic, "");
+    public void publishInfo(Long productKey, String deviceNum) {
+        this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pInfoTopic, "");
     }
 
     /**
@@ -215,22 +234,22 @@ public class EmqxService {
      *
      * @param message
      */
-    private void publishNtp(Long productId, String deviceNum, String message) {
+    private void publishNtp(Long productKey, String deviceNum, String message) {
         NtpModel ntpModel = JSON.parseObject(message, NtpModel.class);
         ntpModel.setServerRecvTime(System.currentTimeMillis());
         ntpModel.setServerSendTime(System.currentTimeMillis());
-        this.emqxClient.publish(1, false, "/" + productId + "/" + deviceNum + this.pNtpTopic,
+        this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pNtpTopic,
             JSON.toJSONString(ntpModel));
     }
 
     /**
      * 4.发布属性
      */
-    public void publishProperty(Long productId, String deviceNum, List<ModelIdAndValue> thingsList) {
+    public void publishProperty(Long productKey, String deviceNum, List<ModelIdAndValue> thingsList) {
         if (thingsList == null) {
-            this.emqxClient.publish(1, true, "/" + productId + "/" + deviceNum + this.pPropertyTopic, "");
+            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pPropertyTopic, "");
         } else {
-            this.emqxClient.publish(1, true, "/" + productId + "/" + deviceNum + this.pPropertyTopic,
+            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pPropertyTopic,
                 JSON.toJSONString(thingsList));
         }
     }
@@ -238,11 +257,11 @@ public class EmqxService {
     /**
      * 5.发布功能
      */
-    public void publishFunction(Long productId, String deviceNum, List<ModelIdAndValue> thingsList) {
+    public void publishFunction(Long productKey, String deviceNum, List<ModelIdAndValue> thingsList) {
         if (thingsList == null) {
-            this.emqxClient.publish(1, true, "/" + productId + "/" + deviceNum + this.pFunctionTopic, "");
+            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pFunctionTopic, "");
         } else {
-            this.emqxClient.publish(1, true, "/" + productId + "/" + deviceNum + this.pFunctionTopic,
+            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pFunctionTopic,
                 JSON.toJSONString(thingsList));
         }
 

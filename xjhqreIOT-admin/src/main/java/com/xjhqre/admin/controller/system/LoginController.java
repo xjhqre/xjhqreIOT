@@ -49,7 +49,7 @@ public class LoginController extends BaseController {
      * @return token
      */
     @ApiOperation(value = "登陆方法")
-    @PostMapping(value = "/login")
+    @PostMapping("/login")
     public R<String> login(@RequestBody LoginBody loginBody) {
         // 生成令牌
         String token = this.loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode(),
@@ -78,7 +78,7 @@ public class LoginController extends BaseController {
      *
      * @return 路由信息
      */
-    @GetMapping("getRouters")
+    @GetMapping("/getRouters")
     public R<List<RouterVo>> getRouters() {
         Long userId = SecurityUtils.getUserId();
         List<Menu> menus = this.menuService.selectMenuTreeByUserId(userId);

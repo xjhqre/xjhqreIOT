@@ -10,7 +10,7 @@ import com.xjhqre.iot.domain.entity.Device;
 /**
  * 设备Mapper接口
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Repository

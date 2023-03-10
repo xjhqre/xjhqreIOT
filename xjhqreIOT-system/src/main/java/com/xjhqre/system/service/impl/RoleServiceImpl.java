@@ -1,7 +1,6 @@
 package com.xjhqre.system.service.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,13 +52,12 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      * @return
      */
     @Override
-    public IPage<Role> findRole(Role role, Integer pageNum, Integer pageSize) {
+    public IPage<Role> find(Role role, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Role> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(role.getRoleId() != null, Role::getRoleId, role.getRoleId())
-            .like(role.getRoleName() != null, Role::getRoleName, role.getRoleName())
-            .eq(role.getStatus() != null, Role::getStatus, role.getStatus())
-            .eq(role.getStatus() != null, Role::getStatus, role.getStatus())
-            .like(role.getRoleKey() != null, Role::getRoleKey, role.getRoleKey());
+            .like(role.getRoleName() != null && !"".equals(role.getRoleName()), Role::getRoleName, role.getRoleName())
+            .eq(role.getStatus() != null && !"".equals(role.getStatus()), Role::getStatus, role.getStatus())
+            .like(role.getRoleKey() != null && !"".equals(role.getRoleKey()), Role::getRoleKey, role.getRoleKey());
         return this.roleMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
     }
 
@@ -215,27 +213,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      * @return 结果
      */
     @Override
-    public int updateRoleStatus(Role role) {
-        return this.roleMapper.updateById(role);
-    }
-
-    /**
-     * 通过角色ID删除角色
-     * 
-     * @param roleId
-     *            角色ID
-     * @return 结果
-     */
-    @Override
-    public void deleteRoleById(Long roleId) {
-        if (this.userRoleService.countUserRoleByRoleId(roleId) > 0) {
-            throw new ServiceException("该角色已分配,不能删除");
-        }
-        this.checkRoleAllowed(roleId);
-        // 删除角色与菜单关联
-        this.roleMenuService.deleteRoleMenuByRoleId(roleId);
-        // 设置删除字段
-        this.roleMapper.deleteById(roleId);
+    public void updateRoleStatus(Role role) {
+        this.roleMapper.updateById(role);
     }
 
     /**
@@ -263,7 +242,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      * @return 结果
      */
     @Override
-    public void deleteRoleByIds(Long[] roleIds) {
+    public void delete(List<Long> roleIds) {
         for (Long roleId : roleIds) {
             this.checkRoleAllowed(roleId);
             Role role = this.getDetail(roleId);
@@ -273,9 +252,9 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         }
         // 删除角色与菜单关联
         LambdaQueryWrapper<RoleMenu> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(RoleMenu::getRoleId, Arrays.asList(roleIds));
+        wrapper.in(RoleMenu::getRoleId, roleIds);
         this.roleMenuService.remove(wrapper);
         // 删除角色
-        this.roleMapper.deleteBatchIds(Arrays.asList(roleIds));
+        this.roleMapper.deleteBatchIds(roleIds);
     }
 }

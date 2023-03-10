@@ -21,16 +21,13 @@ public interface ConfigService extends IService<Config> {
      * @param pageSize
      * @return
      */
-    IPage<Config> findConfig(Config config, Integer pageNum, Integer pageSize);
+    IPage<Config> find(Config config, Integer pageNum, Integer pageSize);
 
     /**
      * 根据键名查询参数配置信息
-     * 
-     * @param configKey
-     *            参数键名
-     * @return 参数键值
+     *
      */
-    String selectConfigByKey(String configKey);
+    String getByConfigKey(String configKey);
 
     /**
      * 获取验证码开关
@@ -38,13 +35,6 @@ public interface ConfigService extends IService<Config> {
      * @return true开启，false关闭
      */
     boolean selectCaptchaEnabled();
-
-    /**
-     * 获取文章审核开关
-     *
-     * @return true开启，false关闭
-     */
-    boolean selectArticleAuditEnabled();
 
     /**
      * 获取图片审核开关
@@ -76,7 +66,7 @@ public interface ConfigService extends IService<Config> {
      *            参数配置信息
      * @return 结果
      */
-    void insertConfig(Config config);
+    void add(Config config);
 
     /**
      * 修改参数配置
@@ -85,7 +75,7 @@ public interface ConfigService extends IService<Config> {
      *            参数配置信息
      * @return 结果
      */
-    void updateConfig(Config config);
+    void update(Config config);
 
     /**
      * 批量删除参数信息
@@ -93,7 +83,7 @@ public interface ConfigService extends IService<Config> {
      * @param configIds
      *            需要删除的参数ID
      */
-    void deleteConfigByIds(Long[] configIds);
+    void delete(List<Long> configIds);
 
     /**
      * 加载参数缓存数据
@@ -112,10 +102,11 @@ public interface ConfigService extends IService<Config> {
 
     /**
      * 校验参数键名是否唯一
-     * 
+     *
      * @param config
      *            参数信息
+     * @param configId
      * @return 结果
      */
-    Boolean checkConfigKeyUnique(String configKey);
+    Boolean checkConfigKeyUnique(String configKey, Long configId);
 }

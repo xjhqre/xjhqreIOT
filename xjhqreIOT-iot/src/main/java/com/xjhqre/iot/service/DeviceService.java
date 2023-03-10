@@ -9,6 +9,7 @@ import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.model.thingsModelItem.ThingsModelItemBase;
 import com.xjhqre.iot.domain.model.thingsModels.ThingsModelShadow;
 import com.xjhqre.iot.domain.vo.DeviceVO;
+import com.xjhqre.iot.domain.vo.ThingsModelVO;
 
 /**
  * DeviceService
@@ -24,15 +25,6 @@ public interface DeviceService extends IService<Device> {
     IPage<DeviceVO> find(Device device, Integer pageNum, Integer pageSize);
 
     /**
-     * 查询设备列表
-     *
-     * @param device
-     *            设备
-     * @return 设备集合
-     */
-    List<Device> selectDeviceList(Device device);
-
-    /**
      * 查询分组可添加设备分页列表
      */
     IPage<Device> findByGroup(Device device, Integer pageNum, Integer pageSize);
@@ -41,6 +33,11 @@ public interface DeviceService extends IService<Device> {
      * 查询所有设备
      */
     IPage<Device> selectAllDevice(Device device, Integer pageNum, Integer pageSize);
+
+    /**
+     * 查询设备列表
+     */
+    List<Device> list(Device device);
 
     /**
      * 查询设备详情
@@ -65,31 +62,32 @@ public interface DeviceService extends IService<Device> {
 
     /**
      * 新增设备
-     *
      */
     void add(Device device);
 
     /**
      * 修改设备
-     *
      */
     void update(Device device);
 
     /**
+     * 启用/禁用设备
+     */
+    void updateDeviceStatus(String deviceId, Integer status);
+
+    /**
      * 重置设备状态
-     *
      */
     void resetDeviceStatus(String deviceNum);
 
     /**
      * 删除设备
-     *
      */
     void delete(List<Long> deviceIds);
 
     /**
      * 上报设备的物模型
-     * 
+     *
      * @param productId
      *            产品id
      * @param deviceNum
@@ -100,9 +98,10 @@ public interface DeviceService extends IService<Device> {
      *            日志类型（1=属性上报，2=事件上报，3=调用功能，4=设备升级，5=设备上线，6=设备离线）
      * @param isShadow
      *            是否影子模式
+     * @param message
      */
     void reportDeviceThingsModelValue(Long productId, String deviceNum, List<ThingsModelItemBase> thingsModelItemBases,
-        int type, boolean isShadow);
+        int type, boolean isShadow, String message);
 
     /**
      * 获取设备设置的影子
@@ -122,16 +121,17 @@ public interface DeviceService extends IService<Device> {
     void updateDeviceStatusAndLocation(Device device, String ipAddress);
 
     /**
-     * 上报设备信息
-     *
-     */
-    void reportDevice(Device device, Device deviceEntity);
-
-    /**
      * 生成设备唯一编号
      *
      * @return 结果
      */
     String generationDeviceNum();
 
+    /**
+     * 查询设备属性记录
+     * 
+     * @param deviceId
+     * @return
+     */
+    List<ThingsModelVO> findDeviceProp(Long deviceId);
 }

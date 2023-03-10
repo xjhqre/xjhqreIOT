@@ -21,7 +21,7 @@ public interface RoleService extends IService<Role> {
      * @param pageSize
      * @return
      */
-    IPage<Role> findRole(Role role, Integer pageNum, Integer pageSize);
+    IPage<Role> find(Role role, Integer pageNum, Integer pageSize);
 
     /**
      * 通过角色ID查询角色
@@ -94,16 +94,7 @@ public interface RoleService extends IService<Role> {
      *            角色信息
      * @return 结果
      */
-    int updateRoleStatus(Role role);
-
-    /**
-     * 通过角色ID删除角色
-     * 
-     * @param roleId
-     *            角色ID
-     * @return 结果
-     */
-    void deleteRoleById(Long roleId);
+    void updateRoleStatus(Role role);
 
     /**
      * 根据条件分页查询角色数据
@@ -121,6 +112,6 @@ public interface RoleService extends IService<Role> {
      *            需要删除的角色ID
      * @return 结果
      */
-    void deleteRoleByIds(Long[] roleIds);
+    void delete(List<Long> roleIds);
 
 }

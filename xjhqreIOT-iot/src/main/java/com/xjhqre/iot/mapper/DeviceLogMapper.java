@@ -8,7 +8,7 @@ import com.xjhqre.iot.domain.entity.DeviceLog;
 /**
  * 设备日志Mapper接口
  *
- * @author kerwincui
+ * @author xjhqre
  * @date 2022-01-13
  */
 @Mapper

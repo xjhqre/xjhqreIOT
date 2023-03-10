@@ -15,11 +15,11 @@ import lombok.Data;
 public class UserRole {
 
     /** 用户ID */
-    @ApiModelProperty(name = "用户id")
+    @ApiModelProperty(value = "用户id")
     private Long userId;
 
     /** 角色ID */
-    @ApiModelProperty(name = "角色id")
+    @ApiModelProperty(value = "角色id")
     private Long roleId;
 
 }

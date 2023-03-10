@@ -36,13 +36,36 @@ public class LoginInfoServiceImpl extends ServiceImpl<LoginInfoMapper, LoginInfo
      * @return
      */
     @Override
-    public IPage<LoginInfo> listLoginInfo(LoginInfo loginInfo, Integer pageNum, Integer pageSize) {
+    public IPage<LoginInfo> find(LoginInfo loginInfo, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<LoginInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(loginInfo.getInfoId() != null, LoginInfo::getInfoId, loginInfo.getInfoId())
-            .eq(loginInfo.getIpaddr() != null, LoginInfo::getIpaddr, loginInfo.getIpaddr())
-            .eq(loginInfo.getStatus() != null, LoginInfo::getStatus, loginInfo.getStatus())
-            .like(loginInfo.getUserName() != null, LoginInfo::getUserName, loginInfo.getUserName());
+            .like(loginInfo.getIpaddr() != null && !"".equals(loginInfo.getIpaddr()), LoginInfo::getIpaddr,
+                loginInfo.getIpaddr())
+            .eq(loginInfo.getStatus() != null && !"".equals(loginInfo.getStatus()), LoginInfo::getStatus,
+                loginInfo.getStatus())
+            .like(loginInfo.getUserName() != null && !"".equals(loginInfo.getUserName()), LoginInfo::getUserName,
+                loginInfo.getUserName());
         return this.loginInfoMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
+    }
+
+    /**
+     * 查询系统登录日志集合
+     *
+     * @param loginInfo
+     *            访问日志对象
+     * @return 登录记录集合
+     */
+    @Override
+    public List<LoginInfo> selectLoginInfoList(LoginInfo loginInfo) {
+        LambdaQueryWrapper<LoginInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(loginInfo.getInfoId() != null, LoginInfo::getInfoId, loginInfo.getInfoId())
+            .eq(loginInfo.getIpaddr() != null && !"".equals(loginInfo.getIpaddr()), LoginInfo::getIpaddr,
+                loginInfo.getIpaddr())
+            .eq(loginInfo.getStatus() != null && !"".equals(loginInfo.getStatus()), LoginInfo::getStatus,
+                loginInfo.getStatus())
+            .like(loginInfo.getUserName() != null && !"".equals(loginInfo.getUserName()), LoginInfo::getUserName,
+                loginInfo.getUserName());
+        return this.loginInfoMapper.selectList(queryWrapper);
     }
 
     /**
@@ -60,23 +83,6 @@ public class LoginInfoServiceImpl extends ServiceImpl<LoginInfoMapper, LoginInfo
     }
 
     /**
-     * 查询系统登录日志集合
-     *
-     * @param loginInfo
-     *            访问日志对象
-     * @return 登录记录集合
-     */
-    @Override
-    public List<LoginInfo> selectLoginInfoList(LoginInfo loginInfo) {
-        LambdaQueryWrapper<LoginInfo> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(loginInfo.getInfoId() != null, LoginInfo::getInfoId, loginInfo.getInfoId())
-            .eq(loginInfo.getIpaddr() != null, LoginInfo::getIpaddr, loginInfo.getIpaddr())
-            .eq(loginInfo.getStatus() != null, LoginInfo::getStatus, loginInfo.getStatus())
-            .like(loginInfo.getUserName() != null, LoginInfo::getUserName, loginInfo.getUserName());
-        return this.loginInfoMapper.selectList(queryWrapper);
-    }
-
-    /**
      * 批量删除系统登录日志
      *
      * @param infoIds
@@ -84,7 +90,7 @@ public class LoginInfoServiceImpl extends ServiceImpl<LoginInfoMapper, LoginInfo
      * @return 结果
      */
     @Override
-    public int deleteLoginInfoByIds(Long[] infoIds) {
+    public int delete(Long[] infoIds) {
         return this.loginInfoMapper.deleteBatchIds(Arrays.asList(infoIds));
     }
 

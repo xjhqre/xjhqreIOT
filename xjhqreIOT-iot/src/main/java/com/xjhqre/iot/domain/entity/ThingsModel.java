@@ -1,9 +1,14 @@
 package com.xjhqre.iot.domain.entity;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.xjhqre.common.base.BaseEntity;
+import com.xjhqre.iot.domain.model.DataType;
+import com.xjhqre.iot.mybatisConfig.DataTypeTypeHandler;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -11,62 +16,75 @@ import lombok.Data;
 /**
  * 物模型对象 iot_things_model
  * 
- * @author kerwincui
- * @date 2021-12-16
+ * @author xjhqre
+ * @since 2022-12-20
  */
 @Data
-@TableName("iot_things_model")
+@TableName(value = "iot_things_model", autoResultMap = true)
 public class ThingsModel extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /** 物模型ID */
-    @ApiModelProperty(name = "物模型ID")
+    @ApiModelProperty(value = "物模型ID")
     @TableId(value = "model_id", type = IdType.AUTO)
     private Long modelId;
 
     /** 物模型名称 */
-    @ApiModelProperty(name = "物模型名称")
+    @ApiModelProperty(value = "物模型名称")
     private String modelName;
 
+    @ApiModelProperty(value = "标识符（产品下唯一）")
+    private String identifier;
+
     /** 产品ID */
-    @ApiModelProperty(name = "产品ID")
+    @ApiModelProperty(value = "产品ID")
     private Long productId;
 
     /** 产品名称 */
-    @ApiModelProperty(name = "产品名称")
+    @ApiModelProperty(value = "产品名称")
     private String productName;
 
     /** 模型类别（1-属性，2-功能，3-事件） */
-    @ApiModelProperty(name = "模型类别（1-属性，2-功能，3-事件）")
+    @ApiModelProperty(value = "模型类别（1-属性，2-服务，3-事件）")
     private Integer type;
 
-    /** 数据类型（integer、decimal、string、bool、array、enum） */
-    @ApiModelProperty(name = "数据类型（integer、decimal、string、bool、array、enum）")
-    private String datatype;
+    /**
+     * 事件类型（1-信息，2-告警，3-故障）
+     */
+    @ApiModelProperty(value = "事件类型（1-信息，2-告警，3-故障）")
+    private Integer eventType;
 
     /** 数据定义 */
     /*
-        {
-            "type": "",
-            "min": "",
-            "max": "",
-            "unit": "",
-            "step": "",
-            "maxLength": "",
-            "falseText": "",
-            "trueText": "",
-            "arrayType": "",
-            "enumList": ""
+    {
+        "type":"",
+        "specs":{
+            "min":"",
+            "max":"",
+            "unit":"",
+            "step":"",
+            "maxLength":"",
+            "falseText":"",
+            "trueText":"",
+            "arrayType":"",
+            "enumList":""
         }
+    }
      */
-    @ApiModelProperty(name = "数据定义")
-    private String specs;
+    @ApiModelProperty(value = "数据定义")
+    @TableField(typeHandler = DataTypeTypeHandler.class)
+    private DataType dataType;
 
-    /** 是否首页显示（0-否，1-是） */
-    @ApiModelProperty(name = "是否首页显示（0-否，1-是）")
-    private Integer isTop;
+    @ApiModelProperty(value = "输入输出参数列表")
+    @TableField(exist = false)
+    private List<ModelParam> paramList;
 
-    /** 是否实时监测（0-否，1-是） */
-    @ApiModelProperty(name = "是否实时监测（0-否，1-是）")
-    private Integer isMonitor;
+    @ApiModelProperty(value = "是否只读（0：读写 1：只读）")
+    private Integer isReadonly;
+
+    /**
+     * 删除标志（0代表存在 2代表删除）
+     */
+    @ApiModelProperty(value = "删除标志（0代表存在 2代表删除）")
+    private String delFlag;
 }

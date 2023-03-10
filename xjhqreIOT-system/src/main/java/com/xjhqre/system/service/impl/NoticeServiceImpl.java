@@ -1,15 +1,17 @@
 package com.xjhqre.system.service.impl;
 
-import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.system.domain.entity.Notice;
 import com.xjhqre.system.mapper.NoticeMapper;
 import com.xjhqre.system.service.NoticeService;
@@ -18,32 +20,32 @@ import com.xjhqre.system.service.NoticeService;
  * 公告 服务层实现
  * 
  * @author xjhqre
+ * @since 2022-12-26
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class NoticeServiceImpl implements NoticeService {
-    @Autowired
+    @Resource
     private NoticeMapper noticeMapper;
 
     /**
-     * 查询公告信息
-     * 
-     * @param noticeId
-     *            公告ID
-     * @return 公告信息
+     * 查询公告详情
+     *
      */
     @Override
-    public Notice selectNoticeById(Long noticeId) {
+    public Notice getDetail(Long noticeId) {
         return this.noticeMapper.selectById(noticeId);
     }
 
     @Override
-    public IPage<Notice> findNotice(Notice notice, Integer pageNum, Integer pageSize) {
+    public IPage<Notice> find(Notice notice, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Notice> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(notice.getNoticeId() != null, Notice::getNoticeId, notice.getNoticeId())
-            .like(notice.getNoticeTitle() != null, Notice::getNoticeTitle, notice.getNoticeType())
-            .eq(notice.getNoticeType() != null, Notice::getNoticeType, notice.getNoticeType());
-        return this.noticeMapper.selectPage(new Page<Notice>(pageNum, pageSize), wrapper);
+            .like(notice.getNoticeTitle() != null && !"".equals(notice.getNoticeTitle()), Notice::getNoticeTitle,
+                notice.getNoticeTitle())
+            .eq(notice.getNoticeType() != null && !"".equals(notice.getNoticeType()), Notice::getNoticeType,
+                notice.getNoticeType());
+        return this.noticeMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
     /**
@@ -57,56 +59,41 @@ public class NoticeServiceImpl implements NoticeService {
     public List<Notice> selectNoticeList(Notice notice) {
         LambdaQueryWrapper<Notice> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(notice.getNoticeId() != null, Notice::getNoticeId, notice.getNoticeId())
-            .like(notice.getNoticeTitle() != null, Notice::getNoticeTitle, notice.getNoticeType())
-            .eq(notice.getNoticeType() != null, Notice::getNoticeType, notice.getNoticeType());
+            .like(notice.getNoticeTitle() != null && !"".equals(notice.getNoticeTitle()), Notice::getNoticeTitle,
+                notice.getNoticeType())
+            .eq(notice.getNoticeType() != null && !"".equals(notice.getNoticeType()), Notice::getNoticeType,
+                notice.getNoticeType());
         return this.noticeMapper.selectList(wrapper);
     }
 
     /**
      * 新增公告
      * 
-     * @param notice
-     *            公告信息
-     * @return 结果
      */
     @Override
-    public int insertNotice(Notice notice) {
-        return this.noticeMapper.insert(notice);
+    public void add(Notice notice) {
+        notice.setCreateBy(SecurityUtils.getUsername());
+        notice.setCreateTime(DateUtils.getNowDate());
+        this.noticeMapper.insert(notice);
     }
 
     /**
      * 修改公告
-     * 
-     * @param notice
-     *            公告信息
-     * @return 结果
+     *
      */
     @Override
-    public int updateNotice(Notice notice) {
-        return this.noticeMapper.updateById(notice);
-    }
-
-    /**
-     * 删除公告对象
-     * 
-     * @param noticeId
-     *            公告ID
-     * @return 结果
-     */
-    @Override
-    public int deleteNoticeById(Long noticeId) {
-        return this.noticeMapper.deleteById(noticeId);
+    public void update(Notice notice) {
+        notice.setUpdateBy(SecurityUtils.getUsername());
+        notice.setUpdateTime(DateUtils.getNowDate());
+        this.noticeMapper.updateById(notice);
     }
 
     /**
      * 批量删除公告信息
-     * 
-     * @param noticeIds
-     *            需要删除的公告ID
-     * @return 结果
+     *
      */
     @Override
-    public int deleteNoticeByIds(Long[] noticeIds) {
-        return this.noticeMapper.deleteBatchIds(Arrays.asList(noticeIds));
+    public void delete(List<Long> noticeIds) {
+        this.noticeMapper.deleteBatchIds(noticeIds);
     }
 }

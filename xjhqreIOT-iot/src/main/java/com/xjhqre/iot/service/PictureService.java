@@ -1,9 +1,12 @@
 package com.xjhqre.iot.service;
 
+import java.util.Map;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xjhqre.common.domain.dto.PictureDTO;
 import com.xjhqre.common.domain.entity.Picture;
 
 /**
@@ -14,16 +17,8 @@ import com.xjhqre.common.domain.entity.Picture;
 public interface PictureService extends IService<Picture> {
 
     /**
-     * 保存图片
-     *
-     * @param picture
-     * @param mFile
-     */
-    void add(Picture picture, MultipartFile mFile);
-
-    /**
      * 分页查询图片列表
-     * 
+     *
      * @param picture
      * @param pageNum
      * @param pageSize
@@ -31,13 +26,21 @@ public interface PictureService extends IService<Picture> {
      */
     IPage<Picture> find(Picture picture, Integer pageNum, Integer pageSize);
 
-    void audit(String pictureId, Integer result);
-
     /**
-     * 批量审核
-     * 
-     * @param pictureIds
-     * @param result
+     * 保存图片
+     *
+     * @param pictureDTO
+     * @param mFile
      */
-    void batchAudit(String[] pictureIds, Integer result);
+    Map<String, String> add(PictureDTO pictureDTO, MultipartFile mFile);
+
+    // void audit(String pictureId, Integer result);
+    //
+    /// **
+    // * 批量审核
+    // *
+    // * @param pictureIds
+    // * @param result
+    // */
+    // void batchAudit(String[] pictureIds, Integer result);
 }

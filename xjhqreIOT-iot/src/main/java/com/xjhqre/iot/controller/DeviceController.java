@@ -6,8 +6,12 @@ import javax.annotation.Resource;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +27,7 @@ import com.xjhqre.common.group.Update;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.vo.DeviceVO;
+import com.xjhqre.iot.domain.vo.ThingsModelVO;
 import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.DeviceService;
 
@@ -49,14 +54,9 @@ public class DeviceController extends BaseController {
     private EmqxService emqxService;
 
     @ApiOperation(value = "分页查询设备列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:device:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<DeviceVO>> find(Device device, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<DeviceVO>> find(Device device, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.deviceService.find(device, pageNum, pageSize));
     }
 
@@ -64,14 +64,9 @@ public class DeviceController extends BaseController {
      * 查询分组可添加设备，设备分组添加设备时用
      */
     @ApiOperation(value = "查询分组可添加设备分页列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:device:list')")
-    @GetMapping("findByGroup/{pageNum}/{pageSize}")
-    public R<IPage<Device>> findByGroup(Device device, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/findByGroup}")
+    public R<IPage<Device>> findByGroup(Device device, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.deviceService.findByGroup(device, pageNum, pageSize));
     }
 
@@ -92,6 +87,16 @@ public class DeviceController extends BaseController {
     }
 
     /**
+     * 查询设备列表
+     */
+    @ApiOperation("查询设备列表")
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @RequestMapping(value = "/list", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<List<Device>> list(Device device) {
+        return R.success(this.deviceService.list(device));
+    }
+
+    /**
      * 获取设备详细信息
      */
     @PreAuthorize("@ss.hasPermission('iot:device:query')")
@@ -99,6 +104,16 @@ public class DeviceController extends BaseController {
     @ApiOperation("获取设备详情")
     public R<DeviceVO> getDetail(@RequestParam Long deviceId) {
         return R.success(this.deviceService.getDetail(deviceId));
+    }
+
+    /**
+     * 获取设备属性值
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @RequestMapping(value = "/findDeviceProp", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("获取设备属性值")
+    public R<List<ThingsModelVO>> findDeviceProp(@RequestParam Long deviceId) {
+        return R.success(this.deviceService.findDeviceProp(deviceId));
     }
 
     /**
@@ -136,9 +151,9 @@ public class DeviceController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:device:add')")
     @Log(title = "添加设备", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    @PostMapping("/add")
     @ApiOperation("添加设备")
-    public R<String> add(@Validated(Insert.class) Device device) {
+    public R<String> add(@Validated(Insert.class) @RequestBody Device device) {
         this.deviceService.add(device);
         return R.success("添加设备成功");
     }
@@ -149,10 +164,22 @@ public class DeviceController extends BaseController {
     @ApiOperation("修改设备")
     @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "修改设备", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> update(@Validated(Update.class) Device device) {
+    @PutMapping("/update")
+    public R<String> update(@Validated(Update.class) @RequestBody Device device) {
         this.deviceService.update(device);
         return R.success("修改设备成功");
+    }
+
+    /**
+     * 启用/禁用设备
+     */
+    @PreAuthorize("@ss.hasPermission('iot:device:update')")
+    @Log(title = "设备状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/updateDeviceStatus")
+    @ApiOperation("启用/禁用设备")
+    public R<String> updateDeviceStatus(@RequestParam String deviceId, @RequestParam Integer status) {
+        this.deviceService.updateDeviceStatus(deviceId, status);
+        return R.success("启用/禁用设备成功");
     }
 
     /**
@@ -172,9 +199,9 @@ public class DeviceController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:device:delete')")
     @Log(title = "删除设备", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("批量删除设备")
-    public R<String> delete(@RequestParam List<Long> deviceIds) {
+    @DeleteMapping("/delete/{deviceIds}")
+    public R<String> delete(@PathVariable List<Long> deviceIds) {
         this.deviceService.delete(deviceIds);
         return R.success("删除设备成功");
     }

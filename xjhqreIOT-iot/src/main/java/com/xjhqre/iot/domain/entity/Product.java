@@ -11,8 +11,8 @@ import lombok.Data;
 /**
  * 产品对象 iot_product
  * 
- * @author kerwincui
- * @date 2021-12-16
+ * @author xjhqre
+ * @since 2023-1-16
  */
 @Data
 @TableName("iot_product")
@@ -22,63 +22,61 @@ public class Product extends BaseEntity {
     /**
      * 产品ID
      */
-    @ApiModelProperty(name = "产品ID")
+    @ApiModelProperty(value = "产品ID", hidden = true)
     @TableId(value = "product_id", type = IdType.AUTO)
     private Long productId;
 
     /**
      * 产品名称
      */
-    @ApiModelProperty(name = "产品名称")
+    @ApiModelProperty(value = "产品名称")
     private String productName;
 
     /**
      * 用户ID
      */
-    @ApiModelProperty(name = "用户ID")
+    @ApiModelProperty(value = "用户ID", hidden = true)
     private Long userId;
 
     /**
-     * 是否启用授权码（0-否，1-是），用户输入
+     * 产品键
      */
-    @ApiModelProperty(name = "是否启用授权码")
-    private Integer isAuthorize;
+    @ApiModelProperty(value = "产品键", hidden = true)
+    private String productKey;
 
-    /** 产品秘钥 */
-    @ApiModelProperty(name = "产品秘钥")
+    /**
+     * 产品秘钥
+     */
+    @ApiModelProperty(value = "产品秘钥", hidden = true)
     private String productSecret;
 
-    /** 状态（1-未发布，2-已发布，不能修改） */
-    @ApiModelProperty(name = "状态 1==未发布，2=已发布，不能修改")
+    /**
+     * 状态（1-未发布，2-已发布，不能修改）
+     */
+    @ApiModelProperty(value = "状态 1==未发布，2=已发布，不能修改", hidden = true)
     private Integer status;
 
     /**
      * 物模型Json，用户添加物模型后设置
      */
-    @ApiModelProperty(name = "物模型Json")
+    @ApiModelProperty(value = "物模型Json", hidden = true)
     private String thingsModelsJson;
-
-    /**
-     * 设备类型（1-直连设备、2-网关子设备、3-网关设备），用户输入
-     */
-    @ApiModelProperty(name = "设备类型（1-直连设备、2-网关子设备、3-网关设备）")
-    private Integer deviceType;
 
     /**
      * 联网方式（1=-wifi、2-蜂窝(2G/3G/4G/5G)、3-以太网、4-其他），用户输入
      */
-    @ApiModelProperty(name = "联网方式（1=-wifi、2-蜂窝(2G/3G/4G/5G)、3-以太网、4-其他）")
+    @ApiModelProperty(value = "联网方式（1=-wifi、2-蜂窝(2G/3G/4G/5G)、3-以太网、4-其他）")
     private Integer networkMethod;
 
     /**
      * 产品图片，用户上传添加
      */
-    @ApiModelProperty(name = "图片地址")
+    @ApiModelProperty(value = "图片地址")
     private String imgUrl;
 
     /**
      * 删除标志（0代表存在 2代表删除）
      */
-    @ApiModelProperty(name = "删除标志（0代表存在 2代表删除）")
+    @ApiModelProperty(value = "删除标志（0代表存在 2代表删除）")
     private String delFlag;
 }

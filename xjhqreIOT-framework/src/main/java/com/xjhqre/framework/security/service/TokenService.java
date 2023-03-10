@@ -15,6 +15,7 @@ import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.model.LoginUser;
 import com.xjhqre.common.utils.ServletUtils;
 import com.xjhqre.common.utils.StringUtils;
+import com.xjhqre.common.utils.ip.AddressUtils;
 import com.xjhqre.common.utils.ip.IpUtils;
 import com.xjhqre.common.utils.redis.RedisCache;
 import com.xjhqre.common.utils.uuid.IdUtils;
@@ -135,7 +136,9 @@ public class TokenService {
      *            登录信息
      */
     public void refreshToken(LoginUser loginUser) {
+        String address = AddressUtils.getRealAddressByIP(loginUser.getUser().getLoginIp());
         loginUser.setLoginTime(System.currentTimeMillis());
+        loginUser.setLoginLocation(address);
         loginUser.setExpireTime(loginUser.getLoginTime() + this.expireTime * MILLIS_MINUTE);
         // 根据uuid将loginUser缓存
         String userKey = this.getTokenKey(loginUser.getToken());

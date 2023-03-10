@@ -52,7 +52,7 @@ public class Server {
      */
     private List<File> files = new LinkedList<File>();
 
-    public void copyTo() throws Exception {
+    public void copyTo() {
         SystemInfo si = new SystemInfo();
         HardwareAbstractionLayer hal = si.getHardware();
 

@@ -18,7 +18,9 @@ import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.entity.DictData;
 import com.xjhqre.common.domain.entity.DictType;
 import com.xjhqre.common.exception.ServiceException;
+import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.DictUtils;
+import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.system.mapper.DictDataMapper;
 import com.xjhqre.system.mapper.DictTypeMapper;
@@ -51,12 +53,29 @@ public class DictTypeServiceImpl implements DictTypeService {
      *
      */
     @Override
-    public IPage<DictType> findDictType(DictType dictType, Integer pageNum, Integer pageSize) {
+    public IPage<DictType> find(DictType dictType, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(dictType.getDictId() != null, DictType::getDictId, dictType.getDictId())
-            .eq(dictType.getDictType() != null, DictType::getDictType, dictType.getDictType())
-            .eq(dictType.getDictName() != null, DictType::getDictName, dictType.getDictName());
+            .eq(dictType.getDictType() != null && !"".equals(dictType.getDictType()), DictType::getDictType,
+                dictType.getDictType())
+            .like(dictType.getDictName() != null && !"".equals(dictType.getDictName()), DictType::getDictName,
+                dictType.getDictName())
+            .eq(dictType.getStatus() != null && !"".equals(dictType.getStatus()), DictType::getStatus,
+                dictType.getStatus());
         return this.dictTypeMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    }
+
+    @Override
+    public List<DictType> list(DictType dictType) {
+        LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(dictType.getDictId() != null, DictType::getDictId, dictType.getDictId())
+            .eq(dictType.getDictType() != null && !"".equals(dictType.getDictType()), DictType::getDictType,
+                dictType.getDictType())
+            .like(dictType.getDictName() != null && !"".equals(dictType.getDictName()), DictType::getDictName,
+                dictType.getDictName())
+            .eq(dictType.getStatus() != null && !"".equals(dictType.getStatus()), DictType::getStatus,
+                dictType.getStatus());
+        return this.dictTypeMapper.selectList(wrapper);
     }
 
     /**
@@ -77,7 +96,7 @@ public class DictTypeServiceImpl implements DictTypeService {
      * @return 字典数据集合信息
      */
     @Override
-    public List<DictData> selectDictDataByType(String dictType) {
+    public List<DictData> getByDictType(String dictType) {
         // 查缓存
         List<DictData> dictDatas = DictUtils.getDictCache(dictType);
         if (StringUtils.isNotEmpty(dictDatas)) {
@@ -101,7 +120,7 @@ public class DictTypeServiceImpl implements DictTypeService {
      * @return 字典类型
      */
     @Override
-    public DictType selectDictTypeById(Long dictId) {
+    public DictType getDetail(Long dictId) {
         LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DictType::getDictId, dictId).last("limit 1");
         return this.dictTypeMapper.selectOne(wrapper);
@@ -128,9 +147,9 @@ public class DictTypeServiceImpl implements DictTypeService {
      *            需要删除的字典ID
      */
     @Override
-    public void deleteDictTypeByIds(Long[] dictIds) {
+    public void delete(List<Long> dictIds) {
         for (Long dictId : dictIds) {
-            DictType dictType = this.selectDictTypeById(dictId);
+            DictType dictType = this.getDetail(dictId);
             if (this.dictDataMapper.countDictDataByType(dictType.getDictType()) > 0) {
                 throw new ServiceException(String.format("%1$s已分配,不能删除", dictType.getDictName()));
             }
@@ -170,14 +189,14 @@ public class DictTypeServiceImpl implements DictTypeService {
 
     /**
      * 新增保存字典类型信息
-     * 
-     * @param dict
-     *            字典类型信息
+     *
      */
     @Override
-    public void insertDictType(DictType dict) {
-        this.dictTypeMapper.insert(dict);
-        DictUtils.setDictCache(dict.getDictType(), null);
+    public void add(DictType dictType) {
+        dictType.setCreateBy(SecurityUtils.getUsername());
+        dictType.setCreateTime(DateUtils.getNowDate());
+        this.dictTypeMapper.insert(dictType);
+        DictUtils.setDictCache(dictType.getDictType(), null);
     }
 
     /**
@@ -187,7 +206,9 @@ public class DictTypeServiceImpl implements DictTypeService {
      *            字典类型信息
      */
     @Override
-    public void updateDictType(DictType dict) {
+    public void update(DictType dict) {
+        dict.setUpdateBy(SecurityUtils.getUsername());
+        dict.setUpdateTime(DateUtils.getNowDate());
         DictType oldDict = this.dictTypeMapper.selectById(dict.getDictId());
         this.dictDataMapper.updateDictDataType(oldDict.getDictType(), dict.getDictType());
         this.dictTypeMapper.updateById(dict);

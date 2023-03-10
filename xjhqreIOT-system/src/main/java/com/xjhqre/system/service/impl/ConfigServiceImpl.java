@@ -19,6 +19,8 @@ import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.constant.UserConstants;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.text.Convert;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.redis.RedisCache;
 import com.xjhqre.system.domain.entity.Config;
@@ -61,23 +63,22 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      * @return
      */
     @Override
-    public IPage<Config> findConfig(Config config, Integer pageNum, Integer pageSize) {
+    public IPage<Config> find(Config config, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(config.getConfigId() != null, Config::getConfigId, config.getConfigId())
-            .like(config.getConfigName() != null, Config::getConfigName, config.getConfigName())
-            .like(config.getConfigKey() != null, Config::getConfigKey, config.getConfigKey());
+            .like(config.getConfigName() != null && !"".equals(config.getConfigName()), Config::getConfigName,
+                config.getConfigName())
+            .like(config.getConfigKey() != null && !"".equals(config.getConfigKey()), Config::getConfigKey,
+                config.getConfigKey());
         return this.configMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
     }
 
     /**
      * 根据键名查询参数配置信息
-     * 
-     * @param configKey
-     *            参数key
-     * @return 参数键值 config_value
+     *
      */
     @Override
-    public String selectConfigByKey(String configKey) {
+    public String getByConfigKey(String configKey) {
         String configValue = Convert.toStr(this.redisCache.getCacheObject(this.getCacheKey(configKey)));
         if (StringUtils.isNotEmpty(configValue)) {
             return configValue;
@@ -99,25 +100,11 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public boolean selectCaptchaEnabled() {
-        String captchaEnabled = this.selectConfigByKey(ConfigConstant.CAPTCHA_ENABLED);
+        String captchaEnabled = this.getByConfigKey(ConfigConstant.CAPTCHA_ENABLED);
         if (StringUtils.isEmpty(captchaEnabled)) {
             return true;
         }
         return Convert.toBool(captchaEnabled);
-    }
-
-    /**
-     * 获取文章审核开关
-     *
-     * @return true开启，false关闭
-     */
-    @Override
-    public boolean selectArticleAuditEnabled() {
-        String articleAudit = this.selectConfigByKey(ConfigConstant.ARTICLE_AUDIT);
-        if (StringUtils.isEmpty(articleAudit)) {
-            return true;
-        }
-        return Convert.toBool(articleAudit);
     }
 
     /**
@@ -127,7 +114,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public boolean selectPictureAuditEnabled() {
-        String pictureAudit = this.selectConfigByKey(ConfigConstant.PICTURE_AUDIT);
+        String pictureAudit = this.getByConfigKey(ConfigConstant.PICTURE_AUDIT);
         if (StringUtils.isEmpty(pictureAudit)) {
             return true;
         }
@@ -141,7 +128,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public boolean selectEsSearch() {
-        String esSearch = this.selectConfigByKey(ConfigConstant.ES_SEARCH);
+        String esSearch = this.getByConfigKey(ConfigConstant.ES_SEARCH);
         if (StringUtils.isEmpty(esSearch)) {
             return true;
         }
@@ -172,7 +159,9 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      * @return 结果
      */
     @Override
-    public void insertConfig(Config config) {
+    public void add(Config config) {
+        config.setCreateBy(SecurityUtils.getUsername());
+        config.setCreateTime(DateUtils.getNowDate());
         this.configMapper.insert(config);
         this.redisCache.setCacheObject(this.getCacheKey(config.getConfigKey()), config.getConfigValue());
     }
@@ -185,7 +174,9 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      * @return 结果
      */
     @Override
-    public void updateConfig(Config config) {
+    public void update(Config config) {
+        config.setUpdateBy(SecurityUtils.getUsername());
+        config.setUpdateTime(DateUtils.getNowDate());
         this.configMapper.updateById(config);
         this.redisCache.setCacheObject(this.getCacheKey(config.getConfigKey()), config.getConfigValue());
     }
@@ -197,7 +188,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      *            需要删除的参数ID
      */
     @Override
-    public void deleteConfigByIds(Long[] configIds) {
+    public void delete(List<Long> configIds) {
         for (Long configId : configIds) {
             Config config = this.configMapper.selectById(configId);
             if (StringUtils.equals(UserConstants.YES, config.getConfigType())) {
@@ -239,15 +230,16 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
     /**
      * 校验参数键名是否唯一
-     * 
+     *
      * @param configKey
      *            参数配置信息
+     * @param configId
      * @return 结果
      */
     @Override
-    public Boolean checkConfigKeyUnique(String configKey) {
+    public Boolean checkConfigKeyUnique(String configKey, Long configId) {
         LambdaQueryWrapper<Config> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Config::getConfigKey, configKey);
+        queryWrapper.eq(Config::getConfigKey, configKey).ne(configId != null, Config::getConfigId, configId);
         Config info = this.configMapper.selectOne(queryWrapper);
         if (StringUtils.isNotNull(info)) {
             return Constants.NOT_UNIQUE;

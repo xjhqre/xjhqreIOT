@@ -72,7 +72,7 @@ public class SysJobLogController extends BaseController {
     /**
      * 清空定时任务日志
      */
-    @PreAuthorize("@ss.hasPermission('monitor:job:remove')")
+    @PreAuthorize("@ss.hasPermission('monitor:job:delete')")
     @Log(title = "定时任务日志", businessType = BusinessType.CLEAN)
     @DeleteMapping("/clean")
     public R<String> clean() {

@@ -38,6 +38,14 @@ public class R<T> implements Serializable {
         return r;
     }
 
+    public static <T> R<T> success(T object, String msg) {
+        R<T> r = new R<>();
+        r.data = object;
+        r.code = HttpStatus.SUCCESS;
+        r.msg = msg;
+        return r;
+    }
+
     public static <T> R<T> error(String msg) {
         R<T> r = new R<>();
         r.msg = msg;

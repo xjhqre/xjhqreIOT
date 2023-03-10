@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.xjhqre.common.constant.CacheConstants;
+import com.xjhqre.common.constant.ConfigConstant;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.domain.model.RegisterBody;
@@ -34,7 +35,7 @@ public class RegisterService {
      * 注册
      */
     public void register(RegisterBody registerBody) {
-        if (!("true".equals(this.configService.selectConfigByKey("registerUser")))) {
+        if (!("true".equals(this.configService.getByConfigKey(ConfigConstant.REGISTER_USER)))) {
             throw new ServiceException("当前系统没有开启注册功能！");
         }
 

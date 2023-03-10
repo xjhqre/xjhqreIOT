@@ -5,8 +5,13 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,12 +22,13 @@ import com.xjhqre.common.annotation.Log;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.group.Insert;
+import com.xjhqre.common.group.Update;
+import com.xjhqre.iot.domain.dto.UpdateDeviceGroupsDTO;
 import com.xjhqre.iot.domain.entity.Group;
 import com.xjhqre.iot.service.GroupService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -42,14 +48,9 @@ public class GroupController extends BaseController {
      * 分页查询分组列表
      */
     @ApiOperation(value = "分页查询分组列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:group:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<Group>> find(Group group, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<Group>> find(Group group, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.groupService.find(group, pageNum, pageSize));
     }
 
@@ -80,8 +81,8 @@ public class GroupController extends BaseController {
     @ApiOperation("添加分组")
     @PreAuthorize("@ss.hasPermission('iot:group:add')")
     @Log(title = "分组", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> add(Group group) {
+    @PostMapping("/add")
+    public R<String> add(@Validated(Insert.class) @RequestBody Group group) {
         this.groupService.add(group);
         return R.success("添加分组成功");
     }
@@ -90,11 +91,11 @@ public class GroupController extends BaseController {
      * 更新分组下的关联设备
      */
     @ApiOperation("更新分组下的关联设备")
-    @PreAuthorize("@ss.hasPermission('iot:group:edit')")
+    @PreAuthorize("@ss.hasPermission('iot:group:update')")
     @Log(title = "设备分组", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/updateDeviceGroups", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> updateDeviceGroups(@RequestParam Long groupId, @RequestParam List<Long> deviceIdList) {
-        this.groupService.updateDeviceGroups(groupId, deviceIdList);
+    @PutMapping(value = "/updateDeviceGroups")
+    public R<String> updateDeviceGroups(@RequestBody UpdateDeviceGroupsDTO dto) {
+        this.groupService.updateDeviceGroups(dto);
         return R.success("更新成功");
     }
 
@@ -104,8 +105,8 @@ public class GroupController extends BaseController {
     @ApiOperation("修改分组")
     @PreAuthorize("@ss.hasPermission('iot:group:update')")
     @Log(title = "分组", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> update(Group group) {
+    @PutMapping("/update")
+    public R<String> update(@Validated(Update.class) @RequestBody Group group) {
         this.groupService.update(group);
         return R.success("修改成功");
     }
@@ -115,9 +116,9 @@ public class GroupController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:group:delete')")
     @Log(title = "分组", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    @DeleteMapping("/delete/{groupIds}")
     @ApiOperation("批量删除设备分组")
-    public R<String> delete(@RequestParam List<Long> groupIds) {
+    public R<String> delete(@PathVariable List<Long> groupIds) {
         this.groupService.delete(groupIds);
         return R.success("删除分组成功");
     }

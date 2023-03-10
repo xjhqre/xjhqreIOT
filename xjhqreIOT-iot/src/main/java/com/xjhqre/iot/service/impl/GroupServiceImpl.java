@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xjhqre.common.domain.model.LoginUser;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.dto.UpdateDeviceGroupsDTO;
 import com.xjhqre.iot.domain.entity.Group;
 import com.xjhqre.iot.mapper.GroupMapper;
 import com.xjhqre.iot.service.GroupService;
@@ -21,7 +22,7 @@ import com.xjhqre.iot.service.GroupService;
 /**
  * 设备分组Service业务层处理
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Service
@@ -34,9 +35,11 @@ public class GroupServiceImpl implements GroupService {
     public IPage<Group> find(Group group, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(group.getGroupId() != null, Group::getGroupId, group.getGroupId())
-            .like(group.getGroupName() != null, Group::getGroupName, group.getGroupName())
+            .like(group.getGroupName() != null && !"".equals(group.getGroupName()), Group::getGroupName,
+                group.getGroupName())
             .eq(group.getUserId() != null, Group::getUserId, group.getUserId())
-            .like(group.getUserName() != null, Group::getUserName, group.getUserName());
+            .like(group.getUserName() != null && !"".equals(group.getUserName()), Group::getUserName,
+                group.getUserName());
         return this.groupMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
@@ -85,12 +88,11 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public void updateDeviceGroups(Long groupId, List<Long> deviceIdList) {
+    public void updateDeviceGroups(UpdateDeviceGroupsDTO dto) {
         // 删除分组下的所有关联设备
-        this.groupMapper.deleteDeviceGroupByGroupIds(Collections.singletonList(groupId));
+        this.groupMapper.deleteDeviceGroupByGroupIds(Collections.singletonList(dto.getGroupId()));
         // 分组下添加关联设备
-        this.groupMapper.insertDeviceGroups(deviceIdList);
-
+        this.groupMapper.insertDeviceGroups(dto.getGroupId(), dto.getDeviceIdList());
     }
 
     /**

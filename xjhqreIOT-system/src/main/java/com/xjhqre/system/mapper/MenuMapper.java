@@ -17,13 +17,10 @@ import com.xjhqre.common.domain.entity.Menu;
 public interface MenuMapper extends BaseMapper<Menu> {
 
     /**
-     * 根据用户查询系统菜单列表
+     * 查询角色权限列表
      *
-     * @param menu
-     *            菜单信息
-     * @return 菜单列表
      */
-    List<Menu> selectMenuListByUserId(@Param("userId") Long userId);
+    List<Menu> selectMenuListByRoleId(@Param("roleId") Long roleId);
 
     /**
      * 根据角色ID查询权限
@@ -58,7 +55,7 @@ public interface MenuMapper extends BaseMapper<Menu> {
      * @param roleId
      * @return
      */
-    List<Long> selectMenuListByRoleId(@Param("roleId") Long roleId);
+    List<Long> selectMenuIdsByRoleId(@Param("roleId") Long roleId);
 
     List<Menu> selectMenuTreeByUserId(@Param("userId") Long userId);
 }

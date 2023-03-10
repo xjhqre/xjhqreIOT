@@ -20,7 +20,12 @@ public interface DictTypeService {
      * @param pageSize
      * @return
      */
-    IPage<DictType> findDictType(DictType dictType, Integer pageNum, Integer pageSize);
+    IPage<DictType> find(DictType dictType, Integer pageNum, Integer pageSize);
+
+    /**
+     * 查询字典列表
+     */
+    List<DictType> list(DictType dictType);
 
     /**
      * 根据所有字典类型
@@ -36,7 +41,7 @@ public interface DictTypeService {
      *            字典类型
      * @return 字典数据集合信息
      */
-    List<DictData> selectDictDataByType(String dictType);
+    List<DictData> getByDictType(String dictType);
 
     /**
      * 根据字典类型ID查询信息
@@ -45,7 +50,7 @@ public interface DictTypeService {
      *            字典类型ID
      * @return 字典类型
      */
-    DictType selectDictTypeById(Long dictId);
+    DictType getDetail(Long dictId);
 
     /**
      * 根据字典类型查询信息
@@ -62,7 +67,7 @@ public interface DictTypeService {
      * @param dictIds
      *            需要删除的字典ID
      */
-    void deleteDictTypeByIds(Long[] dictIds);
+    void delete(List<Long> dictIds);
 
     /**
      * 加载字典缓存数据
@@ -81,7 +86,7 @@ public interface DictTypeService {
      *            字典类型信息
      * @return 结果
      */
-    void insertDictType(DictType dictType);
+    void add(DictType dictType);
 
     /**
      * 修改保存字典类型信息
@@ -90,7 +95,7 @@ public interface DictTypeService {
      *            字典类型信息
      * @return 结果
      */
-    void updateDictType(DictType dictType);
+    void update(DictType dictType);
 
     /**
      * 校验字典类型称是否唯一

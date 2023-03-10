@@ -21,7 +21,7 @@ public interface OperLogService extends IService<OperLog> {
      * @param pageSize
      * @return
      */
-    IPage<OperLog> findOperLog(OperLog operLog, Integer pageNum, Integer pageSize);
+    IPage<OperLog> find(OperLog operLog, Integer pageNum, Integer pageSize);
 
     /**
      * 查询系统操作日志集合
@@ -39,7 +39,7 @@ public interface OperLogService extends IService<OperLog> {
      *            需要删除的操作日志ID
      * @return 结果
      */
-    int deleteOperLogByIds(Long[] operIds);
+    int delete(Long[] operIds);
 
     /**
      * 查询操作日志详细
@@ -61,5 +61,5 @@ public interface OperLogService extends IService<OperLog> {
      * @param operId
      * @return
      */
-    OperLog getInfo(Long operId);
+    OperLog getDetail(Long operId);
 }

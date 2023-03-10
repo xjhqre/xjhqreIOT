@@ -3,7 +3,8 @@ package com.xjhqre.system.service.impl;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,7 @@ import com.xjhqre.system.service.OperLogService;
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> implements OperLogService {
-    @Autowired
+    @Resource
     private OperLogMapper operLogMapper;
 
     /**
@@ -35,14 +36,16 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
      * @return
      */
     @Override
-    public IPage<OperLog> findOperLog(OperLog operLog, Integer pageNum, Integer pageSize) {
+    public IPage<OperLog> find(OperLog operLog, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<OperLog> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(operLog.getOperId() != null, OperLog::getOperId, operLog.getOperId())
-            .eq(operLog.getOperIp() != null, OperLog::getOperIp, operLog.getOperIp())
-            .like(operLog.getOperName() != null, OperLog::getOperName, operLog.getOperName())
+            .eq(operLog.getOperIp() != null && !"".equals(operLog.getOperIp()), OperLog::getOperIp, operLog.getOperIp())
+            .like(operLog.getOperName() != null && !"".equals(operLog.getOperName()), OperLog::getOperName,
+                operLog.getOperName())
             .eq(operLog.getBusinessType() != null, OperLog::getBusinessType, operLog.getBusinessType())
-            .eq(operLog.getMethod() != null, OperLog::getMethod, operLog.getMethod())
-            .eq(operLog.getStatus() != null, OperLog::getStatus, operLog.getStatus());
+            .eq(operLog.getMethod() != null && !"".equals(operLog.getMethod()), OperLog::getMethod, operLog.getMethod())
+            .eq(operLog.getStatus() != null, OperLog::getStatus, operLog.getStatus())
+            .like(operLog.getTitle() != null && !"".equals(operLog.getTitle()), OperLog::getTitle, operLog.getTitle());
         return this.operLogMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
     }
 
@@ -73,7 +76,7 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
      * @return 结果
      */
     @Override
-    public int deleteOperLogByIds(Long[] operIds) {
+    public int delete(Long[] operIds) {
         return this.operLogMapper.deleteBatchIds(Arrays.asList(operIds));
     }
 
@@ -98,7 +101,7 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
     }
 
     @Override
-    public OperLog getInfo(Long operId) {
+    public OperLog getDetail(Long operId) {
         return this.operLogMapper.selectById(operId);
     }
 }

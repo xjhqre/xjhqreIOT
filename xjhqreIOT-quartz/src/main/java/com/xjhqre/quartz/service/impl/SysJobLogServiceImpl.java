@@ -31,10 +31,15 @@ public class SysJobLogServiceImpl extends ServiceImpl<SysJobLogMapper, SysJobLog
     @Override
     public IPage<SysJobLog> find(SysJobLog sysJobLog, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<SysJobLog> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(sysJobLog.getJobGroup() != null, SysJobLog::getJobGroup, sysJobLog.getJobGroup())
-            .like(sysJobLog.getJobName() != null, SysJobLog::getJobName, sysJobLog.getJobName())
-            .eq(sysJobLog.getStatus() != null, SysJobLog::getStatus, sysJobLog.getStatus())
-            .like(sysJobLog.getInvokeTarget() != null, SysJobLog::getInvokeTarget, sysJobLog.getInvokeTarget());
+        wrapper
+            .eq(sysJobLog.getJobGroup() != null && !"".equals(sysJobLog.getJobGroup()), SysJobLog::getJobGroup,
+                sysJobLog.getJobGroup())
+            .like(sysJobLog.getJobName() != null && !"".equals(sysJobLog.getJobName()), SysJobLog::getJobName,
+                sysJobLog.getJobName())
+            .eq(sysJobLog.getStatus() != null && !"".equals(sysJobLog.getStatus()), SysJobLog::getStatus,
+                sysJobLog.getStatus())
+            .like(sysJobLog.getInvokeTarget() != null && !"".equals(sysJobLog.getInvokeTarget()),
+                SysJobLog::getInvokeTarget, sysJobLog.getInvokeTarget());
         return this.jobLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

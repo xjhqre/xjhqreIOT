@@ -6,7 +6,7 @@ spring:
     druid:
       url: jdbc:mysql://1.15.88.204:3306/xjhqre_iot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: root
-      password: ENC(RSSBtJfceg1SStaGPVmRDQ==)
+      password: ENC(uE2ORVX52Cm/DqB3oGJs+2AUfgKN4hk0)
       # 初始连接数
       initialSize: 5
       # 最小连接池数量

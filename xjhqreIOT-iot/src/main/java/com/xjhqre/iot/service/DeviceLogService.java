@@ -9,7 +9,7 @@ import com.xjhqre.iot.domain.entity.DeviceLog;
 /**
  * 设备日志Service接口
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2022-01-13
  */
 public interface DeviceLogService extends IService<DeviceLog> {
@@ -48,5 +48,5 @@ public interface DeviceLogService extends IService<DeviceLog> {
      *            需要删除的设备日志ID
      * @return 结果
      */
-    void deleteDeviceLogByDeviceNumber(String deviceNumber);
+    void deleteDeviceLogByDeviceId(Long deviceId);
 }

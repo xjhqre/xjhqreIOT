@@ -8,7 +8,7 @@ import com.xjhqre.iot.domain.entity.DeviceJob;
 /**
  * 调度任务信息 数据层
  * 
- * @author kerwincui
+ * @author xjhqre
  */
 @Mapper
 public interface DeviceJobMapper extends BaseMapper<DeviceJob> {

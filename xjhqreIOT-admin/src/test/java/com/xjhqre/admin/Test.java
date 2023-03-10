@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.alibaba.fastjson2.JSON;
 import com.xjhqre.common.utils.BaiduMapUtils;
+import com.xjhqre.common.utils.SecurityUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,6 +18,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class Test {
+
+    @org.junit.Test
+    public void test3() {
+        String s = SecurityUtils.encryptPassword("123456");
+        System.out.println(s);
+    }
 
     @org.junit.Test
     public void test2() {

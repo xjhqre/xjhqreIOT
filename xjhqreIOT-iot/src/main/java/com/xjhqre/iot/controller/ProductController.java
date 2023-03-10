@@ -8,6 +8,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,12 +21,12 @@ import com.xjhqre.common.annotation.Log;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.group.Insert;
+import com.xjhqre.common.group.Update;
 import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.service.ProductService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -43,14 +46,9 @@ public class ProductController extends BaseController {
     private ProductService productService;
 
     @ApiOperation(value = "产品分页列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:product:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<Product>> find(Product product, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<Product>> find(Product product, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.productService.find(product, pageNum, pageSize));
     }
 
@@ -76,10 +74,11 @@ public class ProductController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:product:add')")
     @Log(title = "产品", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
+    @PostMapping("/add")
     @ApiOperation("添加产品")
-    public void add(@Validated Product product) {
+    public R<String> add(@Validated(Insert.class) @RequestBody Product product) {
         this.productService.add(product);
+        return R.success("添加产品成功", "添加产品成功");
     }
 
     /**
@@ -87,10 +86,11 @@ public class ProductController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:product:update')")
     @Log(title = "产品", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    @PostMapping("/update")
     @ApiOperation("修改产品")
-    public void update(@Validated Product product) {
+    public R<String> update(@Validated(Update.class) @RequestBody Product product) {
         this.productService.update(product);
+        return R.success("修改产品成功", "修改产品成功");
     }
 
     /**
@@ -98,10 +98,11 @@ public class ProductController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:product:update')")
     @Log(title = "更新产品状态", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/status", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("更新产品状态")
-    public void changeProductStatus(@RequestParam Long productId, @RequestParam Integer status) {
+    @PutMapping("/status")
+    public R<String> changeProductStatus(@RequestParam Long productId, @RequestParam Integer status) {
         this.productService.changeProductStatus(productId, status);
+        return R.success("更新产品状态成功", "更新产品状态成功");
     }
 
     /**
@@ -109,9 +110,10 @@ public class ProductController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:product:delete')")
     @Log(title = "产品", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/delete/{productIds}", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("批量删除产品")
-    public void delete(@RequestParam Long[] productIds) {
+    public R<String> delete(@PathVariable Long[] productIds) {
         this.productService.delete(productIds);
+        return R.success("删除产品成功", "删除产品成功");
     }
 }

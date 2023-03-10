@@ -12,6 +12,7 @@ import com.xjhqre.iot.domain.model.thingsModelItem.IntegerModel;
 import com.xjhqre.iot.domain.model.thingsModelItem.ReadOnlyModelOutput;
 import com.xjhqre.iot.domain.model.thingsModelItem.StringModel;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -24,6 +25,18 @@ import lombok.Data;
 public class DeviceVO extends Device {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 产品秘钥
+     */
+    @ApiModelProperty(value = "产品秘钥", hidden = true)
+    private String productSecret;
+
+    /**
+     * 联网方式（1=-wifi、2-蜂窝(2G/3G/4G/5G)、3-以太网、4-其他），用户输入
+     */
+    @ApiModelProperty(value = "联网方式（1=-wifi、2-蜂窝(2G/3G/4G/5G)、3-以太网、4-其他）")
+    private Integer networkMethod;
 
     public DeviceVO() {
         this.stringList = new ArrayList<>();

@@ -33,13 +33,13 @@ public class DeviceLogServiceImpl extends ServiceImpl<DeviceLogMapper, DeviceLog
     @Override
     public IPage<DeviceLog> find(DeviceLog deviceLog, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DeviceLog> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(deviceLog.getDeviceNumber() != null, DeviceLog::getDeviceNumber, deviceLog.getDeviceNumber())
-            .eq(deviceLog.getDeviceId() != null, DeviceLog::getDeviceId, deviceLog.getDeviceId())
-            .like(deviceLog.getDeviceName() != null, DeviceLog::getDeviceName, deviceLog.getDeviceName())
+        wrapper.eq(deviceLog.getDeviceId() != null, DeviceLog::getDeviceId, deviceLog.getDeviceId())
+            .like(deviceLog.getDeviceName() != null && !"".equals(deviceLog.getDeviceName()), DeviceLog::getDeviceName,
+                deviceLog.getDeviceName())
             .eq(deviceLog.getUserId() != null, DeviceLog::getUserId, deviceLog.getUserId())
-            .like(deviceLog.getUserName() != null, DeviceLog::getUserName, deviceLog.getUserName())
+            .like(deviceLog.getUserName() != null && !"".equals(deviceLog.getUserName()), DeviceLog::getUserName,
+                deviceLog.getUserName())
             .eq(deviceLog.getModelId() != null, DeviceLog::getModelId, deviceLog.getModelId())
-            .eq(deviceLog.getMode() != null, DeviceLog::getMode, deviceLog.getMode())
             .eq(deviceLog.getLogType() != null, DeviceLog::getLogType, deviceLog.getLogType());
         return this.deviceLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
@@ -89,9 +89,9 @@ public class DeviceLogServiceImpl extends ServiceImpl<DeviceLogMapper, DeviceLog
      *
      */
     @Override
-    public void deleteDeviceLogByDeviceNumber(String deviceNumber) {
+    public void deleteDeviceLogByDeviceId(Long deviceId) {
         LambdaQueryWrapper<DeviceLog> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DeviceLog::getDeviceNumber, deviceNumber);
+        wrapper.eq(DeviceLog::getDeviceId, deviceId);
         this.deviceLogMapper.delete(wrapper);
     }
 }

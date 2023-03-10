@@ -2,14 +2,13 @@ package com.xjhqre.admin.controller.system;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -24,6 +23,8 @@ import com.xjhqre.common.domain.R;
 import com.xjhqre.common.domain.entity.Role;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.group.Insert;
+import com.xjhqre.common.group.Update;
 import com.xjhqre.system.service.RoleService;
 import com.xjhqre.system.service.UserService;
 
@@ -41,21 +42,16 @@ import io.swagger.annotations.ApiOperation;
 @Api(value = "角色操作接口", tags = "角色操作接口")
 @RequestMapping("/system/role")
 public class RoleController extends BaseController {
-    @Autowired
+    @Resource
     private RoleService roleService;
-    @Autowired
+    @Resource
     private UserService userService;
 
     @ApiOperation(value = "分页查询角色列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
-    @GetMapping("findRole/{pageNum}/{pageSize}")
+    @GetMapping("/find")
     @PreAuthorize("@ss.hasPermission('system:role:list')")
-    public R<IPage<Role>> findRole(Role role, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
-        return R.success(this.roleService.findRole(role, pageNum, pageSize));
+    public R<IPage<Role>> find(Role role, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+        return R.success(this.roleService.find(role, pageNum, pageSize));
     }
 
     /**
@@ -85,8 +81,8 @@ public class RoleController extends BaseController {
     @ApiOperation(value = "新增角色")
     @PreAuthorize("@ss.hasPermission('system:role:add')")
     @Log(title = "角色管理", businessType = BusinessType.INSERT)
-    @PostMapping
-    public R<String> add(@Validated @RequestBody Role role) {
+    @PostMapping("/add")
+    public R<String> add(@Validated(Insert.class) @RequestBody Role role) {
         if (Constants.NOT_UNIQUE.equals(this.roleService.checkRoleNameUnique(role))) {
             return R.error("新增角色'" + role.getRoleName() + "'失败，角色名称已存在");
         } else if (Constants.NOT_UNIQUE.equals(this.roleService.checkRoleKeyUnique(role))) {
@@ -102,10 +98,10 @@ public class RoleController extends BaseController {
      * 修改保存角色
      */
     @ApiOperation(value = "修改角色")
-    @PreAuthorize("@ss.hasPermission('system:role:edit')")
+    @PreAuthorize("@ss.hasPermission('system:role:update')")
     @Log(title = "角色管理", businessType = BusinessType.UPDATE)
-    @PutMapping
-    public R<String> edit(@Validated @RequestBody Role role) {
+    @PostMapping("/update")
+    public R<String> update(@Validated(Update.class) @RequestBody Role role) {
         this.roleService.checkRoleAllowed(role.getRoleId());
         if (Constants.NOT_UNIQUE.equals(this.roleService.checkRoleNameUnique(role))) {
             return R.error("修改角色'" + role.getRoleName() + "'失败，角色名称已存在");
@@ -120,10 +116,10 @@ public class RoleController extends BaseController {
      * 状态修改
      */
     @ApiOperation(value = "状态修改")
-    @PreAuthorize("@ss.hasPermission('system:role:edit')")
+    @PreAuthorize("@ss.hasPermission('system:role:update')")
     @Log(title = "角色管理", businessType = BusinessType.UPDATE)
-    @PutMapping("/changeStatus")
-    public R<String> changeStatus(@RequestBody Role role) {
+    @PostMapping("/changeStatus")
+    public R<String> changeStatus(@Validated(Update.class) @RequestBody Role role) {
         this.roleService.checkRoleAllowed(role.getRoleId());
         role.setUpdateBy(this.getUsername());
         this.roleService.updateRoleStatus(role);
@@ -134,11 +130,11 @@ public class RoleController extends BaseController {
      * 删除角色
      */
     @ApiOperation(value = "删除角色")
-    @PreAuthorize("@ss.hasPermission('system:role:remove')")
+    @PreAuthorize("@ss.hasPermission('system:role:delete')")
     @Log(title = "角色管理", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{roleIds}")
-    public R<String> remove(@PathVariable Long[] roleIds) {
-        this.roleService.deleteRoleByIds(roleIds);
+    @RequestMapping(value = "/delete/{roleIds}", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@PathVariable List<Long> roleIds) {
+        this.roleService.delete(roleIds);
         return R.success("删除角色成功");
     }
 

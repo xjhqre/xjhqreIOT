@@ -57,11 +57,15 @@ public class DeviceJobServiceImpl implements DeviceJobService {
     public IPage<DeviceJob> find(DeviceJob deviceJob, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DeviceJob> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(deviceJob.getDeviceId() != null, DeviceJob::getDeviceId, deviceJob.getDeviceId())
-            .like(deviceJob.getDeviceName() != null, DeviceJob::getDeviceName, deviceJob.getDeviceName())
-            .eq(deviceJob.getJobGroup() != null, DeviceJob::getJobGroup, deviceJob.getJobGroup())
-            .eq(deviceJob.getStatus() != null, DeviceJob::getStatus, deviceJob.getStatus())
+            .like(deviceJob.getDeviceName() != null && !"".equals(deviceJob.getDeviceName()), DeviceJob::getDeviceName,
+                deviceJob.getDeviceName())
+            .eq(deviceJob.getJobGroup() != null && !"".equals(deviceJob.getJobGroup()), DeviceJob::getJobGroup,
+                deviceJob.getJobGroup())
+            .eq(deviceJob.getStatus() != null && !"".equals(deviceJob.getStatus()), DeviceJob::getStatus,
+                deviceJob.getStatus())
             .eq(deviceJob.getJobId() != null, DeviceJob::getJobId, deviceJob.getJobId())
-            .like(deviceJob.getJobName() != null, DeviceJob::getJobName, deviceJob.getJobName());
+            .like(deviceJob.getJobName() != null && !"".equals(deviceJob.getJobName()), DeviceJob::getJobName,
+                deviceJob.getJobName());
         return this.deviceJobMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

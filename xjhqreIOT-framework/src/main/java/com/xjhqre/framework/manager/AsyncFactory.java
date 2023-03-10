@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xjhqre.common.constant.Constants;
+import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.LogUtils;
 import com.xjhqre.common.utils.ServletUtils;
 import com.xjhqre.common.utils.SpringUtils;
@@ -67,6 +68,7 @@ public class AsyncFactory {
                 loginInfo.setLoginLocation(address);
                 loginInfo.setBrowser(browser);
                 loginInfo.setOs(os);
+                loginInfo.setLoginTime(DateUtils.getNowDate());
                 loginInfo.setMsg(message);
                 // 日志状态
                 if (StringUtils.equalsAny(status, Constants.LOGIN_SUCCESS, Constants.LOGOUT, Constants.REGISTER)) {

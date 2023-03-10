@@ -8,7 +8,7 @@ import com.xjhqre.iot.domain.entity.Firmware;
 /**
  * 产品固件Mapper接口
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Mapper

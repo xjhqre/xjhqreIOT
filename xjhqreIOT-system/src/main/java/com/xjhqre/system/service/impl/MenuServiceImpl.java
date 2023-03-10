@@ -21,6 +21,8 @@ import com.xjhqre.common.constant.UserConstants;
 import com.xjhqre.common.domain.entity.Menu;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.domain.model.TreeSelect;
+import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.system.domain.vo.MetaVo;
 import com.xjhqre.system.domain.vo.RouterVo;
@@ -42,42 +44,39 @@ public class MenuServiceImpl implements MenuService {
     private RoleMenuMapper roleMenuMapper;
 
     @Override
-    public IPage<Menu> findMenu(Menu menu, Integer pageNum, Integer pageSize) {
+    public IPage<Menu> find(Menu menu, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(menu.getMenuType() != null, Menu::getMenuType, menu.getMenuType())
+        wrapper.eq(menu.getMenuType() != null && !"".equals(menu.getMenuType()), Menu::getMenuType, menu.getMenuType())
             .eq(menu.getMenuId() != null, Menu::getMenuId, menu.getMenuId())
-            .like(menu.getMenuName() != null, Menu::getMenuName, menu.getMenuName())
-            .eq(menu.getParentId() != null, Menu::getParentId, menu.getParentId());
+            .like(menu.getMenuName() != null && !"".equals(menu.getMenuName()), Menu::getMenuName, menu.getMenuName())
+            .eq(menu.getParentId() != null, Menu::getParentId, menu.getParentId())
+            .eq(menu.getStatus() != null, Menu::getStatus, menu.getStatus());
         return this.menuMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
-    /**
-     * 根据用户查询系统菜单列表
-     *
-     * @param userId
-     *            用户ID
-     * @return 菜单列表
-     */
     @Override
-    public List<Menu> selectMenuList(Long userId) {
-        return this.selectMenuList(new Menu(), userId);
+    public List<Menu> list(Menu menu) {
+        LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(menu.getMenuType() != null && !"".equals(menu.getMenuType()), Menu::getMenuType, menu.getMenuType())
+            .eq(menu.getMenuId() != null, Menu::getMenuId, menu.getMenuId())
+            .like(menu.getMenuName() != null && !"".equals(menu.getMenuName()), Menu::getMenuName, menu.getMenuName())
+            .eq(menu.getParentId() != null, Menu::getParentId, menu.getParentId())
+            .eq(menu.getStatus() != null, Menu::getStatus, menu.getStatus());
+        return this.menuMapper.selectList(wrapper);
     }
 
     /**
-     * 查询系统菜单列表
+     * 查询角色权限列表
      *
-     * @param menu
-     *            菜单信息
-     * @return 菜单列表
      */
     @Override
-    public List<Menu> selectMenuList(Menu menu, Long userId) {
+    public List<Menu> selectMenuListByRoleId(Long roleId) {
         List<Menu> menuList;
         // 管理员显示所有菜单信息
-        if (User.isAdmin(userId)) {
+        if (User.isAdmin(roleId)) {
             menuList = this.menuMapper.selectList(null);
         } else {
-            menuList = this.menuMapper.selectMenuListByUserId(userId);
+            menuList = this.menuMapper.selectMenuListByRoleId(roleId);
         }
         return menuList;
     }
@@ -130,12 +129,14 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<Menu> selectMenuTreeByUserId(Long userId) {
         List<Menu> menus;
+        LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByAsc(Menu::getParentId).orderByAsc(Menu::getOrderNum);
         if (User.isAdmin(userId)) {
-            menus = this.menuMapper.selectList(null);
+            menus = this.menuMapper.selectList(wrapper);
         } else {
             menus = this.menuMapper.selectMenuTreeByUserId(userId);
         }
-        return this.getChildPerms(menus, 0);
+        return this.buildMenuTree(menus);
     }
 
     /**
@@ -146,8 +147,8 @@ public class MenuServiceImpl implements MenuService {
      * @return 选中菜单列表
      */
     @Override
-    public List<Long> selectMenuListByRoleId(Long roleId) {
-        return this.menuMapper.selectMenuListByRoleId(roleId);
+    public List<Long> selectMenuIdsByRoleId(Long roleId) {
+        return this.menuMapper.selectMenuIdsByRoleId(roleId);
     }
 
     /**
@@ -215,25 +216,21 @@ public class MenuServiceImpl implements MenuService {
      *            菜单列表
      * @return 树结构列表
      */
-    @Override
-    public List<Menu> buildMenuTree(List<Menu> menus) {
-        List<Menu> returnList = new ArrayList<>();
-        List<Long> tempList = new ArrayList<>();
-        for (Menu dept : menus) {
-            tempList.add(dept.getMenuId());
-        }
-        for (Menu menu : menus) {
-            // 如果是顶级节点, 遍历该父节点的所有子节点
-            if (!tempList.contains(menu.getParentId())) {
-                this.recursionFn(menus, menu);
-                returnList.add(menu);
-            }
-        }
-        if (returnList.isEmpty()) {
-            returnList = menus;
-        }
-        return returnList;
-    }
+    // @Override
+    // public List<Menu> buildMenuTree(List<Menu> menus) {
+    // List<Menu> returnList = new ArrayList<>();
+    // for (Menu menu : menus) {
+    // // 如果是顶级节点
+    // if (menu.getParentId().intValue() == 0) {
+    // this.recursionFn(menus, menu);
+    // returnList.add(menu);
+    // }
+    // }
+    // if (returnList.isEmpty()) {
+    // returnList = menus;
+    // }
+    // return returnList;
+    // }
 
     /**
      * 构建前端所需要下拉树结构
@@ -256,7 +253,7 @@ public class MenuServiceImpl implements MenuService {
      * @return 菜单信息
      */
     @Override
-    public Menu selectMenuById(Long menuId) {
+    public Menu getDetail(Long menuId) {
         return this.menuMapper.selectById(menuId);
     }
 
@@ -294,7 +291,13 @@ public class MenuServiceImpl implements MenuService {
      * @return 结果
      */
     @Override
-    public int insertMenu(Menu menu) {
+    public int add(Menu menu) {
+        LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Menu::getParentId, menu.getParentId());
+        Integer count = this.menuMapper.selectCount(wrapper);
+        menu.setMenuId(menu.getParentId() * 100 + count + 1);
+        menu.setCreateBy(SecurityUtils.getUsername());
+        menu.setCreateTime(DateUtils.getNowDate());
         return this.menuMapper.insert(menu);
     }
 
@@ -306,7 +309,9 @@ public class MenuServiceImpl implements MenuService {
      * @return 结果
      */
     @Override
-    public int updateMenu(Menu menu) {
+    public int update(Menu menu) {
+        menu.setUpdateBy(SecurityUtils.getUsername());
+        menu.setUpdateTime(DateUtils.getNowDate());
         return this.menuMapper.updateById(menu);
     }
 
@@ -318,7 +323,7 @@ public class MenuServiceImpl implements MenuService {
      * @return 结果
      */
     @Override
-    public int deleteMenuById(Long menuId) {
+    public int delete(Long menuId) {
         return this.menuMapper.deleteById(menuId);
     }
 
@@ -437,58 +442,34 @@ public class MenuServiceImpl implements MenuService {
     }
 
     /**
-     * 根据父节点的ID获取所有子节点
+     * 使用递归方法建树
+     */
+    @Override
+    public List<Menu> buildMenuTree(List<Menu> treeNodes) {
+        List<Menu> trees = new ArrayList<>();
+        for (Menu treeNode : treeNodes) {
+            if (treeNode.getParentId() == 0) {
+                Menu children = this.findChildren(treeNode, treeNodes);
+                trees.add(children);
+            }
+        }
+        return trees;
+    }
+
+    /**
+     * 递归查找子节点
      *
-     * @param list
-     *            分类表
-     * @param parentId
-     *            传入的父节点ID
-     * @return String
      */
-    public List<Menu> getChildPerms(List<Menu> list, int parentId) {
-        List<Menu> returnList = new ArrayList<>();
-        for (Menu t : list) {
-            // 一、根据传入的某个父节点ID,遍历该父节点的所有子节点
-            if (t.getParentId() == parentId) {
-                this.recursionFn(list, t);
-                returnList.add(t);
+    public Menu findChildren(Menu treeNode, List<Menu> treeNodes) {
+        for (Menu item : treeNodes) {
+            if (treeNode.getMenuId().equals(item.getParentId())) {
+                if (treeNode.getChildren() == null) {
+                    treeNode.setChildren(new ArrayList<>());
+                }
+                treeNode.getChildren().add(this.findChildren(item, treeNodes));
             }
         }
-        return returnList;
-    }
-
-    /**
-     * 递归列表
-     */
-    private void recursionFn(List<Menu> list, Menu t) {
-        // 得到子节点列表
-        List<Menu> childList = this.getChildList(list, t);
-        t.setChildren(childList);
-        for (Menu tChild : childList) {
-            if (this.hasChild(list, tChild)) {
-                this.recursionFn(list, tChild);
-            }
-        }
-    }
-
-    /**
-     * 得到子节点列表
-     */
-    private List<Menu> getChildList(List<Menu> list, Menu t) {
-        List<Menu> tlist = new ArrayList<>();
-        for (Menu n : list) {
-            if (n.getParentId().longValue() == t.getMenuId().longValue()) {
-                tlist.add(n);
-            }
-        }
-        return tlist;
-    }
-
-    /**
-     * 判断是否有子节点
-     */
-    private boolean hasChild(List<Menu> list, Menu t) {
-        return this.getChildList(list, t).size() > 0;
+        return treeNode;
     }
 
     /**

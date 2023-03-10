@@ -54,7 +54,7 @@ public interface DictDataService {
      * @param dictCodes
      *            需要删除的字典数据ID
      */
-    void deleteDictDataByIds(Long[] dictCodes);
+    void delete(List<Long> dictCodes);
 
     /**
      * 新增保存字典数据信息
@@ -63,7 +63,7 @@ public interface DictDataService {
      *            字典数据信息
      * @return 结果
      */
-    void insertDictData(DictData dictData);
+    void add(DictData dictData);
 
     /**
      * 修改保存字典数据信息
@@ -72,5 +72,5 @@ public interface DictDataService {
      *            字典数据信息
      * @return 结果
      */
-    void updateDictData(DictData dictData);
+    void update(DictData dictData);
 }

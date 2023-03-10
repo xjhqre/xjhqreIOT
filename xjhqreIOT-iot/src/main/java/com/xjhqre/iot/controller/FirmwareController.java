@@ -5,8 +5,11 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,8 +24,6 @@ import com.xjhqre.iot.domain.entity.Firmware;
 import com.xjhqre.iot.service.FirmwareService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -42,14 +43,9 @@ public class FirmwareController extends BaseController {
     private FirmwareService firmwareService;
 
     @ApiOperation(value = "产品固件分页列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:firmware:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<Firmware>> find(Firmware firmware, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<Firmware>> find(Firmware firmware, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.firmwareService.find(firmware, pageNum, pageSize));
     }
 
@@ -86,9 +82,10 @@ public class FirmwareController extends BaseController {
     @ApiOperation("添加产品固件")
     @PreAuthorize("@ss.hasPermission('iot:firmware:add')")
     @Log(title = "产品固件", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
-    public void add(Firmware firmware) {
+    @PostMapping("/add")
+    public R<String> add(@RequestBody @Validated Firmware firmware) {
         this.firmwareService.add(firmware);
+        return R.success("添加产品固件成功");
     }
 
     /**
@@ -97,9 +94,10 @@ public class FirmwareController extends BaseController {
     @ApiOperation("修改产品固件")
     @PreAuthorize("@ss.hasPermission('iot:firmware:update')")
     @Log(title = "产品固件", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
-    public void update(Firmware firmware) {
+    @PostMapping("/update")
+    public R<String> update(@RequestBody Firmware firmware) {
         this.firmwareService.update(firmware);
+        return R.success("修改产品固件成功");
     }
 
     /**
@@ -108,8 +106,9 @@ public class FirmwareController extends BaseController {
     @ApiOperation("批量删除产品固件")
     @PreAuthorize("@ss.hasPermission('iot:firmware:delete')")
     @Log(title = "产品固件", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
-    public void delete(@RequestParam Long[] firmwareIds) {
+    @RequestMapping(value = "/delete/{firmwareIds}", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@PathVariable Long[] firmwareIds) {
         this.firmwareService.delete(firmwareIds);
+        return R.success("删除产品固件成功");
     }
 }

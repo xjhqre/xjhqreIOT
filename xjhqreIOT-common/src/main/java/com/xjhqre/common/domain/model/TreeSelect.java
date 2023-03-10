@@ -10,7 +10,7 @@ import com.xjhqre.common.domain.entity.Menu;
 import lombok.Data;
 
 /**
- * Treeselect树结构实体类
+ * TreeSelect树结构实体类
  * 
  * @author ruoyi
  */

@@ -1,11 +1,13 @@
 package com.xjhqre.admin.controller.monitor;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -18,8 +20,6 @@ import com.xjhqre.system.domain.entity.LoginInfo;
 import com.xjhqre.system.service.LoginInfoService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -31,22 +31,18 @@ import io.swagger.annotations.ApiOperation;
 @Api(value = "系统访问记录", tags = "系统访问记录")
 @RequestMapping("/monitor/loginInfo")
 public class LoginInfoController extends BaseController {
-    @Autowired
+    @Resource
     private LoginInfoService loginInfoService;
 
-    @Autowired
+    @Resource
     private PasswordService passwordService;
 
     @ApiOperation(value = "分页查询系统访问记录")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('monitor:logininfor:list')")
-    @GetMapping("list/{pageNum}/{pageSize}")
-    public R<IPage<LoginInfo>> listLoginInfo(LoginInfo loginInfo, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
-        return R.success(this.loginInfoService.listLoginInfo(loginInfo, pageNum, pageSize));
+    @GetMapping("/find")
+    public R<IPage<LoginInfo>> find(LoginInfo loginInfo, @RequestParam Integer pageNum,
+        @RequestParam Integer pageSize) {
+        return R.success(this.loginInfoService.find(loginInfo, pageNum, pageSize));
     }
 
     /**
@@ -56,11 +52,11 @@ public class LoginInfoController extends BaseController {
      * @return
      */
     @ApiOperation(value = "根据条件删除登陆日志")
-    @PreAuthorize("@ss.hasPermission('monitor:logininfor:remove')")
+    @PreAuthorize("@ss.hasPermission('monitor:logininfor:delete')")
     @Log(title = "登录日志", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{infoIds}")
-    public R<String> remove(@PathVariable Long[] infoIds) {
-        this.loginInfoService.deleteLoginInfoByIds(infoIds);
+    @DeleteMapping("/delete/{infoIds}")
+    public R<String> delete(@PathVariable Long[] infoIds) {
+        this.loginInfoService.delete(infoIds);
         return R.success("删除日志成功");
     }
 
@@ -70,7 +66,7 @@ public class LoginInfoController extends BaseController {
      * @return
      */
     @ApiOperation(value = "清空所有登陆日志")
-    @PreAuthorize("@ss.hasPermission('monitor:logininfor:remove')")
+    @PreAuthorize("@ss.hasPermission('monitor:logininfor:delete')")
     @Log(title = "登录日志", businessType = BusinessType.CLEAN)
     @DeleteMapping("/clean")
     public R<String> clean() {

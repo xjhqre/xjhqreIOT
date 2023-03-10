@@ -20,43 +20,41 @@ public class AlertLog extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /** 告警ID */
-    @ApiModelProperty(name = "告警ID")
+    @ApiModelProperty(value = "告警ID")
     @TableId(value = "alert_log_id", type = IdType.AUTO)
     private Long alertLogId;
 
     /** 告警名称 */
-    @ApiModelProperty(name = "告警名称")
+    @ApiModelProperty(value = "告警名称")
     private String alertName;
 
-    /** 告警级别（1=提醒通知，2=轻微问题，3=严重警告，4=场景联动） */
-    @ApiModelProperty(name = "告警级别（1=提醒通知，2=轻微问题，3=严重警告，4=场景联动）")
-    private Long alertLevel;
-
-    /** 处理状态(0=不需要处理,1=未处理,2=已处理) */
-    @ApiModelProperty(name = "处理状态(0=不需要处理,1=未处理,2=已处理)")
-    private Long status;
-
     /** 产品ID */
-    @ApiModelProperty(name = "产品ID")
+    @ApiModelProperty(value = "产品ID")
     private Long productId;
 
     /** 产品名称 */
-    @ApiModelProperty(name = "产品名称")
+    @ApiModelProperty(value = "产品名称")
     private String productName;
 
     /** 设备ID */
-    @ApiModelProperty(name = "设备ID")
+    @ApiModelProperty(value = "设备ID")
     private Long deviceId;
 
     /** 设备名称 */
-    @ApiModelProperty(name = "设备名称")
+    @ApiModelProperty(value = "设备名称")
     private String deviceName;
 
     /** 用户ID */
-    @ApiModelProperty(name = "用户ID")
+    @ApiModelProperty(value = "用户ID")
     private Long userId;
 
     /** 用户昵称 */
-    @ApiModelProperty(name = "用户昵称")
+    @ApiModelProperty(value = "用户昵称")
     private String userName;
+
+    /**
+     * 告警数据
+     */
+    @ApiModelProperty(value = "告警数据")
+    private String data;
 }

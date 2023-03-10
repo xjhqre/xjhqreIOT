@@ -16,18 +16,18 @@ import lombok.Data;
 @Data
 public class DeviceLogDTO {
 
-    @ApiModelProperty(name = "设备日志ID")
+    @ApiModelProperty(value = "设备日志ID")
     private Date ts;
 
     /** 查询用的开始时间 */
-    @ApiModelProperty(name = "查询用的开始时间")
+    @ApiModelProperty(value = "查询用的开始时间")
     private String beginTime;
 
     /** 查询用的结束时间 */
-    @ApiModelProperty(name = "查询用的结束时间")
+    @ApiModelProperty(value = "查询用的结束时间")
     private String endTime;
 
     /** 查询的总数 */
-    @ApiModelProperty(name = "查询的总数")
+    @ApiModelProperty(value = "查询的总数")
     private int total;
 }

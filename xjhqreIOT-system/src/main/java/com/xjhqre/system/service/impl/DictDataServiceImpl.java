@@ -10,7 +10,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xjhqre.common.domain.entity.DictData;
+import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.DictUtils;
+import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.system.mapper.DictDataMapper;
 import com.xjhqre.system.service.DictDataService;
 
@@ -37,8 +39,12 @@ public class DictDataServiceImpl implements DictDataService {
     public IPage<DictData> find(DictData dictData, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(dictData.getDictCode() != null, DictData::getDictCode, dictData.getDictCode())
-            .eq(dictData.getDictLabel() != null, DictData::getDictLabel, dictData.getDictLabel())
-            .like(dictData.getDictType() != null, DictData::getDictType, dictData.getDictType());
+            .eq(dictData.getDictLabel() != null && !"".equals(dictData.getDictLabel()), DictData::getDictLabel,
+                dictData.getDictLabel())
+            .like(dictData.getDictType() != null && !"".equals(dictData.getDictType()), DictData::getDictType,
+                dictData.getDictType())
+            .eq(dictData.getStatus() != null && !"".equals(dictData.getStatus()), DictData::getStatus,
+                dictData.getStatus());
         return this.dictDataMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 
@@ -46,8 +52,12 @@ public class DictDataServiceImpl implements DictDataService {
     public List<DictData> list(DictData dictData) {
         LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(dictData.getDictCode() != null, DictData::getDictCode, dictData.getDictCode())
-            .eq(dictData.getDictLabel() != null, DictData::getDictLabel, dictData.getDictLabel())
-            .like(dictData.getDictType() != null, DictData::getDictType, dictData.getDictType());
+            .eq(dictData.getDictLabel() != null && !"".equals(dictData.getDictLabel()), DictData::getDictLabel,
+                dictData.getDictLabel())
+            .like(dictData.getDictType() != null && !"".equals(dictData.getDictType()), DictData::getDictType,
+                dictData.getDictType())
+            .eq(dictData.getStatus() != null && !"".equals(dictData.getStatus()), DictData::getStatus,
+                dictData.getStatus());
         return this.dictDataMapper.selectList(wrapper);
     }
 
@@ -78,13 +88,43 @@ public class DictDataServiceImpl implements DictDataService {
     }
 
     /**
-     * 批量删除字典数据信息
-     * 
-     * @param dictCodes
-     *            需要删除的字典数据ID
+     * 新增保存字典数据信息
+     *
      */
     @Override
-    public void deleteDictDataByIds(Long[] dictCodes) {
+    public void add(DictData dictData) {
+        dictData.setCreateBy(SecurityUtils.getUsername());
+        dictData.setCreateTime(DateUtils.getNowDate());
+        this.dictDataMapper.insert(dictData);
+        // 更新缓存
+        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DictData::getDictType, dictData.getDictType());
+        List<DictData> dictDataList = this.dictDataMapper.selectList(wrapper);
+        DictUtils.setDictCache(dictData.getDictType(), dictDataList);
+    }
+
+    /**
+     * 修改保存字典数据信息
+     *
+     */
+    @Override
+    public void update(DictData dictData) {
+        dictData.setUpdateBy(SecurityUtils.getUsername());
+        dictData.setCreateTime(DateUtils.getNowDate());
+        this.dictDataMapper.updateById(dictData);
+        // 更新缓存
+        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DictData::getDictType, dictData.getDictType());
+        List<DictData> dictDataList = this.dictDataMapper.selectList(wrapper);
+        DictUtils.setDictCache(dictData.getDictType(), dictDataList);
+    }
+
+    /**
+     * 批量删除字典数据信息
+     *
+     */
+    @Override
+    public void delete(List<Long> dictCodes) {
         for (Long dictCode : dictCodes) {
             // 根据 dictCode 删除对应字典数据
             DictData data = this.getDetail(dictCode);
@@ -95,39 +135,5 @@ public class DictDataServiceImpl implements DictDataService {
             List<DictData> dictDatas = this.dictDataMapper.selectList(wrapper);
             DictUtils.setDictCache(data.getDictType(), dictDatas);
         }
-    }
-
-    /**
-     * 新增保存字典数据信息
-     * 
-     * @param data
-     *            字典数据信息
-     * @return 结果
-     */
-    @Override
-    public void insertDictData(DictData data) {
-        this.dictDataMapper.insert(data);
-        // 更新缓存
-        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DictData::getDictType, data.getDictType());
-        List<DictData> dictDataList = this.dictDataMapper.selectList(wrapper);
-        DictUtils.setDictCache(data.getDictType(), dictDataList);
-    }
-
-    /**
-     * 修改保存字典数据信息
-     * 
-     * @param data
-     *            字典数据信息
-     * @return 结果
-     */
-    @Override
-    public void updateDictData(DictData data) {
-        this.dictDataMapper.updateById(data);
-        // 更新缓存
-        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DictData::getDictType, data.getDictType());
-        List<DictData> dictDataList = this.dictDataMapper.selectList(wrapper);
-        DictUtils.setDictCache(data.getDictType(), dictDataList);
     }
 }

@@ -11,7 +11,7 @@ import com.xjhqre.iot.domain.entity.Group;
 /**
  * 设备分组Mapper接口
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Mapper
@@ -25,11 +25,11 @@ public interface GroupMapper extends BaseMapper<Group> {
     /**
      * 分组下批量增加设备分组
      */
-    void insertDeviceGroups(@Param("deviceIdList") List<Long> deviceIdList);
+    void insertDeviceGroups(@Param("groupId") Long groupId, @Param("deviceIdList") List<Long> deviceIdList);
 
     /**
      * 批量删除分组中的设备
      */
-    int deleteDeviceGroupByGroupIds(@Param("groupIds") List<Long> groupIds);
+    void deleteDeviceGroupByGroupIds(@Param("groupIds") List<Long> groupIds);
 
 }

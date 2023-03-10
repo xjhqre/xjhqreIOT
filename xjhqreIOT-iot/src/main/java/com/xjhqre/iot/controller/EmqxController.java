@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.exception.EmqxException;
+import com.xjhqre.common.utils.AESUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.iot.domain.dto.MqttClientConnectDTO;
 import com.xjhqre.iot.domain.entity.Device;
@@ -26,7 +28,6 @@ import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.mqtt.MqttConfig;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
-import com.xjhqre.iot.service.ToolService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -52,8 +53,6 @@ public class EmqxController extends BaseController {
     private EmqxService emqxService;
     @Resource
     private MqttConfig mqttConfig;
-    @Resource
-    private ToolService toolService;
     @Resource
     private ProductService productService;
     // 令牌秘钥
@@ -86,10 +85,10 @@ public class EmqxController extends BaseController {
                 ex.printStackTrace();
                 throw new EmqxException(ex.getMessage());
             }
-        } else {
+        } else { // 设备端认证
             /*
-             # 客户端Id等于 产品ID & 设备编号
-             clientId = productId & deviceNumber
+             # 客户端Id等于 产品key & 设备编号
+             clientId = productKey & deviceNumber
             # 用户名
             userName = 设备用户名
             # 密码
@@ -99,9 +98,9 @@ public class EmqxController extends BaseController {
             if (clientArray.length != 2 || clientArray[0].equals("") || clientArray[1].equals("")) {
                 throw new EmqxException("设备客户端Id格式错误");
             }
-            String productId = clientArray[0];
+            String productKey = clientArray[0];
             String deviceNumber = clientArray[1];
-            Product product = this.productService.getById(productId);
+            Product product = this.productService.getById(productKey);
             Device device = this.deviceService.getByDeviceNumber(deviceNumber);
             if (product == null) {
                 throw new EmqxException("设备认证，没有此id的产品");
@@ -117,7 +116,7 @@ public class EmqxController extends BaseController {
                 throw new EmqxException("设备认证，设备对应的产品还未发布");
             }
             // 解析密码
-            this.toolService.verifyPassword(productId, deviceNumber, username, password);
+            this.verifyPassword(productKey, deviceNumber, username, password);
             return ResponseEntity.ok().body("ok");
         }
     }
@@ -130,9 +129,9 @@ public class EmqxController extends BaseController {
         if (model.getClientId().startsWith("server") || model.getClientId().startsWith("web")) {
             return;
         }
-        // 客户端id格式： productId & deviceNumber (中间无空格)
+        // 客户端id格式： productKey & deviceNumber (中间无空格)
         String[] clientArray = model.getClientId().split("&");
-        String productId = clientArray[0]; // 产品id
+        String productKey = clientArray[0]; // 产品id
         String deviceNumber = clientArray[1]; // 设备编号
 
         // 根据设备编号查询设备
@@ -174,5 +173,39 @@ public class EmqxController extends BaseController {
         ntpJson.put("serverRecvTime", System.currentTimeMillis());
         ntpJson.put("serverSendTime", System.currentTimeMillis());
         return ntpJson;
+    }
+
+    public void verifyPassword(String productKey, String deviceNumber, String username, String encryptPassword) {
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getProductKey, productKey);
+        Product product = this.productService.getOne(wrapper);
+        String productSecret = product.getProductSecret();
+        Device device = this.deviceService.getByDeviceNumber(deviceNumber);
+
+        String decrypt = AESUtils.decrypt(encryptPassword, productSecret);
+        if (decrypt == null || decrypt.equals("")) {
+            throw new EmqxException("设备认证，设备密码解密失败");
+        }
+        String[] passwordArray = decrypt.split("&");
+        if (passwordArray.length != 2) {
+            // 密码加密格式 password & expireTime
+            throw new EmqxException("设备认证，设备密码格式错误");
+        }
+        String decryptPassword = passwordArray[0];
+        long expireTime = Long.parseLong(passwordArray[1]);
+        // 验证密码
+        if (!decryptPassword.equals(device.getDevicePassword())) {
+            throw new EmqxException("设备认证，设备密码不匹配");
+        }
+        // 验证过期时间
+        if (expireTime < System.currentTimeMillis()) {
+            throw new EmqxException("设备认证，设备密码已过期");
+        }
+        // 设备状态验证 （1-未激活，2-禁用，3-在线，4-离线）
+        if (device.getStatus() == 2) {
+            throw new EmqxException("设备加密认证，设备处于禁用状态");
+        }
+        log.info("-----------设备加密认证成功,clientId: {}&{} ---------------", productKey, deviceNumber);
     }
 }

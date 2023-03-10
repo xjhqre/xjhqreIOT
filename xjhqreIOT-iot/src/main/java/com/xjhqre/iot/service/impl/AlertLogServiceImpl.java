@@ -35,12 +35,13 @@ public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> i
     public IPage<AlertLog> find(AlertLog alertLog, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<AlertLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(alertLog.getAlertLogId() != null, AlertLog::getAlertLogId, alertLog.getAlertLogId())
-            .like(alertLog.getAlertName() != null, AlertLog::getAlertName, alertLog.getAlertName())
-            .eq(alertLog.getAlertLevel() != null, AlertLog::getAlertLevel, alertLog.getAlertLevel())
-            .eq(alertLog.getStatus() != null, AlertLog::getStatus, alertLog.getStatus())
-            .like(alertLog.getUserName() != null, AlertLog::getUserName, alertLog.getUserName())
+            .like(alertLog.getAlertName() != null && !"".equals(alertLog.getAlertName()), AlertLog::getAlertName,
+                alertLog.getAlertName())
+            .like(alertLog.getUserName() != null && !"".equals(alertLog.getUserName()), AlertLog::getUserName,
+                alertLog.getUserName())
             .eq(alertLog.getUserId() != null, AlertLog::getUserId, alertLog.getUserId())
-            .like(alertLog.getProductName() != null, AlertLog::getProductName, alertLog.getProductName())
+            .like(alertLog.getProductName() != null && !"".equals(alertLog.getProductName()), AlertLog::getProductName,
+                alertLog.getProductName())
             .eq(alertLog.getProductId() != null, AlertLog::getProductId, alertLog.getProductId());
         return this.alertLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }

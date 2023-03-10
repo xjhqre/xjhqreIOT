@@ -88,6 +88,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public R<String> exceptionHandler(Exception ex) {
         log.error(ex.getMessage());
+        ex.printStackTrace();
         return R.error("系统未知异常");
     }
 }

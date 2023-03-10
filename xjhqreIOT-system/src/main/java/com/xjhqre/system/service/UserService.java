@@ -113,16 +113,9 @@ public interface UserService extends IService<User> {
      *            用户信息
      * @return 结果
      */
-    int updateUser(User user);
+    void updateUser(User user);
 
-    /**
-     * 通过用户ID删除用户
-     * 
-     * @param userId
-     *            用户ID
-     * @return 结果
-     */
-    void deleteUserById(Long userId);
+    void changeStatus(User user);
 
     /**
      * 批量删除用户信息
@@ -131,7 +124,8 @@ public interface UserService extends IService<User> {
      *            需要删除的用户ID
      * @return 结果
      */
-    int deleteUserByIds(Long[] userIds);
+    void deleteUserByIds(List<Long> userIds);
 
     boolean registerUser(User user);
+
 }

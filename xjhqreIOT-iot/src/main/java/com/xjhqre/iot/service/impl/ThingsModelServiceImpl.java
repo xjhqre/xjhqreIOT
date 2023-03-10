@@ -3,43 +3,48 @@ package com.xjhqre.iot.service.impl;
 import static com.xjhqre.common.utils.SecurityUtils.getUsername;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.constant.CacheConstants;
 import com.xjhqre.common.utils.AssertUtils;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.redis.RedisCache;
+import com.xjhqre.iot.domain.entity.ModelParam;
 import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.mapper.ProductMapper;
 import com.xjhqre.iot.mapper.ThingsModelMapper;
+import com.xjhqre.iot.service.ModelParamService;
 import com.xjhqre.iot.service.ThingsModelService;
 
 /**
  * 物模型Service业务层处理
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2021-12-16
  */
 @Service
-public class ThingsModelServiceImpl implements ThingsModelService {
+public class ThingsModelServiceImpl extends ServiceImpl<ThingsModelMapper, ThingsModel> implements ThingsModelService {
 
     @Resource
     private ThingsModelMapper thingsModelMapper;
-
     @Resource
     private ProductMapper productMapper;
-
     @Resource
     private RedisCache redisCache;
+    @Resource
+    private ModelParamService modelParamService;
 
     /**
      * 分页查询产品物模型列表
@@ -47,15 +52,21 @@ public class ThingsModelServiceImpl implements ThingsModelService {
     @Override
     public IPage<ThingsModel> find(ThingsModel thingsModel, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(thingsModel.getDatatype() != null, ThingsModel::getDatatype, thingsModel.getDatatype())
-            .eq(thingsModel.getModelId() != null, ThingsModel::getModelId, thingsModel.getModelId())
-            .like(thingsModel.getModelName() != null, ThingsModel::getModelName, thingsModel.getModelName())
+        wrapper.eq(thingsModel.getModelId() != null, ThingsModel::getModelId, thingsModel.getModelId())
+            .like(thingsModel.getModelName() != null && !"".equals(thingsModel.getModelName()),
+                ThingsModel::getModelName, thingsModel.getModelName())
             .eq(thingsModel.getType() != null, ThingsModel::getType, thingsModel.getType())
             .eq(thingsModel.getProductId() != null, ThingsModel::getProductId, thingsModel.getProductId())
-            .like(thingsModel.getProductName() != null, ThingsModel::getProductName, thingsModel.getProductName())
-            .eq(thingsModel.getIsTop() != null, ThingsModel::getIsTop, thingsModel.getIsTop())
-            .eq(thingsModel.getIsMonitor() != null, ThingsModel::getIsMonitor, thingsModel.getIsMonitor());
-        return this.thingsModelMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+            .like(thingsModel.getProductName() != null && !"".equals(thingsModel.getProductName()),
+                ThingsModel::getProductName, thingsModel.getProductName());
+        // 装入输入输出参数
+        return this.thingsModelMapper.selectPage(new Page<>(pageNum, pageSize), wrapper).convert(model -> {
+            if (model.getType() != 1) { // 添加输入输出参数
+                List<ModelParam> modelParams = this.modelParamService.listByModelId(model.getModelId());
+                model.setParamList(modelParams);
+            }
+            return model;
+        });
     }
 
     /**
@@ -64,14 +75,13 @@ public class ThingsModelServiceImpl implements ThingsModelService {
     @Override
     public List<ThingsModel> list(ThingsModel thingsModel) {
         LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(thingsModel.getDatatype() != null, ThingsModel::getDatatype, thingsModel.getDatatype())
-            .eq(thingsModel.getModelId() != null, ThingsModel::getModelId, thingsModel.getModelId())
-            .like(thingsModel.getModelName() != null, ThingsModel::getModelName, thingsModel.getModelName())
+        wrapper.eq(thingsModel.getModelId() != null, ThingsModel::getModelId, thingsModel.getModelId())
+            .like(thingsModel.getModelName() != null && !"".equals(thingsModel.getModelName()),
+                ThingsModel::getModelName, thingsModel.getModelName())
             .eq(thingsModel.getType() != null, ThingsModel::getType, thingsModel.getType())
             .eq(thingsModel.getProductId() != null, ThingsModel::getProductId, thingsModel.getProductId())
-            .like(thingsModel.getProductName() != null, ThingsModel::getProductName, thingsModel.getProductName())
-            .eq(thingsModel.getIsTop() != null, ThingsModel::getIsTop, thingsModel.getIsTop())
-            .eq(thingsModel.getIsMonitor() != null, ThingsModel::getIsMonitor, thingsModel.getIsMonitor());
+            .like(thingsModel.getProductName() != null && !"".equals(thingsModel.getProductName()),
+                ThingsModel::getProductName, thingsModel.getProductName());
         return this.thingsModelMapper.selectList(wrapper);
     }
 
@@ -80,7 +90,12 @@ public class ThingsModelServiceImpl implements ThingsModelService {
      */
     @Override
     public ThingsModel getDetail(Long modelId) {
-        return this.thingsModelMapper.selectById(modelId);
+        ThingsModel thingsModel = this.thingsModelMapper.selectById(modelId);
+        LambdaQueryWrapper<ModelParam> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ModelParam::getModelId, modelId);
+        List<ModelParam> modelParamList = this.modelParamService.list(wrapper);
+        thingsModel.setParamList(modelParamList);
+        return thingsModel;
     }
 
     /**
@@ -95,6 +110,19 @@ public class ThingsModelServiceImpl implements ThingsModelService {
         thingsModel.setCreateTime(DateUtils.getNowDate());
         thingsModel.setCreateBy(getUsername());
         this.thingsModelMapper.insert(thingsModel);
+        // 添加输出输出参数
+        if (!CollectionUtils.isEmpty(thingsModel.getParamList())) {
+            List<ModelParam> modelParamList = thingsModel.getParamList().stream().peek(modelParam -> {
+                modelParam.setModelId(thingsModel.getModelId());
+                modelParam.setModelName(thingsModel.getModelName());
+                modelParam.setProductId(thingsModel.getProductId());
+                modelParam.setProductName(thingsModel.getProductName());
+                modelParam.setIdentifier(thingsModel.getIdentifier());
+                modelParam.setCreateBy(SecurityUtils.getUsername());
+                modelParam.setCreateTime(DateUtils.getNowDate());
+            }).collect(Collectors.toList());
+            this.modelParamService.saveBatch(modelParamList);
+        }
         // 更新redis缓存
         this.setThingsModelCacheByProductId(thingsModel.getProductId());
     }
@@ -118,6 +146,13 @@ public class ThingsModelServiceImpl implements ThingsModelService {
     @Override
     public void delete(List<Long> modelIds) {
         ThingsModel thingsModel = this.thingsModelMapper.selectById(modelIds.get(0));
+        for (Long modelId : modelIds) {
+            ThingsModel thingsModel1 = this.thingsModelMapper.selectById(modelId);
+            // 删除服务和事件的入参和出参
+            if (thingsModel1.getType() != 1) {
+                this.modelParamService.deleteByModelId(modelId);
+            }
+        }
         this.thingsModelMapper.deleteBatchIds(modelIds);
         // 更新redis缓存
         this.setThingsModelCacheByProductId(thingsModel.getProductId());

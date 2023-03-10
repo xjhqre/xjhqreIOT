@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * @Classname MqttConfig
  * @Description mqtt配置信息
- * @author kerwincui
+ * @author xjhqre
  */
 @Component
 @ConfigurationProperties("spring.mqtt")

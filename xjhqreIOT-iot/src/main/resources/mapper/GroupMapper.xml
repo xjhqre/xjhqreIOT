@@ -24,7 +24,7 @@
     <!-- 删除分组下的所有设备关联 -->
     <delete id="deleteDeviceGroupByGroupIds">
         delete from iot_device_group where group_id in
-        <foreach item="groupId" collection="array" open="(" separator="," close=")">
+        <foreach item="groupId" collection="groupIds" open="(" separator="," close=")">
             #{groupId}
         </foreach>
     </delete>

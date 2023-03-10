@@ -6,7 +6,6 @@ import javax.annotation.Resource;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,8 +21,6 @@ import com.xjhqre.iot.domain.entity.Scene;
 import com.xjhqre.iot.service.SceneService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -41,14 +38,9 @@ public class SceneController extends BaseController {
     private SceneService sceneService;
 
     @ApiOperation(value = "分页查询场景联动列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:scene:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<Scene>> find(Scene scene, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<Scene>> find(Scene scene, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.sceneService.find(scene, pageNum, pageSize));
     }
 

@@ -21,7 +21,7 @@ public interface LoginInfoService extends IService<LoginInfo> {
      * @param pageSize
      * @return
      */
-    IPage<LoginInfo> listLoginInfo(LoginInfo loginInfo, Integer pageNum, Integer pageSize);
+    IPage<LoginInfo> find(LoginInfo loginInfo, Integer pageNum, Integer pageSize);
 
     /**
      * 新增系统登录日志
@@ -47,7 +47,7 @@ public interface LoginInfoService extends IService<LoginInfo> {
      *            需要删除的登录日志ID
      * @return 结果
      */
-    int deleteLoginInfoByIds(Long[] infoIds);
+    int delete(Long[] infoIds);
 
     /**
      * 清空系统登录日志

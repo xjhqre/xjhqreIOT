@@ -22,8 +22,6 @@ import com.xjhqre.iot.domain.entity.AlertLog;
 import com.xjhqre.iot.service.AlertLogService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -40,14 +38,9 @@ public class AlertLogController extends BaseController {
     private AlertLogService alertLogService;
 
     @ApiOperation(value = "分页查询设备告警日志列表")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "pageNum", value = "正整数，表示查询第几页", required = true, dataType = "int", example = "1"),
-        @ApiImplicitParam(name = "pageSize", value = "正整数，表示每页几条记录", required = true, dataType = "int",
-            example = "10")})
     @PreAuthorize("@ss.hasPermission('iot:alert:list')")
-    @GetMapping("find/{pageNum}/{pageSize}")
-    public R<IPage<AlertLog>> find(AlertLog alertLog, @PathVariable("pageNum") Integer pageNum,
-        @PathVariable("pageSize") Integer pageSize) {
+    @GetMapping("/find")
+    public R<IPage<AlertLog>> find(AlertLog alertLog, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
         return R.success(this.alertLogService.find(alertLog, pageNum, pageSize));
     }
 
@@ -87,8 +80,8 @@ public class AlertLogController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermission('iot:alert:delete')")
     @Log(title = "设备告警", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> delete(@RequestParam List<Long> alertLogIds) {
+    @RequestMapping(value = "/delete/{alertLogIds}", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> delete(@PathVariable List<Long> alertLogIds) {
         this.alertLogService.delete(alertLogIds);
         return R.success("删除设备告警成功");
     }

@@ -1,11 +1,11 @@
 package com.xjhqre.system.service.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +17,7 @@ import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.entity.Role;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.exception.ServiceException;
+import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.system.domain.entity.UserRole;
@@ -33,11 +34,11 @@ import com.xjhqre.system.service.UserService;
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    @Autowired
+    @Resource
     private UserMapper userMapper;
-    @Autowired
+    @Resource
     private RoleService roleService;
-    @Autowired
+    @Resource
     private UserRoleService userRoleService;
 
     /**
@@ -52,18 +53,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public IPage<User> find(User user, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(user.getUserId() != null, User::getUserId, user.getUserId())
-            .like(user.getUserName() != null, User::getUserName, user.getUserName())
-            .like(user.getNickName() != null, User::getNickName, user.getNickName())
-            .eq(user.getStatus() != null, User::getStatus, user.getStatus())
-            .like(user.getMobile() != null, User::getMobile, user.getMobile());
-        return this.userMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+            .like(user.getUserName() != null && !"".equals(user.getUserName()), User::getUserName, user.getUserName())
+            .like(user.getNickName() != null && !"".equals(user.getNickName()), User::getNickName, user.getNickName())
+            .eq(user.getStatus() != null && !"".equals(user.getStatus()), User::getStatus, user.getStatus())
+            .like(user.getMobile() != null && !"".equals(user.getMobile()), User::getMobile, user.getMobile());
+        Page<User> page = this.userMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        for (User record : page.getRecords()) {
+            List<String> roleNames = this.roleService.selectRolesByUserId(record.getUserId()).stream().map(Role::getRoleName)
+                .collect(Collectors.toList());
+            record.setRoleNames(roleNames);
+        }
+        return page;
     }
 
     @Override
     public User getDetail(Long userId) {
         User user = this.userMapper.selectById(userId);
         List<Role> roles = this.roleService.selectRolesByUserId(userId);
-        List<Long> roleIds = user.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
+        List<Long> roleIds = roles.stream().map(Role::getRoleId).collect(Collectors.toList());
         user.setRoles(roles);
         user.setRoleIds(roleIds);
         return user;
@@ -200,6 +207,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public void insertUser(User user) {
         // 新增用户信息
+        user.setDelFlag("0");
         this.userMapper.insert(user);
         // 新增用户与角色管理
         List<UserRole> list = new ArrayList<>();
@@ -220,7 +228,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return 结果
      */
     @Override
-    public int updateUser(User user) {
+    public void updateUser(User user) {
         Long userId = user.getUserId();
         // 删除用户与角色关联
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
@@ -237,26 +245,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!list.isEmpty()) {
             this.userRoleService.saveBatch(list);
         }
-        return this.userMapper.updateById(user);
+        this.userMapper.updateById(user);
     }
 
     /**
-     * 通过用户ID删除用户
-     * 
-     * @param userId
-     *            用户ID
-     * @return 结果
+     * 修改用户状态
      */
     @Override
-    public void deleteUserById(Long userId) {
-        // 校验
-        this.checkUserAllowed(userId);
-        // 删除用户与角色关联
-        LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRole::getUserId, userId);
-        this.userRoleService.remove(wrapper);
-        // 删除用户
-        this.userMapper.deleteById(userId);
+    public void changeStatus(User user) {
+        user.setUpdateBy(SecurityUtils.getUsername());
+        user.setUpdateTime(DateUtils.getNowDate());
+        this.userMapper.updateById(user);
     }
 
     /**
@@ -267,16 +266,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return 结果
      */
     @Override
-    public int deleteUserByIds(Long[] userIds) {
+    public void deleteUserByIds(List<Long> userIds) {
         for (Long userId : userIds) {
             this.checkUserAllowed(userId);
         }
         // 删除用户与角色关联
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(UserRole::getUserId, Arrays.asList(userIds));
+        wrapper.in(UserRole::getUserId, userIds);
         this.userRoleService.remove(wrapper);
         // 删除用户
-        return this.userMapper.deleteBatchIds(Arrays.asList(userIds));
+        this.userMapper.deleteBatchIds(userIds);
     }
 
     /**

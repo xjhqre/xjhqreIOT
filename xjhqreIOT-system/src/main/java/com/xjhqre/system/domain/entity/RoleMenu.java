@@ -14,10 +14,10 @@ import lombok.Data;
 @TableName("sys_role_menu")
 public class RoleMenu {
     /** 角色ID */
-    @ApiModelProperty(name = "角色id")
+    @ApiModelProperty(value = "角色id")
     private Long roleId;
 
     /** 菜单ID */
-    @ApiModelProperty(name = "菜单id")
+    @ApiModelProperty(value = "菜单id")
     private Long menuId;
 }

@@ -23,54 +23,54 @@ public class Menu extends BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty(name = "权限ID", example = "0")
-    @TableId(value = "menu_id", type = IdType.AUTO)
+    @ApiModelProperty(value = "权限ID", example = "0")
+    @TableId(value = "menu_id", type = IdType.INPUT)
     private Long menuId;
 
     @NotBlank(message = "菜单名称不能为空")
     @Size(max = 50, message = "菜单名称长度不能超过50个字符")
-    @ApiModelProperty(name = "权限名称")
+    @ApiModelProperty(value = "权限名称")
     private String menuName;
 
-    @ApiModelProperty(name = "父菜单ID", example = "0")
+    @ApiModelProperty(value = "父菜单ID", example = "0")
     private Long parentId;
 
     @NotNull(message = "显示顺序不能为空")
-    @ApiModelProperty(name = "显示顺序", example = "0")
+    @ApiModelProperty(value = "显示顺序", example = "0")
     private Integer orderNum;
 
     @Size(max = 200, message = "路由地址不能超过200个字符")
-    @ApiModelProperty(name = "路由地址")
+    @ApiModelProperty(value = "路由地址")
     private String path;
 
     @Size(max = 200, message = "组件路径不能超过255个字符")
-    @ApiModelProperty(name = "组件路径")
+    @ApiModelProperty(value = "组件路径")
     private String component;
 
-    @ApiModelProperty(name = "路由参数")
+    @ApiModelProperty(value = "路由参数")
     private String query;
 
-    @ApiModelProperty(name = "是否为外链（1是 0否）")
+    @ApiModelProperty(value = "是否为外链（1是 0否）")
     private Integer isFrame;
 
-    @ApiModelProperty(name = "是否缓存（1缓存 0不缓存）")
+    @ApiModelProperty(value = "是否缓存（1缓存 0不缓存）")
     private Integer isCache;
 
     @NotBlank(message = "菜单类型不能为空")
-    @ApiModelProperty(name = "菜单类型（M目录 C菜单 F按钮）")
+    @ApiModelProperty(value = "菜单类型（M目录 C菜单 F按钮）")
     private String menuType;
 
-    @ApiModelProperty(name = "显示状态（1显示 0隐藏）")
+    @ApiModelProperty(value = "显示状态（1显示 0隐藏）")
     private String visible;
 
-    @ApiModelProperty(name = "菜单状态（1正常 0停用）")
+    @ApiModelProperty(value = "菜单状态（1正常 0停用）")
     private String status;
 
     @Size(max = 100, message = "权限标识长度不能超过100个字符")
-    @ApiModelProperty(name = "权限标识")
+    @ApiModelProperty(value = "权限标识")
     private String perms;
 
-    @ApiModelProperty(name = "菜单图标")
+    @ApiModelProperty(value = "菜单图标")
     private String icon;
 
     /**

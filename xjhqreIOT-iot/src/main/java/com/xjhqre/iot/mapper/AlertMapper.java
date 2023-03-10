@@ -8,7 +8,7 @@ import com.xjhqre.iot.domain.entity.Alert;
 /**
  * 设备告警Mapper接口
  * 
- * @author kerwincui
+ * @author xjhqre
  * @date 2022-01-13
  */
 @Mapper

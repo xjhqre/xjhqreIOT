@@ -60,10 +60,13 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
     public IPage<SysJob> find(SysJob sysJob, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<SysJob> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(sysJob.getJobId() != null, SysJob::getJobId, sysJob.getJobId())
-            .like(sysJob.getJobName() != null, SysJob::getJobName, sysJob.getJobName())
-            .eq(sysJob.getJobGroup() != null, SysJob::getJobGroup, sysJob.getJobGroup())
-            .eq(sysJob.getStatus() != null, SysJob::getStatus, sysJob.getStatus())
-            .like(sysJob.getInvokeTarget() != null, SysJob::getInvokeTarget, sysJob.getInvokeTarget());
+            .like(sysJob.getJobName() != null && !"".equals(sysJob.getJobName()), SysJob::getJobName,
+                sysJob.getJobName())
+            .eq(sysJob.getJobGroup() != null && !"".equals(sysJob.getJobGroup()), SysJob::getJobGroup,
+                sysJob.getJobGroup())
+            .eq(sysJob.getStatus() != null && !"".equals(sysJob.getStatus()), SysJob::getStatus, sysJob.getStatus())
+            .like(sysJob.getInvokeTarget() != null && !"".equals(sysJob.getInvokeTarget()), SysJob::getInvokeTarget,
+                sysJob.getInvokeTarget());
         return this.sysJobMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

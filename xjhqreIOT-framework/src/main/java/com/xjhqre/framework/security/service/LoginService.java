@@ -89,7 +89,7 @@ public class LoginService {
         }
         AsyncManager.me().execute(AsyncFactory.recordLoginInfo(username, Constants.LOGIN_SUCCESS, "登陆成功"));
         LoginUser loginUser = (LoginUser)authentication.getPrincipal();
-        this.recordLoginInfo(loginUser.getUserId());
+        this.updateUserInfo(loginUser.getUserId());
         // 生成token，并存入redis
         return this.tokenService.createToken(loginUser);
     }
@@ -121,7 +121,7 @@ public class LoginService {
      * @param userId
      *            用户ID
      */
-    public void recordLoginInfo(Long userId) {
+    public void updateUserInfo(Long userId) {
         User user = new User();
         user.setUserId(userId);
         user.setLoginIp(IpUtils.getIpAddr(ServletUtils.getRequest()));
