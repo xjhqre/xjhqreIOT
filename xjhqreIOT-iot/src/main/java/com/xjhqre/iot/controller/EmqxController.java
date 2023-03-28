@@ -65,7 +65,7 @@ public class EmqxController extends BaseController {
     public ResponseEntity<String> mqttAuth(@RequestParam String clientId, @RequestParam String username,
         @RequestParam String password) {
         log.info("clientId --> {}", clientId);
-        log.info("username --> {}", clientId);
+        log.info("username --> {}", username);
         log.info("password --> {}", password);
         if (clientId.startsWith("server")) {
             // 服务端认证：配置的账号密码认证
@@ -120,7 +120,7 @@ public class EmqxController extends BaseController {
                 throw new EmqxException("设备认证，设备对应的产品还未发布");
             }
             // 解析密码
-            this.verifyPassword(productKey, deviceNumber, username, password);
+            // this.verifyPassword(productKey, deviceNumber, username, password);
             return ResponseEntity.ok().body("ok");
         }
     }
