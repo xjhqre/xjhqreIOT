@@ -20,6 +20,7 @@ import com.xjhqre.common.annotation.Log;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.Firmware;
 import com.xjhqre.iot.service.FirmwareService;
 
@@ -49,6 +50,13 @@ public class FirmwareController extends BaseController {
         return R.success(this.firmwareService.find(firmware, pageNum, pageSize));
     }
 
+    @ApiOperation(value = "查询固件设备")
+    @PreAuthorize("@ss.hasPermission('iot:firmware:list')")
+    @GetMapping("/listDeviceByFirmwareId")
+    public R<List<Device>> listDeviceByFirmwareId(@RequestParam Long firmwareId) {
+        return R.success(this.firmwareService.listDeviceByFirmwareId(firmwareId));
+    }
+
     @ApiOperation("产品固件列表")
     @PreAuthorize("@ss.hasPermission('iot:firmware:list')")
     @RequestMapping(value = "/list", method = {RequestMethod.POST, RequestMethod.GET})
@@ -64,16 +72,6 @@ public class FirmwareController extends BaseController {
     @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
     public R<Firmware> getDetail(@RequestParam Long firmwareId) {
         return R.success(this.firmwareService.getDetail(firmwareId));
-    }
-
-    /**
-     * 获取设备最新固件
-     */
-    @ApiOperation("获取设备最新固件")
-    @PreAuthorize("@ss.hasPermission('iot:firmware:query')")
-    @RequestMapping(value = "/getLatest", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<Firmware> getLatest(@RequestParam Long deviceId) {
-        return R.success(this.firmwareService.getLatest(deviceId));
     }
 
     /**

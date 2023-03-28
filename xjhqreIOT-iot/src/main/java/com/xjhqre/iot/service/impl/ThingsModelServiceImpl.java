@@ -174,6 +174,19 @@ public class ThingsModelServiceImpl extends ServiceImpl<ThingsModelMapper, Thing
     }
 
     /**
+     * 根据产品id获取物模型列表
+     * 
+     * @param productId
+     * @return
+     */
+    @Override
+    public List<ThingsModel> listThingModelByProductId(Long productId) {
+        LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ThingsModel::getProductId, productId);
+        return this.thingsModelMapper.selectList(wrapper);
+    }
+
+    /**
      * 根据产品ID更新JSON物模型
      */
     private void setThingsModelCacheByProductId(Long productId) {

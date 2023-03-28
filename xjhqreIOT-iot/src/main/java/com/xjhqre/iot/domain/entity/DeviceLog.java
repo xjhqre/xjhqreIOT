@@ -32,11 +32,14 @@ public class DeviceLog extends BaseEntity {
     @ApiModelProperty(value = "物模型Id")
     private Long modelId;
 
+    // 物模型标识符
+    private String identifier;
+
     /**
      * 物模型名称
      */
     @ApiModelProperty(value = "物模型名称")
-    private Long modelName;
+    private String modelName;
 
     /**
      * 类型（1=属性上报，2=事件上报，3=调用功能，4=设备升级，5=设备上线，6=设备离线）

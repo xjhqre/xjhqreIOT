@@ -40,6 +40,7 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
         wrapper.eq(alert.getAlertId() != null, Alert::getAlertId, alert.getAlertId())
             .eq(alert.getAlertName() != null && !"".equals(alert.getAlertName()), Alert::getAlertName,
                 alert.getAlertName())
+            .eq(alert.getProductId() != null, Alert::getProductId, alert.getProductId())
             .eq(alert.getStatus() != null, Alert::getStatus, alert.getStatus());
         return this.alertMapper.selectPage(new Page<>(pageNum, pageSize), wrapper).convert(alert1 -> {
             Long alertId = alert1.getAlertId();

@@ -1,5 +1,6 @@
 package com.xjhqre.iot.controller;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Resource;
@@ -23,7 +24,7 @@ import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.iot.domain.dto.MqttClientConnectDTO;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.Product;
-import com.xjhqre.iot.domain.model.thingsModels.ThingsModelShadow;
+import com.xjhqre.iot.domain.model.Topic;
 import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.mqtt.MqttConfig;
 import com.xjhqre.iot.service.DeviceService;
@@ -63,6 +64,9 @@ public class EmqxController extends BaseController {
     @PostMapping("/mqtt/auth")
     public ResponseEntity<String> mqttAuth(@RequestParam String clientId, @RequestParam String username,
         @RequestParam String password) {
+        log.info("clientId --> {}", clientId);
+        log.info("username --> {}", clientId);
+        log.info("password --> {}", password);
         if (clientId.startsWith("server")) {
             // 服务端认证：配置的账号密码认证
             if (this.mqttConfig.getUsername().equals(username) && this.mqttConfig.getPassword().equals(password)) {
@@ -124,7 +128,7 @@ public class EmqxController extends BaseController {
     @ApiOperation("mqtt钩子处理")
     @PostMapping("/mqtt/webhook")
     public void webHookProcess(@RequestBody MqttClientConnectDTO model) {
-        log.info("webhook:" + model.getAction());
+        log.info("webhook: " + model);
         // 过滤服务端、web端
         if (model.getClientId().startsWith("server") || model.getClientId().startsWith("web")) {
             return;
@@ -142,26 +146,26 @@ public class EmqxController extends BaseController {
             device.setStatus(4);
             this.deviceService.updateDeviceStatusAndLocation(device, "");
             // 设备掉线后发布设备状态
-            this.emqxService.publishStatus(device.getProductId(), device.getDeviceNumber(), 4, device.getIsShadow(),
-                device.getRssi());
-            // 清空保留消息，上线后发布新的属性功能保留消息
-            this.emqxService.publishProperty(device.getProductId(), device.getDeviceNumber(), null);
-            this.emqxService.publishFunction(device.getProductId(), device.getDeviceNumber(), null);
+            // this.emqxService.publishStatus(device.getProductId(), device.getDeviceNumber(), 4, device.getIsShadow(),
+            // device.getRssi());
+            //// 清空保留消息，上线后发布新的属性功能保留消息
+            // this.emqxService.publishProperty(device.getProductId(), device.getDeviceNumber(), null);
+            // this.emqxService.publishFunction(device.getProductId(), device.getDeviceNumber(), null);
         } else if (model.getAction().equals("client_connected")) {
             device.setStatus(3);
             this.deviceService.updateDeviceStatusAndLocation(device, model.getIpaddress());
             // 影子模式，发布属性和功能
-            if (device.getIsShadow() == 1) {
-                ThingsModelShadow shadow = this.deviceService.getDeviceShadowThingsModel(device);
-                if (shadow.getProperties().size() > 0) {
-                    this.emqxService.publishProperty(device.getProductId(), device.getDeviceNumber(),
-                        shadow.getProperties());
-                }
-                if (shadow.getFunctions().size() > 0) {
-                    this.emqxService.publishFunction(device.getProductId(), device.getDeviceNumber(),
-                        shadow.getFunctions());
-                }
-            }
+            // if (device.getIsShadow() == 1) {
+            // ThingsModelShadow shadow = this.deviceService.getDeviceShadowThingsModel(device);
+            // if (shadow.getProperties().size() > 0) {
+            // this.emqxService.publishProperty(device.getProductId(), device.getDeviceNumber(),
+            // shadow.getProperties());
+            // }
+            // if (shadow.getFunctions().size() > 0) {
+            // this.emqxService.publishFunction(device.getProductId(), device.getDeviceNumber(),
+            // shadow.getFunctions());
+            // }
+            // }
         }
     }
 
@@ -207,5 +211,11 @@ public class EmqxController extends BaseController {
             throw new EmqxException("设备加密认证，设备处于禁用状态");
         }
         log.info("-----------设备加密认证成功,clientId: {}&{} ---------------", productKey, deviceNumber);
+    }
+
+    @ApiOperation("获取设备topic列表")
+    @GetMapping("/listDeviceTopic")
+    public List<Topic> listDeviceTopic(@RequestParam Long deviceId) {
+        return this.emqxService.listDeviceTopic(deviceId);
     }
 }

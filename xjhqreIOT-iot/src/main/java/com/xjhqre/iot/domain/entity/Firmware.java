@@ -1,11 +1,13 @@
 package com.xjhqre.iot.domain.entity;
 
-import java.math.BigDecimal;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.xjhqre.common.base.BaseEntity;
+import com.xjhqre.common.group.Insert;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -28,33 +30,30 @@ public class Firmware extends BaseEntity {
 
     /** 固件名称 */
     @ApiModelProperty(value = "固件名称")
+    @NotBlank(groups = Insert.class)
     private String firmwareName;
+
+    /**
+     * oss唯一文件名
+     */
+    @ApiModelProperty(value = "oss唯一文件名")
+    private String ossName;
 
     /** 产品ID */
     @ApiModelProperty(value = "产品ID")
+    @NotNull(groups = Insert.class)
     private Long productId;
 
     /** 产品名称 */
     @ApiModelProperty(value = "产品名称")
     private String productName;
 
-    /** 是否系统通用（0-否，1-是） */
-    @ApiModelProperty(value = "是否系统通用（0-否，1-是）")
-    private Integer isSys;
-
-    /** 是否最新版（0-否，1-是） */
-    @ApiModelProperty(value = "是否最新版（0-否，1-是）")
-    private Integer isLatest;
-
     /** 固件版本 */
     @ApiModelProperty(value = "固件版本")
-    private BigDecimal version;
+    @NotBlank(groups = Insert.class)
+    private String version;
 
     /** 文件路径 */
     @ApiModelProperty(value = "文件路径")
     private String filePath;
-
-    /** 删除标志（0代表存在 2代表删除） */
-    @ApiModelProperty(value = "删除标志（0代表存在 2代表删除）")
-    private String delFlag;
 }

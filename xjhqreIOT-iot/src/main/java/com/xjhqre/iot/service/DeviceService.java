@@ -5,11 +5,10 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xjhqre.iot.domain.entity.Device;
+import com.xjhqre.iot.domain.entity.ThingsModel;
+import com.xjhqre.iot.domain.entity.ThingsModelValue;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
-import com.xjhqre.iot.domain.model.thingsModelItem.ThingsModelItemBase;
-import com.xjhqre.iot.domain.model.thingsModels.ThingsModelShadow;
 import com.xjhqre.iot.domain.vo.DeviceVO;
-import com.xjhqre.iot.domain.vo.ThingsModelVO;
 
 /**
  * DeviceService
@@ -92,16 +91,15 @@ public interface DeviceService extends IService<Device> {
      *            产品id
      * @param deviceNum
      *            设备编号
-     * @param thingsModelItemBases
+     * @param thingsModelValues
      *            设备物模型值
      * @param type
      *            日志类型（1=属性上报，2=事件上报，3=调用功能，4=设备升级，5=设备上线，6=设备离线）
-     * @param isShadow
-     *            是否影子模式
      * @param message
+     *            消息
      */
-    void reportDeviceThingsModelValue(Long productId, String deviceNum, List<ThingsModelItemBase> thingsModelItemBases,
-        int type, boolean isShadow, String message);
+    void reportDeviceThingsModelValue(String productId, String deviceNum, List<ThingsModelValue> thingsModelValues,
+        int type, String message);
 
     /**
      * 获取设备设置的影子
@@ -109,7 +107,7 @@ public interface DeviceService extends IService<Device> {
      * @param device
      * @return
      */
-    ThingsModelShadow getDeviceShadowThingsModel(Device device);
+    // ThingsModelShadow getDeviceShadowThingsModel(Device device);
 
     /**
      * 更新设备状态和定位
@@ -133,5 +131,5 @@ public interface DeviceService extends IService<Device> {
      * @param deviceId
      * @return
      */
-    List<ThingsModelVO> findDeviceProp(Long deviceId);
+    List<ThingsModel> listThingModelWithLastValue(Long deviceId, String modelName);
 }

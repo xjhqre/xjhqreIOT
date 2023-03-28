@@ -1,7 +1,7 @@
 package com.xjhqre.iot.mapper;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -13,7 +13,7 @@ import com.xjhqre.iot.domain.entity.Device;
  * @author xjhqre
  * @date 2021-12-16
  */
-@Repository
+@Mapper
 public interface DeviceMapper extends BaseMapper<Device> {
 
     /**
@@ -31,4 +31,11 @@ public interface DeviceMapper extends BaseMapper<Device> {
      */
     int deleteDeviceGroupByDeviceId(@Param("deviceId") Long deviceId);
 
+    /**
+     * 查询物模型最后一次值
+     * 
+     * @param modelId
+     * @return
+     */
+    String getLastModelValue(@Param("modelId") Long modelId);
 }

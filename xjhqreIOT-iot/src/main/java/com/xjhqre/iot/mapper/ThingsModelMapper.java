@@ -1,6 +1,6 @@
 package com.xjhqre.iot.mapper;
 
-import org.springframework.stereotype.Repository;
+import org.mapstruct.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xjhqre.iot.domain.entity.ThingsModel;
@@ -11,5 +11,5 @@ import com.xjhqre.iot.domain.entity.ThingsModel;
  * @author xjhqre
  * @date 2021-12-16
  */
-@Repository
+@Mapper
 public interface ThingsModelMapper extends BaseMapper<ThingsModel> {}

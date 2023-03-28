@@ -3,11 +3,9 @@ package com.xjhqre.iot.service.impl;
 import static com.xjhqre.common.utils.SecurityUtils.getLoginUser;
 import static com.xjhqre.common.utils.SecurityUtils.getUsername;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -16,7 +14,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -26,8 +23,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.domain.model.LoginUser;
-import com.xjhqre.common.exception.ServiceException;
-import com.xjhqre.common.utils.AssertUtils;
 import com.xjhqre.common.utils.BaiduMapUtils;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
@@ -35,28 +30,23 @@ import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.http.HttpUtils;
 import com.xjhqre.common.utils.ip.IpUtils;
 import com.xjhqre.common.utils.uuid.RandomUtils;
-import com.xjhqre.iot.domain.entity.Alert;
 import com.xjhqre.iot.domain.entity.AlertLog;
-import com.xjhqre.iot.domain.entity.AlertTrigger;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceLog;
-import com.xjhqre.iot.domain.entity.DeviceProp;
 import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.entity.ThingsModel;
+import com.xjhqre.iot.domain.entity.ThingsModelValue;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.model.thingsModelItem.ThingsModelItemBase;
-import com.xjhqre.iot.domain.model.thingsModels.ModelIdAndValue;
-import com.xjhqre.iot.domain.model.thingsModels.ThingsModelShadow;
 import com.xjhqre.iot.domain.vo.DeviceVO;
-import com.xjhqre.iot.domain.vo.ThingsModelVO;
 import com.xjhqre.iot.mapper.DeviceMapper;
 import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.AlertLogService;
 import com.xjhqre.iot.service.AlertService;
 import com.xjhqre.iot.service.DeviceLogService;
-import com.xjhqre.iot.service.DevicePropService;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
+import com.xjhqre.iot.service.ThingsModelValueService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,13 +72,13 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Resource
     private ProductService productService;
     @Resource
-    private DevicePropService devicePropService;
-    @Resource
     private EmqxService emqxService;
     @Resource
     private AlertLogService alertLogService;
     @Resource
     private AlertService alertService;
+    @Resource
+    private ThingsModelValueService thingsModelValueService;
 
     @Override
     public IPage<DeviceVO> find(Device device, Integer pageNum, Integer pageSize) {
@@ -276,28 +266,12 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Override
 
     public void add(Device device) {
-        // 设备编号唯一检查
-        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Device::getDeviceNumber, device.getDeviceNumber());
-        Device existDevice = this.deviceMapper.selectOne(wrapper);
-        AssertUtils.isNull(existDevice, "设备编号：" + device.getDeviceNumber() + "已经存在了，新增设备失败");
-
         User sysUser = getLoginUser().getUser();
         // 添加设备
         device.setCreateTime(DateUtils.getNowDate());
         device.setCreateBy(getUsername());
         device.setDevicePassword(RandomUtils.randomString(16)); // 16位设备密钥
         device.setDeviceNumber(RandomUtils.randomString(16)); // 16位设备编号
-        // 设置功能和属性的默认值
-        /* ThingsModelValue:
-        [
-          {"identifier": "", "modelName": "", "value": "", "isTop": "", "isMonitor": "", "type": "", "datatype": "", "shadow": ""},
-          {"identifier": "", "modelName": "", "value": "", "isTop": "", "isMonitor": "", "type": "", "datatype": "", "shadow": ""},
-          {"identifier": "", "modelName": "", "value": "", "isTop": "", "isMonitor": "", "type": "", "datatype": "", "shadow": ""}
-        ]
-         */
-        device.setThingsModelValue(
-            JSONObject.toJSONString(this.getThingsModelListWithDefaultValue(device.getProductId())));
         device.setUserId(sysUser.getUserId());
         device.setUserName(sysUser.getUserName());
         device.setRssi(0);
@@ -328,30 +302,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Override
     public void update(Device device) {
         // 设备编号唯一检查
-        Device oldDevice = this.deviceMapper.selectById(device.getDeviceId());
-        // 若修改了设备编号
-        if (!oldDevice.getDeviceNumber().equals(device.getDeviceNumber())) {
-            LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Device::getDeviceNumber, device.getDeviceNumber());
-            Device existDevice = this.deviceMapper.selectOne(wrapper);
-            AssertUtils.isNull(existDevice, "设备编号：" + device.getDeviceNumber() + " 已经存在，新增设备失败");
-        }
         device.setUpdateTime(DateUtils.getNowDate());
         device.setUpdateBy(getUsername());
-        // 未激活状态,可以修改产品以及物模型
-        if (device.getStatus() == 1) {
-            device.setThingsModelValue(
-                JSONObject.toJSONString(this.getThingsModelListWithDefaultValue(device.getProductId())));
-        } else {
-            device.setProductId(null);
-            device.setProductName(null);
-        }
+        device.setProductId(null);
+        device.setProductName(null);
         this.deviceMapper.updateById(device);
-        // 设备取消禁用，原设备状态为禁用，修改为离线
-        if (oldDevice.getStatus() == 2 && device.getStatus() == 4) {
-            // 发布设备信息
-            this.emqxService.publishInfo(oldDevice.getProductId(), oldDevice.getDeviceNumber());
-        }
     }
 
     /**
@@ -367,7 +322,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             if (device.getActiveTime() != null) { // 已经激活过，设置为离线状态
                 device.setStatus(3);
             } else { // 未激活
-                device.setStatus(1);
+                device.setStatus(1); // 设置未激活状态
             }
         }
         this.deviceMapper.updateById(device);
@@ -432,30 +387,39 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
      * @return
      */
     @Override
-    public List<ThingsModelVO> findDeviceProp(Long deviceId) {
-        Device device = this.deviceMapper.selectById(deviceId);
+    public List<ThingsModel> listThingModelWithLastValue(Long deviceId, String modelName) {
+        Device device = this.getById(deviceId);
+        Product product = this.productService.getById(device.getProductId());
         LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ThingsModel::getProductId, device.getProductId());
-        List<ThingsModel> list = this.thingsModelService.list(wrapper);
-        return list.stream().map(thingsModel -> {
-            ThingsModelVO thingsModelVO = new ThingsModelVO();
-            BeanUtils.copyProperties(thingsModel, thingsModelVO);
-            LambdaQueryWrapper<DeviceProp> wrapper2 = new LambdaQueryWrapper<>();
-            wrapper2.eq(DeviceProp::getDeviceId, device.getDeviceId())
-                .eq(DeviceProp::getModelId, thingsModel.getModelId()).orderByDesc(DeviceProp::getReportTime)
-                .last("limit 1");
-            DeviceProp deviceProp = this.devicePropService.getOne(wrapper2);
-            thingsModelVO.setLastValue(deviceProp);
-            return thingsModelVO;
+        wrapper.eq(ThingsModel::getProductId, product.getProductId()).like(modelName != null && !"".equals(modelName),
+            ThingsModel::getModelName, modelName);
+        List<ThingsModel> thingsModelList = this.thingsModelService.list(wrapper);
+
+        return thingsModelList.stream().peek(thingsModel -> {
+            // 设置最新的物模型值
+            String value = this.deviceMapper.getLastModelValue(thingsModel.getModelId());
+            thingsModel.setLastValue(value);
         }).collect(Collectors.toList());
+
     }
 
     /**
-     * 更新设备的物模型
+     * 依据订阅的消息更新设备属性
+     *
+     * @param productKey
+     *            产品key
+     * @param deviceNum
+     *            设备编号
+     * @param thingsModelValues
+     *            设备物模型值
+     * @param type
+     *            日志类型（1=属性上报，2=事件上报，3=调用功能，4=设备升级，5=设备上线，6=设备离线）
+     * @param message
+     *            消息
      */
     @Override
-    public void reportDeviceThingsModelValue(Long productKey, String deviceNum,
-        List<ThingsModelItemBase> newThingsModelItemBaseList, int type, boolean isShadow, String message) {
+    public void reportDeviceThingsModelValue(String productKey, String deviceNum,
+        List<ThingsModelValue> thingsModelValues, int type, String message) {
         // 根据设备编号查询设备信息
         LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Device::getDeviceNumber, deviceNum);
@@ -465,37 +429,32 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         wrapper1.eq(Product::getProductKey, productKey);
         Product product = this.productService.getOne(wrapper1);
 
-        // 设备原物模型值
-        List<ThingsModelItemBase> oldThingsModelItemBaseList =
-            JSON.parseArray(device.getThingsModelValue(), ThingsModelItemBase.class);
+        thingsModelValues = thingsModelValues.stream().peek(vo -> {
+            String identifier = vo.getIdentifier();
+            LambdaQueryWrapper<ThingsModel> wrapper2 = new LambdaQueryWrapper<>();
+            wrapper2.eq(ThingsModel::getProductId, product.getProductId()).eq(ThingsModel::getIdentifier, identifier);
+            ThingsModel thingsModel = this.thingsModelService.getOne(wrapper2);
+            vo.setModelId(thingsModel.getModelId());
+            vo.setModelName(thingsModel.getModelName());
+            vo.setType(1);
+            vo.setMessage(message);
+            vo.setCreateTime(DateUtils.getNowDate());
+        }).collect(Collectors.toList());
 
-        // newThingsModelItemBaseList：设备最新上报的物模型值
-        for (ThingsModelItemBase newThingsModelItemBase : newThingsModelItemBaseList) {
-            for (ThingsModelItemBase oldThingsModelItemBase : oldThingsModelItemBaseList) {
-                // 根据id找到对应的物模型值进行更新
-                if (Objects.equals(newThingsModelItemBase.getModelId(), oldThingsModelItemBase.getModelId())) {
-                    // 影子模式只更新影子值
-                    if (!isShadow) {
-                        oldThingsModelItemBase.setValue(newThingsModelItemBase.getValue());
-                    }
-                    oldThingsModelItemBase.setShadow(newThingsModelItemBase.getValue());
+        // 保存物模型值
+        this.thingsModelValueService.saveBatch(thingsModelValues);
 
-                    // TODO 场景联动、告警规则匹配处理
-                    break;
-                }
-            }
-        }
-        // 更新数据库中设备的物模型值
-        LambdaUpdateWrapper<Device> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(Device::getDeviceId, device.getDeviceId()).set(Device::getThingsModelValue,
-            JSONObject.toJSONString(oldThingsModelItemBaseList));
-        this.deviceMapper.update(null, updateWrapper);
-
-        // 添加到设备日志，每更新一个物模型值就添加日志
-        this.recordDeviceLog(type, message, device, product);
-
-        // 告警规则匹配
-        this.alarmRuleMatching(message, device, product, oldThingsModelItemBaseList);
+        //// 更新数据库中设备的物模型值
+        // LambdaUpdateWrapper<Device> updateWrapper = new LambdaUpdateWrapper<>();
+        // updateWrapper.eq(Device::getDeviceId, device.getDeviceId()).set(Device::getThingsModelValue,
+        // JSONObject.toJSONString(oldThingsModelItemBaseList));
+        // this.deviceMapper.update(null, updateWrapper);
+        //
+        //// 添加到设备日志，每更新一个物模型值就添加日志
+        // this.recordDeviceLog(type, message, device, product);
+        //
+        //// 告警规则匹配
+        // this.alarmRuleMatching(message, device, product, oldThingsModelItemBaseList);
     }
 
     /**
@@ -518,75 +477,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         deviceLog.setUserName(device.getUserName());
         deviceLog.setCreateTime(DateUtils.getNowDate());
         this.deviceLogService.save(deviceLog);
-    }
-
-    private void alarmRuleMatching(String message, Device device, Product product,
-        List<ThingsModelItemBase> oldThingsModelItemBaseList) {
-        Alert alert = this.alertService.getByProductId(product.getProductId());
-        List<Boolean> flagList = new ArrayList<>();
-        for (AlertTrigger trigger : alert.getTriggers()) {
-            for (ThingsModelItemBase thingsModelItemBase : oldThingsModelItemBaseList) {
-                if (Objects.equals(thingsModelItemBase.getModelId(), trigger.getModelId())) {
-                    String operator = trigger.getOperator();
-                    String value = trigger.getValue();
-                    String value2 = thingsModelItemBase.getValue();
-                    switch (operator) {
-                        case ">":
-                            flagList.add(Double.parseDouble(value2) > Double.parseDouble(value));
-                            break;
-                        case ">=":
-                            flagList.add(Double.parseDouble(value2) >= Double.parseDouble(value));
-                            break;
-                        case "=":
-                            flagList.add(value.equals(value2));
-                        case "!=":
-                            flagList.add(!value.equals(value2));
-                        case "<":
-                            flagList.add(Double.parseDouble(value2) < Double.parseDouble(value));
-                            break;
-                        case "<=":
-                            flagList.add(Double.parseDouble(value2) <= Double.parseDouble(value));
-                            break;
-                        default:
-                            throw new ServiceException("运算符错误");
-                    }
-                    break;
-                }
-            }
-        }
-        String restriction = alert.getRestriction(); // any or all
-        if ("any".equals(restriction)) {
-            if (flagList.stream().anyMatch(val -> val)) {
-                // 触发告警，添加告警日志
-                this.addAlertLog(message, device, alert);
-            }
-        } else if ("all".equals(restriction)) {
-            if (flagList.stream().allMatch(val -> val)) {
-                // 触发告警，添加告警日志
-                this.addAlertLog(message, device, alert);
-            }
-        }
-    }
-
-    /**
-     * 添加告警日志
-     * 
-     * @param message
-     * @param device
-     * @param alert
-     */
-    private void addAlertLog(String message, Device device, Alert alert) {
-        AlertLog alertLog = new AlertLog();
-        alertLog.setAlertName(alert.getAlertName());
-        alertLog.setProductId(alert.getProductId());
-        alertLog.setProductName(alert.getProductName());
-        alertLog.setDeviceId(device.getDeviceId());
-        alertLog.setDeviceName(device.getDeviceName());
-        alertLog.setUserId(device.getUserId());
-        alertLog.setUserName(device.getUserName());
-        alertLog.setData(message);
-        alertLog.setCreateTime(DateUtils.getNowDate());
-        this.alertLogService.save(alertLog);
     }
 
     /// **
@@ -699,9 +589,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         ]
          */
         // 获取物模型,设置默认值
-        String thingsModelsJson = this.thingsModelService.getThingsModelCache(productId);
-        List<ThingsModel> thingsModels = JSON.parseArray(thingsModelsJson, ThingsModel.class);
-        return thingsModels.stream().map(thingsModel -> {
+        List<ThingsModel> thingsModelList = this.thingsModelService.listThingModelByProductId(productId);
+        return thingsModelList.stream().map(thingsModel -> {
             ThingsModelItemBase thingsModelItemBase = new ThingsModelItemBase();
             BeanUtils.copyProperties(thingsModel, thingsModelItemBase);
             thingsModelItemBase.setValue("");
@@ -713,69 +602,69 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     /**
      * 获取设备影子
      */
-    @Override
-    public ThingsModelShadow getDeviceShadowThingsModel(Device device) {
-        // 产品物模型
-        String thingsModelsJson = this.thingsModelService.getThingsModelCache(device.getProductId());
-        List<ThingsModel> thingsModelsList = JSON.parseArray(thingsModelsJson, ThingsModel.class);
-
-        List<ThingsModel> properties = new ArrayList<>();
-        List<ThingsModel> functions = new ArrayList<>();
-
-        for (ThingsModel thingsModel : thingsModelsList) {
-            if (thingsModel.getType() == 1) {
-                properties.add(thingsModel);
-            } else if (thingsModel.getType() == 2) {
-                functions.add(thingsModel);
-            }
-        }
-
-        // 设备物模型值
-        /*
-        [
-        {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
-        {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
-        {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
-        {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
-        {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""}
-        ]
-         */
-        List<ThingsModelItemBase> thingsModelItemBaseList =
-            JSON.parseArray(device.getThingsModelValue(), ThingsModelItemBase.class);
-
-        // 查询出设置的影子值
-        List<ThingsModelItemBase> shadowList = new ArrayList<>();
-        for (ThingsModelItemBase thingsModelItemBase : thingsModelItemBaseList) {
-            // 如果设备的影子值和物模型值不一样
-            if (!thingsModelItemBase.getValue().equals(thingsModelItemBase.getShadow())) {
-                shadowList.add(thingsModelItemBase);
-            }
-        }
-        ThingsModelShadow shadow = new ThingsModelShadow();
-        for (ThingsModelItemBase shadowItem : shadowList) {
-            boolean isGetValue = false;
-            for (ThingsModel property : properties) {
-                if (property.getModelId().equals(shadowItem.getModelId())) {
-                    ModelIdAndValue item = new ModelIdAndValue(shadowItem.getModelId(), shadowItem.getShadow());
-                    shadow.getProperties().add(item);
-                    System.out.println("添加影子属性：" + item.getModelId());
-                    isGetValue = true;
-                    break;
-                }
-            }
-            if (!isGetValue) {
-                for (ThingsModel function : functions) {
-                    if (function.getModelId().equals(shadowItem.getModelId())) {
-                        ModelIdAndValue item = new ModelIdAndValue(shadowItem.getModelId(), shadowItem.getShadow());
-                        shadow.getFunctions().add(item);
-                        System.out.println("添加影子功能：" + item.getModelId());
-                        break;
-                    }
-                }
-            }
-        }
-        return shadow;
-    }
+    // @Override
+    // public ThingsModelShadow getDeviceShadowThingsModel(Device device) {
+    // // 产品物模型
+    // String thingsModelsJson = this.thingsModelService.getThingsModelCache(device.getProductId());
+    // List<ThingsModel> thingsModelsList = JSON.parseArray(thingsModelsJson, ThingsModel.class);
+    //
+    // List<ThingsModel> properties = new ArrayList<>();
+    // List<ThingsModel> functions = new ArrayList<>();
+    //
+    // for (ThingsModel thingsModel : thingsModelsList) {
+    // if (thingsModel.getType() == 1) {
+    // properties.add(thingsModel);
+    // } else if (thingsModel.getType() == 2) {
+    // functions.add(thingsModel);
+    // }
+    // }
+    //
+    // // 设备物模型值
+    // /*
+    // [
+    // {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
+    // {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
+    // {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
+    // {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""},
+    // {"modelId": "", "modelName": "", ..., "type": "", "dataType": "", "specs", ""}
+    // ]
+    // */
+    // List<ThingsModelItemBase> thingsModelItemBaseList =
+    // JSON.parseArray(device.getThingsModelValue(), ThingsModelItemBase.class);
+    //
+    // // 查询出设置的影子值
+    // List<ThingsModelItemBase> shadowList = new ArrayList<>();
+    // for (ThingsModelItemBase thingsModelItemBase : thingsModelItemBaseList) {
+    // // 如果设备的影子值和物模型值不一样
+    // if (!thingsModelItemBase.getValue().equals(thingsModelItemBase.getShadow())) {
+    // shadowList.add(thingsModelItemBase);
+    // }
+    // }
+    // ThingsModelShadow shadow = new ThingsModelShadow();
+    // for (ThingsModelItemBase shadowItem : shadowList) {
+    // boolean isGetValue = false;
+    // for (ThingsModel property : properties) {
+    // if (property.getModelId().equals(shadowItem.getModelId())) {
+    // ModelIdAndValue item = new ModelIdAndValue(shadowItem.getModelId(), shadowItem.getShadow());
+    // shadow.getProperties().add(item);
+    // System.out.println("添加影子属性：" + item.getModelId());
+    // isGetValue = true;
+    // break;
+    // }
+    // }
+    // if (!isGetValue) {
+    // for (ThingsModel function : functions) {
+    // if (function.getModelId().equals(shadowItem.getModelId())) {
+    // ModelIdAndValue item = new ModelIdAndValue(shadowItem.getModelId(), shadowItem.getShadow());
+    // shadow.getFunctions().add(item);
+    // System.out.println("添加影子功能：" + item.getModelId());
+    // break;
+    // }
+    // }
+    // }
+    // }
+    // return shadow;
+    // }
 
     /**
      * @param device

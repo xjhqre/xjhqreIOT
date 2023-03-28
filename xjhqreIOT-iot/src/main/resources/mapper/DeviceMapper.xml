@@ -29,6 +29,18 @@
         order by d.create_time desc
     </select>
 
+    <!-- 查询物模型最新的值 -->
+    <select id="getLastModelValue" resultType="java.lang.String">
+        select value
+        from iot_things_model_value
+        where model_id = #{modelId}
+          and log_id in (SELECT max(log_id)
+                         FROM iot_things_model_value
+                         GROUP BY identifier)
+    </select>
+
+    <!-- 查询设备物模型以及最后一次值记录 -->
+
     <delete id="deleteDeviceGroupByDeviceId">
         delete
         from iot_device_group

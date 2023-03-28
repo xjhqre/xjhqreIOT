@@ -25,9 +25,9 @@ import com.xjhqre.common.enums.BusinessType;
 import com.xjhqre.common.group.Insert;
 import com.xjhqre.common.group.Update;
 import com.xjhqre.iot.domain.entity.Device;
+import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.vo.DeviceVO;
-import com.xjhqre.iot.domain.vo.ThingsModelVO;
 import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.DeviceService;
 
@@ -110,10 +110,11 @@ public class DeviceController extends BaseController {
      * 获取设备属性值
      */
     @PreAuthorize("@ss.hasPermission('iot:device:query')")
-    @RequestMapping(value = "/findDeviceProp", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/listThingModelWithLastValue", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("获取设备属性值")
-    public R<List<ThingsModelVO>> findDeviceProp(@RequestParam Long deviceId) {
-        return R.success(this.deviceService.findDeviceProp(deviceId));
+    public R<List<ThingsModel>> listThingModelWithLastValue(@RequestParam Long deviceId,
+        @RequestParam(required = false) String modelName) {
+        return R.success(this.deviceService.listThingModelWithLastValue(deviceId, modelName));
     }
 
     /**

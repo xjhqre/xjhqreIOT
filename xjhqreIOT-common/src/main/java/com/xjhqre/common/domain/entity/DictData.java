@@ -48,6 +48,11 @@ public class DictData extends BaseEntity {
     @ApiModelProperty(value = "字典类型")
     private String dictType;
 
+    /** 字典标签样式 */
+    @Size(max = 100, message = "字典键值长度不能超过100个字符")
+    @ApiModelProperty(value = "字典标签样式")
+    private String listClass;
+
     /** 是否默认（Y是 N否） */
     @ApiModelProperty(value = "是否默认，Y=是,N=否")
     private String isDefault;

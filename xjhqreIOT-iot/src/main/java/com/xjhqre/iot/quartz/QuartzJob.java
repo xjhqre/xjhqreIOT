@@ -71,11 +71,11 @@ public class QuartzJob implements Job {
             EmqxService emqxService = SpringUtils.getBean(EmqxService.class);
             // 发布属性
             if (properties.size() > 0) {
-                emqxService.publishProperty(deviceJob.getProductId(), deviceJob.getDeviceNumber(), properties);
+                // emqxService.publishProperty(deviceJob.getProductId(), deviceJob.getDeviceNumber(), properties);
             }
             // 发布功能
             if (functions.size() > 0) {
-                emqxService.publishFunction(deviceJob.getProductId(), deviceJob.getDeviceNumber(), functions);
+                // emqxService.publishFunction(deviceJob.getProductId(), deviceJob.getDeviceNumber(), functions);
             }
 
         }

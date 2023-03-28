@@ -17,7 +17,6 @@ import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectResult;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.xjhqre.common.exception.ServiceException;
-import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.file.MimeTypeUtils;
 import com.xjhqre.framework.config.properties.OssProperties;
 
@@ -61,7 +60,8 @@ public class OSSUtil {
 
     // 文件路径的枚举
     public enum FileDirType {
-        AVATAR("avatar/"), PRODUCT("product/"), SCREENSHOT("screenshot/"), DEVICE("device/"), PICTURE("picture/");
+        AVATAR("avatar/"), PRODUCT("product/"), SCREENSHOT("screenshot/"), DEVICE("device/"), PICTURE("picture/"),
+        FIRMWARE("firmware/");
 
         private final String dir;
 
@@ -82,13 +82,14 @@ public class OSSUtil {
      *            文件
      * @param fileDir
      *            上传到OSS上文件的路径
-     * @param pictureId
+     * @param fileId
+     *            文件编号，number + extension
      * @return 文件的访问地址
      */
-    public static String upload(MultipartFile file, FileDirType fileDir, String pictureId) {
+    public static String upload(MultipartFile file, FileDirType fileDir, String fileId) {
         OSSUtil.createBucket();
-        String fileName = OSSUtil.uploadFile(file, fileDir, pictureId); // 返回唯一文件名
-        String fileOssURL = OSSUtil.getImgUrl(fileName, fileDir); // 返回OSS地址
+        String fileName = OSSUtil.uploadFile(file, fileDir, fileId); // 返回唯一文件名
+        String fileOssURL = OSSUtil.getFileUrl(fileName, fileDir); // 返回OSS地址
         int firstChar = fileOssURL.indexOf("?");
         if (firstChar > 0) {
             fileOssURL = fileOssURL.substring(0, firstChar);
@@ -122,10 +123,11 @@ public class OSSUtil {
      *            文件
      * @param fileDir
      *            上传到OSS上文件的路径
-     * @param pictureId
+     * @param fileId
+     *            文件唯一名称 number + extension
      * @return 唯一文件名，例如：asdasfwafa.jpg
      */
-    private static String uploadFile(MultipartFile file, FileDirType fileDir, String pictureId) {
+    private static String uploadFile(MultipartFile file, FileDirType fileDir, String fileId) {
         // 生成文件名为 UUID.ext 的形式
         try (InputStream inputStream = file.getInputStream()) {
             // 创建上传Object的Metadata
@@ -133,15 +135,16 @@ public class OSSUtil {
             objectMetadata.setContentLength(inputStream.available());
             objectMetadata.setCacheControl("no-cache");
             objectMetadata.setHeader("Pragma", "no-cache");
-            objectMetadata.setContentType(getContentType(FileTypeUtils.getExtension(file.getOriginalFilename())));
-            objectMetadata.setContentDisposition("inline;filename=" + pictureId);
+            // objectMetadata.setContentType(getContentType(FileTypeUtils.getExtension(file.getOriginalFilename())));
+            objectMetadata.setContentType(file.getContentType());
+            objectMetadata.setContentDisposition("inline;filename=" + fileId);
             // 上传文件
-            PutObjectResult putResult = OSSUtil.getOSSClient().putObject(OSS_BUCKET_NAME, fileDir.getDir() + pictureId,
+            PutObjectResult putResult = OSSUtil.getOSSClient().putObject(OSS_BUCKET_NAME, fileDir.getDir() + fileId,
                 inputStream, objectMetadata);
         } catch (Exception e) {
             throw new ServiceException("上传图片到OSS失败");
         }
-        return pictureId;
+        return fileId;
     }
 
     /**
@@ -153,7 +156,7 @@ public class OSSUtil {
      *            文件在OSS上的路径
      * @return 文件的路径
      */
-    private static String getImgUrl(String fileName, FileDirType fileDir) {
+    private static String getFileUrl(String fileName, FileDirType fileDir) {
         if (StringUtils.isEmpty(fileName)) {
             LOGGER.error("{}", "文件地址为空");
             throw new RuntimeException("文件地址为空");

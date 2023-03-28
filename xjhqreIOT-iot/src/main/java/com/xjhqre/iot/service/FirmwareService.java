@@ -3,6 +3,8 @@ package com.xjhqre.iot.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.Firmware;
 
 /**
@@ -11,7 +13,7 @@ import com.xjhqre.iot.domain.entity.Firmware;
  * @author xjhqre
  * @date 2022-12-16
  */
-public interface FirmwareService {
+public interface FirmwareService extends IService<Firmware> {
 
     /**
      * 产品固件分页列表
@@ -26,11 +28,6 @@ public interface FirmwareService {
     Firmware getDetail(Long firmwareId);
 
     /**
-     * 获取设备最新固件
-     */
-    Firmware getLatest(Long deviceId);
-
-    /**
      * 新增产品固件
      */
     void add(Firmware firmware);
@@ -41,4 +38,14 @@ public interface FirmwareService {
     void update(Firmware firmware);
 
     void delete(Long[] firmwareIds);
+
+    /**
+     * 查询固件涉及的设备
+     * 
+     * @param firmware
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    List<Device> listDeviceByFirmwareId(Long firmwareId);
 }

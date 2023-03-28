@@ -4,23 +4,4 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.xjhqre.iot.mapper.FirmwareMapper">
 
-    <select id="selectLatestFirmware" resultType="com.xjhqre.iot.domain.entity.Firmware">
-        select f.firmware_id,
-        f.firmware_name,
-        f.product_id,
-        f.product_name,
-        f.is_sys,
-        f.is_latest,
-        f.version,
-        f.file_path,
-        f.create_time,
-        f.remark
-        from iot_device d
-        left join iot_firmware f on d.product_id = f.product_id
-        where d.device_id = #{deviceId}
-        and f.is_latest = 1
-        order by f.create_time desc
-        limit 1
-    </select>
-
 </mapper>

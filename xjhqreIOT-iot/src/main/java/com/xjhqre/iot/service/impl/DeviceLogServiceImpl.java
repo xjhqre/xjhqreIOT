@@ -36,6 +36,8 @@ public class DeviceLogServiceImpl extends ServiceImpl<DeviceLogMapper, DeviceLog
         wrapper.eq(deviceLog.getDeviceId() != null, DeviceLog::getDeviceId, deviceLog.getDeviceId())
             .like(deviceLog.getDeviceName() != null && !"".equals(deviceLog.getDeviceName()), DeviceLog::getDeviceName,
                 deviceLog.getDeviceName())
+            .eq(deviceLog.getIdentifier() != null && !"".equals(deviceLog.getIdentifier()), DeviceLog::getIdentifier,
+                deviceLog.getIdentifier())
             .eq(deviceLog.getUserId() != null, DeviceLog::getUserId, deviceLog.getUserId())
             .like(deviceLog.getUserName() != null && !"".equals(deviceLog.getUserName()), DeviceLog::getUserName,
                 deviceLog.getUserName())

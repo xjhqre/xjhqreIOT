@@ -10,11 +10,16 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.Firmware;
+import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.mapper.FirmwareMapper;
+import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.FirmwareService;
+import com.xjhqre.iot.service.ProductService;
 
 /**
  * 产品固件Service业务层处理
@@ -23,9 +28,13 @@ import com.xjhqre.iot.service.FirmwareService;
  * @date 2021-12-16
  */
 @Service
-public class FirmwareServiceImpl implements FirmwareService {
+public class FirmwareServiceImpl extends ServiceImpl<FirmwareMapper, Firmware> implements FirmwareService {
     @Resource
     private FirmwareMapper firmwareMapper;
+    @Resource
+    private ProductService productService;
+    @Resource
+    private DeviceService deviceService;
 
     /**
      * 产品固件分页列表
@@ -63,20 +72,10 @@ public class FirmwareServiceImpl implements FirmwareService {
     }
 
     /**
-     * 查询设备最新固件
-     */
-    @Override
-    public Firmware getLatest(Long deviceId) {
-        return this.firmwareMapper.selectLatestFirmware(deviceId);
-    }
-
-    /**
      * 新增产品固件
      */
     @Override
     public void add(Firmware firmware) {
-        // 判断是否为管理员
-        firmware.setIsSys(1);
         firmware.setCreateBy(SecurityUtils.getUsername());
         firmware.setCreateTime(DateUtils.getNowDate());
         this.firmwareMapper.insert(firmware);
@@ -98,5 +97,19 @@ public class FirmwareServiceImpl implements FirmwareService {
     @Override
     public void delete(Long[] firmwareIds) {
         this.firmwareMapper.deleteBatchIds(Arrays.asList(firmwareIds));
+    }
+
+    @Override
+    public List<Device> listDeviceByFirmwareId(Long firmwareId) {
+        Firmware firmware = this.firmwareMapper.selectById(firmwareId);
+        Long productId = firmware.getProductId();
+        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Device::getProductId, productId);
+        List<Device> deviceList = this.deviceService.list(wrapper);
+        for (Device device : deviceList) {
+            Product product = this.productService.getById(device.getProductId());
+            device.setProductKey(product.getProductKey());
+        }
+        return deviceList;
     }
 }

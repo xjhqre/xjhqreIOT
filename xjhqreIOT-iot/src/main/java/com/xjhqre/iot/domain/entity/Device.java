@@ -6,6 +6,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -99,9 +100,6 @@ public class Device extends BaseEntity {
     @NotNull(message = "定位方式不能为空")
     private Integer locationWay;
 
-    @ApiModelProperty(value = "物模型", hidden = true)
-    private String thingsModelValue;
-
     /** 设备所在地址 */
     @ApiModelProperty(value = "设备所在地址")
     private String address;
@@ -132,7 +130,16 @@ public class Device extends BaseEntity {
     @ApiModelProperty(value = "图片地址")
     private String imgUrl;
 
+    @ApiModelProperty(value = "升级状态(1：未升级，2：升级中，3：升级失败，4：升级成功)")
+    private Integer upgradeStatus;
+
     /** 删除标志（0代表存在 2代表删除） */
     @ApiModelProperty(value = "删除标志（0代表存在 2代表删除）", hidden = true, example = "0")
     private String delFlag;
+
+    /**
+     * 产品密钥
+     */
+    @TableField(exist = false)
+    private String productKey;
 }

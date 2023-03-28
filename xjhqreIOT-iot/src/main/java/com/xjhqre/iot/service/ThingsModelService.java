@@ -50,4 +50,11 @@ public interface ThingsModelService extends IService<ThingsModel> {
      */
     String getThingsModelCache(Long productId);
 
+    /**
+     * 根据产品id获取物模型列表
+     * 
+     * @param productId
+     * @return
+     */
+    List<ThingsModel> listThingModelByProductId(Long productId);
 }
