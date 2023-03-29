@@ -79,9 +79,6 @@ public class ThingsModel extends BaseEntity {
     @TableField(exist = false)
     private List<ModelParam> paramList;
 
-    @ApiModelProperty(value = "是否只读（0：读写 1：只读）")
-    private Integer isReadonly;
-
     /**
      * 删除标志（0代表存在 2代表删除）
      */
