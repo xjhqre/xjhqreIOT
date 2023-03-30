@@ -1,11 +1,12 @@
 package com.xjhqre.iot.controller;
 
-import java.util.List;
-
 import javax.annotation.Resource;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -60,8 +61,8 @@ public class SceneController extends BaseController {
     @ApiOperation(value = "新增场景联动")
     @PreAuthorize("@ss.hasPermission('iot:scene:add')")
     @Log(title = "场景联动", businessType = BusinessType.INSERT)
-    @RequestMapping(value = "/add", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> add(Scene scene) {
+    @PostMapping("/add")
+    public R<String> add(@RequestBody Scene scene) {
         this.sceneService.add(scene);
         return R.success("新增场景联动成功");
     }
@@ -84,9 +85,9 @@ public class SceneController extends BaseController {
     @ApiOperation(value = "删除场景联动")
     @PreAuthorize("@ss.hasPermission('iot:scene:delete')")
     @Log(title = "场景联动", businessType = BusinessType.DELETE)
-    @RequestMapping(value = "/delete", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> remove(@RequestParam List<Long> sceneIdList) {
-        this.sceneService.remove(sceneIdList);
+    @DeleteMapping(value = "/delete/{sceneIds}")
+    public R<String> delete(@PathVariable Long[] sceneIds) {
+        this.sceneService.delete(sceneIds);
         return R.success("删除场景联动成功");
     }
 }

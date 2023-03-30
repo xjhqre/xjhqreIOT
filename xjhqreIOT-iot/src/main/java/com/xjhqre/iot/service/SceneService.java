@@ -1,7 +1,5 @@
 package com.xjhqre.iot.service;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xjhqre.iot.domain.entity.Scene;
 
@@ -40,5 +38,5 @@ public interface SceneService {
      * 批量删除场景联动
      *
      */
-    void remove(List<Long> sceneIds);
+    void delete(Long[] sceneIds);
 }

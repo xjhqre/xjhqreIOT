@@ -1,8 +1,12 @@
 package com.xjhqre.iot.domain.entity;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.xjhqre.common.base.BaseEntity;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -45,14 +49,25 @@ public class Scene extends BaseEntity {
     private String userName;
 
     /**
+     * 1：设备触发 2：定时触发
+     */
+    private Integer source;
+
+    /**
+     * 条件限制，部分满足或全部满足，值为 any 或者 all
+     */
+    @JsonProperty("condition")
+    private String restriction;
+
+    /**
      * 触发器
      */
-    @ApiModelProperty(value = "触发器")
-    private String triggers;
+    @TableField(exist = false)
+    private List<SceneTrigger> triggers;
 
     /**
      * 执行动作
      */
-    @ApiModelProperty(value = "执行动作")
-    private String actions;
+    @TableField(exist = false)
+    private List<SceneAction> actions;
 }

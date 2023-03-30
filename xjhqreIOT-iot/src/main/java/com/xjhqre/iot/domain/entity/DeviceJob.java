@@ -89,22 +89,10 @@ public class DeviceJob extends BaseEntity {
     private String deviceName;
 
     /**
-     * 是否详细corn表达式
-     */
-    @ApiModelProperty(value = "是否详细corn表达式")
-    private Integer isAdvance;
-
-    /**
      * 执行动作
      */
     @ApiModelProperty(value = "执行动作")
     private String actions;
-
-    /**
-     * 定时类型（1=设备定时，2=设备告警，3=场景联动）
-     */
-    @ApiModelProperty(value = "定时类型（1=设备定时，2=设备告警，3=场景联动）")
-    private Integer jobType;
 
     /**
      * 产品ID
@@ -117,18 +105,6 @@ public class DeviceJob extends BaseEntity {
      */
     @ApiModelProperty(value = "产品名称")
     private String productName;
-
-    /**
-     * 场景联动ID
-     */
-    @ApiModelProperty(value = "场景联动ID")
-    private Long sceneId;
-
-    /**
-     * 告警ID
-     */
-    @ApiModelProperty(value = "告警ID")
-    private Long alertId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public Date getNextValidTime() {

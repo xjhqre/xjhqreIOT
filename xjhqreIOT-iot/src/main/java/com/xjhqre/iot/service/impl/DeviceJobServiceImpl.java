@@ -19,10 +19,13 @@ import com.xjhqre.common.constant.ScheduleConstants;
 import com.xjhqre.common.exception.TaskException;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceJob;
 import com.xjhqre.iot.mapper.DeviceJobMapper;
 import com.xjhqre.iot.quartz.ScheduleUtils;
 import com.xjhqre.iot.service.DeviceJobService;
+import com.xjhqre.iot.service.DeviceService;
+import com.xjhqre.iot.service.ProductService;
 
 /**
  * 设备定时任务serviceImpl层
@@ -34,7 +37,10 @@ import com.xjhqre.iot.service.DeviceJobService;
 public class DeviceJobServiceImpl implements DeviceJobService {
     @Resource
     private Scheduler scheduler;
-
+    @Resource
+    private DeviceService deviceService;
+    @Resource
+    private ProductService productService;
     @Resource
     private DeviceJobMapper deviceJobMapper;
 
@@ -87,6 +93,10 @@ public class DeviceJobServiceImpl implements DeviceJobService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void add(DeviceJob deviceJob) throws SchedulerException, TaskException {
+        Device device = this.deviceService.getById(deviceJob.getDeviceId());
+        deviceJob.setDeviceNumber(device.getDeviceNumber());
+        deviceJob.setProductId(device.getProductId());
+        deviceJob.setProductName(device.getProductName());
         deviceJob.setCreateBy(SecurityUtils.getUsername());
         deviceJob.setCreateTime(DateUtils.getNowDate());
         this.deviceJobMapper.insert(deviceJob);

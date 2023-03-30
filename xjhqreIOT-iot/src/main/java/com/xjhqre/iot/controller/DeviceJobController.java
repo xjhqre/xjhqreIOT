@@ -107,8 +107,8 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "设备定时任务立即执行一次")
     @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/run", method = {RequestMethod.POST, RequestMethod.GET})
-    public R<String> run(DeviceJob job) {
+    @PostMapping(value = "/run")
+    public R<String> run(@RequestBody DeviceJob job) {
         this.deviceJobService.run(job);
         return R.success("执行成功");
     }
