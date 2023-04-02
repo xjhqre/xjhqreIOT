@@ -66,7 +66,8 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
                 ThingsModelValue::getIdentifier, thingsModelValue.getIdentifier())
             .eq(thingsModelValue.getDeviceId() != null, ThingsModelValue::getDeviceId, thingsModelValue.getDeviceId())
             .eq(thingsModelValue.getDeviceName() != null && !"".equals(thingsModelValue.getDeviceName()),
-                ThingsModelValue::getDeviceName, thingsModelValue.getDeviceName());
+                ThingsModelValue::getDeviceName, thingsModelValue.getDeviceName())
+            .orderByDesc(ThingsModelValue::getCreateTime);
         if (dateRange != null) {
             if (dateRange == 1) {
                 wrapper.last("and create_time > date_sub(date_add(now(), interval 8 hour), interval 1 hour) ");

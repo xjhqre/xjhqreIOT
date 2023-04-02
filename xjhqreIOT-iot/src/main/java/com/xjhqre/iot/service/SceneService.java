@@ -1,6 +1,7 @@
 package com.xjhqre.iot.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.xjhqre.iot.domain.entity.Scene;
 
 /**
@@ -9,7 +10,7 @@ import com.xjhqre.iot.domain.entity.Scene;
  * @author xjhqre
  * @since 2023-01-7
  */
-public interface SceneService {
+public interface SceneService extends IService<Scene> {
 
     /**
      * 分页查询场景联动列表
@@ -39,4 +40,6 @@ public interface SceneService {
      *
      */
     void delete(Long[] sceneIds);
+
+    void changeStatus(Long sceneId, Integer status);
 }

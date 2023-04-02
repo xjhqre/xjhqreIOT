@@ -43,7 +43,7 @@ public interface DeviceJobService {
      * 任务调度状态修改
      *
      */
-    void changeStatus(DeviceJob job) throws SchedulerException;
+    void changeStatus(Long jobId, Integer status) throws SchedulerException;
 
     /**
      * 立即运行任务

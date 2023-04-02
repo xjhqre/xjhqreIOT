@@ -36,6 +36,7 @@
         where model_id = #{modelId}
           and log_id in (SELECT max(log_id)
                          FROM iot_things_model_value
+                         where product_id = #{productId}
                          GROUP BY identifier)
     </select>
 

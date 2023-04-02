@@ -4,6 +4,7 @@ import static com.xjhqre.common.utils.SecurityUtils.getLoginUser;
 import static com.xjhqre.common.utils.SecurityUtils.getUsername;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,10 +31,11 @@ import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.http.HttpUtils;
 import com.xjhqre.common.utils.ip.IpUtils;
 import com.xjhqre.common.utils.uuid.RandomUtils;
-import com.xjhqre.iot.domain.entity.AlertLog;
+import com.xjhqre.iot.domain.entity.Alert;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceLog;
 import com.xjhqre.iot.domain.entity.Product;
+import com.xjhqre.iot.domain.entity.Scene;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.entity.ThingsModelValue;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
@@ -46,6 +48,7 @@ import com.xjhqre.iot.service.AlertService;
 import com.xjhqre.iot.service.DeviceLogService;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
+import com.xjhqre.iot.service.SceneService;
 import com.xjhqre.iot.service.ThingsModelValueService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +82,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     private AlertService alertService;
     @Resource
     private ThingsModelValueService thingsModelValueService;
+    @Resource
+    private SceneService sceneService;
 
     @Override
     public IPage<DeviceVO> find(Device device, Integer pageNum, Integer pageSize) {
@@ -199,6 +204,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
         int productCount = this.productService.count(productWrapper);
 
+        // 已发布产品数量
+        productWrapper = new LambdaQueryWrapper<>();
+        productWrapper.eq(Product::getStatus, 2);
+        int pulishedProductCount = this.productService.count(productWrapper);
+
         // 查询设备数量
         LambdaQueryWrapper<Device> deviceWrapper = new LambdaQueryWrapper<>();
         if (!isAdmin) {
@@ -206,53 +216,59 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         }
         Integer deviceCount = this.deviceMapper.selectCount(deviceWrapper);
 
-        // 查询告警数量
-        LambdaQueryWrapper<AlertLog> alertLogWrapper = new LambdaQueryWrapper<>();
-        if (!isAdmin) {
-            alertLogWrapper.eq(AlertLog::getUserId, user.getUserId());
-        }
-        int alertLogCount = this.alertLogService.count(alertLogWrapper);
+        // 在线设备数量
+        deviceWrapper = new LambdaQueryWrapper<>();
+        deviceWrapper.eq(Device::getStatus, 3);
+        Integer onlineDeviceCount = this.deviceMapper.selectCount(deviceWrapper);
 
-        // 获取属性上报数量
-        LambdaQueryWrapper<DeviceLog> propertiesWrapper = new LambdaQueryWrapper<>();
-        propertiesWrapper.eq(DeviceLog::getLogType, 1);
-        if (!isAdmin) {
-            propertiesWrapper.eq(DeviceLog::getUserId, user.getUserId());
-        }
-        int propertiesCount = this.deviceLogService.count(propertiesWrapper);
+        // 离线设备数量
+        deviceWrapper = new LambdaQueryWrapper<>();
+        deviceWrapper.eq(Device::getStatus, 4);
+        Integer offlineDeviceCount = this.deviceMapper.selectCount(deviceWrapper);
 
-        // 获取功能上报数量
-        LambdaQueryWrapper<DeviceLog> functionWrapper = new LambdaQueryWrapper<>();
-        functionWrapper.eq(DeviceLog::getLogType, 2);
-        if (!isAdmin) {
-            functionWrapper.eq(DeviceLog::getUserId, user.getUserId());
-        }
-        int functionCount = this.deviceLogService.count(functionWrapper);
+        // 查询告警配置数量
+        int alertCount = this.alertService.count();
 
-        // 获取事件上报数量
-        LambdaQueryWrapper<DeviceLog> eventWrapper = new LambdaQueryWrapper<>();
-        eventWrapper.eq(DeviceLog::getLogType, 3);
-        if (!isAdmin) {
-            eventWrapper.eq(DeviceLog::getUserId, user.getUserId());
-        }
-        int eventCount = this.deviceLogService.count(eventWrapper);
+        // 正常告警配置数量
+        LambdaQueryWrapper<Alert> alertLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        alertLambdaQueryWrapper.eq(Alert::getStatus, 1);
+        int enableAlertCount = this.alertService.count(alertLambdaQueryWrapper);
 
-        // 获取监测数据上报数量
-        LambdaQueryWrapper<DeviceLog> monitorWrapper = new LambdaQueryWrapper<>();
-        monitorWrapper.eq(DeviceLog::getLogType, 1);
-        if (!isAdmin) {
-            monitorWrapper.eq(DeviceLog::getUserId, user.getUserId());
-        }
-        int monitorCount = this.deviceLogService.count(monitorWrapper);
+        // 禁用告警配置数量
+        int disableAlertCount = alertCount - enableAlertCount;
+
+        // 查询今日告警日志数量
+        int dayAlertLogCount = this.alertLogService.getTodayLogCount();
+
+        // 查询当月告警日志数量
+        int monthAlertLogCount = this.alertLogService.getMonthLogCount();
+
+        // 场景联动数量
+        int sceneCount = this.sceneService.count();
+
+        // 正常场景联动
+        LambdaQueryWrapper<Scene> sceneLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sceneLambdaQueryWrapper.eq(Scene::getStatus, 1);
+        int enableSceneCount = this.sceneService.count(sceneLambdaQueryWrapper);
+
+        // 禁用场景联动数量
+        int disableSceneCount = sceneCount - enableSceneCount;
 
         DeviceStatistic statistic = new DeviceStatistic();
         statistic.setProductCount(productCount);
+        statistic.setPublishedProductCount(pulishedProductCount);
+        statistic.setUnPublishedProductCount(productCount - pulishedProductCount);
         statistic.setDeviceCount(deviceCount);
-        statistic.setAlertCount(alertLogCount);
-        statistic.setPropertyCount(propertiesCount);
-        statistic.setFunctionCount(functionCount);
-        statistic.setEventCount(eventCount);
-        statistic.setMonitorCount(monitorCount);
+        statistic.setAlertCount(alertCount);
+        statistic.setEnableAlertCount(enableAlertCount);
+        statistic.setDisableAlertCount(disableAlertCount);
+        statistic.setOnlineDeviceCount(onlineDeviceCount);
+        statistic.setOfflineDeviceCount(offlineDeviceCount);
+        statistic.setDayAlertLogCount(dayAlertLogCount);
+        statistic.setMonthAlertLogCount(monthAlertLogCount);
+        statistic.setSceneCount(sceneCount);
+        statistic.setEnableSceneCount(enableSceneCount);
+        statistic.setDisableSceneCount(disableSceneCount);
         return statistic;
     }
 
@@ -387,20 +403,59 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
      * @return
      */
     @Override
-    public List<ThingsModel> listThingModelWithLastValue(Long deviceId, String modelName) {
+    public List<ThingsModel> listPropertiesWithLastValue(Long deviceId, String modelName) {
         Device device = this.getById(deviceId);
         Product product = this.productService.getById(device.getProductId());
         LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ThingsModel::getProductId, product.getProductId()).like(modelName != null && !"".equals(modelName),
-            ThingsModel::getModelName, modelName);
+        wrapper.eq(ThingsModel::getProductId, product.getProductId()).eq(ThingsModel::getType, 1)
+            .like(modelName != null && !"".equals(modelName), ThingsModel::getModelName, modelName);
         List<ThingsModel> thingsModelList = this.thingsModelService.list(wrapper);
 
         return thingsModelList.stream().peek(thingsModel -> {
             // 设置最新的物模型值
-            String value = this.deviceMapper.getLastModelValue(thingsModel.getModelId());
+            String value = this.deviceMapper.getLastModelValue(thingsModel.getModelId(), thingsModel.getProductId());
             thingsModel.setLastValue(value);
         }).collect(Collectors.toList());
 
+    }
+
+    /**
+     * 获取各种状态设备数量
+     * 
+     * @return
+     */
+    @Override
+    public Map<String, Integer> getDeviceCount() {
+        // 设备总数
+        int deviceTotalCount = this.count();
+
+        // 激活设备
+        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ne(Device::getStatus, 1);
+        int activateDeviceCount = this.count(wrapper);
+
+        // 在线设备
+        wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Device::getStatus, 3);
+        int onlineDeviceCount = this.count(wrapper);
+
+        // 禁用设备
+        wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Device::getStatus, 2);
+        int disableDeviceCount = this.count(wrapper);
+
+        // 离线设备
+        wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Device::getStatus, 4);
+        int offlineDeviceCount = this.count(wrapper);
+
+        Map<String, Integer> retMap = new HashMap<>();
+        retMap.put("deviceTotalCount", deviceTotalCount);
+        retMap.put("activateDeviceCount", activateDeviceCount);
+        retMap.put("onlineDeviceCount", onlineDeviceCount);
+        retMap.put("disableDeviceCount", disableDeviceCount);
+        retMap.put("offlineDeviceCount", offlineDeviceCount);
+        return retMap;
     }
 
     /**
@@ -672,7 +727,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
      * @return 结果
      */
     @Override
-
     public void updateDeviceStatusAndLocation(Device device, String ipAddress) {
         // 设置自动定位和状态
         if (!"".equals(ipAddress)) {

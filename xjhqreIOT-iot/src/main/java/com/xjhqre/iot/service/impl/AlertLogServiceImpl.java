@@ -42,6 +42,8 @@ public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> i
             .eq(alertLog.getUserId() != null, AlertLog::getUserId, alertLog.getUserId())
             .like(alertLog.getProductName() != null && !"".equals(alertLog.getProductName()), AlertLog::getProductName,
                 alertLog.getProductName())
+            .like(alertLog.getDeviceName() != null && !"".equals(alertLog.getDeviceName()), AlertLog::getDeviceName,
+                alertLog.getDeviceName())
             .eq(alertLog.getProductId() != null, AlertLog::getProductId, alertLog.getProductId());
         return this.alertLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
@@ -94,5 +96,35 @@ public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> i
         LambdaQueryWrapper<AlertLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AlertLog::getDeviceId, deviceId);
         this.alertLogMapper.delete(wrapper);
+    }
+
+    /**
+     * 获取最新的三个告警日志
+     * 
+     * @return
+     */
+    @Override
+    public List<AlertLog> getNewAlertLogList() {
+        return this.alertLogMapper.getNewAlertLogList();
+    }
+
+    /**
+     * 获取今天的日志数量
+     * 
+     * @return
+     */
+    @Override
+    public int getTodayLogCount() {
+        return this.alertLogMapper.getTodayLogCount();
+    }
+
+    /**
+     * 获取当月日志数量
+     * 
+     * @return
+     */
+    @Override
+    public int getMonthLogCount() {
+        return this.alertLogMapper.getMonthLogCount();
     }
 }

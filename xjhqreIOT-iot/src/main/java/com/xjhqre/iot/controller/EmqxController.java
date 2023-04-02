@@ -154,18 +154,6 @@ public class EmqxController extends BaseController {
         } else if (model.getAction().equals("client_connected")) {
             device.setStatus(3);
             this.deviceService.updateDeviceStatusAndLocation(device, model.getIpaddress());
-            // 影子模式，发布属性和功能
-            // if (device.getIsShadow() == 1) {
-            // ThingsModelShadow shadow = this.deviceService.getDeviceShadowThingsModel(device);
-            // if (shadow.getProperties().size() > 0) {
-            // this.emqxService.publishProperty(device.getProductId(), device.getDeviceNumber(),
-            // shadow.getProperties());
-            // }
-            // if (shadow.getFunctions().size() > 0) {
-            // this.emqxService.publishFunction(device.getProductId(), device.getDeviceNumber(),
-            // shadow.getFunctions());
-            // }
-            // }
         }
     }
 

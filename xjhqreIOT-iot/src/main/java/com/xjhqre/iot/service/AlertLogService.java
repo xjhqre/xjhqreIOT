@@ -48,4 +48,21 @@ public interface AlertLogService extends IService<AlertLog> {
      * 根据设备ID删除告警日志
      */
     void deleteByDeviceId(Long deviceId);
+
+    List<AlertLog> getNewAlertLogList();
+
+    /**
+     * 获取今天的日志数量
+     * 
+     * @return
+     */
+    int getTodayLogCount();
+
+    /**
+     * 获取当月日志数量
+     * 
+     * @return
+     */
+    int getMonthLogCount();
+
 }

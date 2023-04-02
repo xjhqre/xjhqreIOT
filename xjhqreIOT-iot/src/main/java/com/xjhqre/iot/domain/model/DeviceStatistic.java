@@ -17,32 +17,68 @@ public class DeviceStatistic {
     private int deviceCount;
 
     /**
+     * 在线设备数量
+     */
+    private int onlineDeviceCount;
+
+    /**
+     * 离线设备数量
+     */
+    private int OfflineDeviceCount;
+
+    /**
      * 产品数量
      */
     private int productCount;
 
     /**
-     * 告警数量
+     * 已发布产品数量
+     */
+    private int publishedProductCount;
+
+    /**
+     * 未发布产品数量
+     */
+    private int unPublishedProductCount;
+
+    /**
+     * 今日告警日志数量
+     */
+    private long dayAlertLogCount;
+
+    /**
+     * 当月告警日志数量
+     */
+    private long monthAlertLogCount;
+
+    /**
+     * 告警配置数量
      */
     private long alertCount;
 
     /**
-     * 属性上报
+     * 正常告警配置数量
      */
-    private long propertyCount;
+    private int enableAlertCount;
 
     /**
-     * 功能上报
+     * 禁用告警配置数量
      */
-    private long functionCount;
+    private int disableAlertCount;
 
     /**
-     * 事件上报
+     * 场景联动数量
      */
-    private long eventCount;
+    private long sceneCount;
 
     /**
-     * 监测数据上报
+     * 正常场景联动
      */
-    private long monitorCount;
+    private int enableSceneCount;
+
+    /**
+     * 禁用场景联动
+     */
+    private int disableSceneCount;
+
 }

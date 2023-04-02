@@ -73,15 +73,18 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
      * @return
      */
     @Override
-    public Alert getByProductId(Long productId) {
+    public List<Alert> getByProductId(Long productId) {
         LambdaQueryWrapper<Alert> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Alert::getProductId, productId).eq(Alert::getStatus, 1);
-        Alert alert = this.alertMapper.selectOne(wrapper);
-        LambdaQueryWrapper<AlertTrigger> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.eq(AlertTrigger::getAlertId, alert.getAlertId());
-        List<AlertTrigger> alertTriggers = this.alertTriggerService.list(wrapper1);
-        alert.setTriggers(alertTriggers);
-        return alert;
+        List<Alert> alerts = this.alertMapper.selectList(wrapper);
+        for (Alert alert : alerts) {
+            LambdaQueryWrapper<AlertTrigger> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.eq(AlertTrigger::getAlertId, alert.getAlertId());
+            List<AlertTrigger> alertTriggers = this.alertTriggerService.list(wrapper1);
+            alert.setTriggers(alertTriggers);
+        }
+
+        return alerts;
     }
 
     /**

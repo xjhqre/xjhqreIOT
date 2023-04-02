@@ -47,6 +47,15 @@ public class AlertLogController extends BaseController {
     /**
      * 获取设备告警详细信息
      */
+    @PreAuthorize("@ss.hasPermission('iot:alert:list')")
+    @RequestMapping(value = "/getNewAlertLogList", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<List<AlertLog>> getNewAlertLogList() {
+        return R.success(this.alertLogService.getNewAlertLogList());
+    }
+
+    /**
+     * 获取设备告警详细信息
+     */
     @PreAuthorize("@ss.hasPermission('iot:alert:query')")
     @RequestMapping(value = "/getDetail", method = {RequestMethod.POST, RequestMethod.GET})
     public R<AlertLog> getDetail(@RequestParam Long alertLogId) {

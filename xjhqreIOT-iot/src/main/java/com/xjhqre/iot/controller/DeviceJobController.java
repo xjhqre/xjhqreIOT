@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,6 +23,7 @@ import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
 import com.xjhqre.common.exception.TaskException;
+import com.xjhqre.common.utils.AssertUtils;
 import com.xjhqre.iot.domain.entity.DeviceJob;
 import com.xjhqre.iot.service.DeviceJobService;
 import com.xjhqre.quartz.util.CronUtils;
@@ -80,7 +82,7 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "修改设备定时任务")
     @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
-    @PostMapping("/update")
+    @PutMapping("/update")
     public R<String> update(@RequestBody @Validated DeviceJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return R.error("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
@@ -95,9 +97,11 @@ public class DeviceJobController extends BaseController {
     @ApiOperation(value = "设备定时任务状态修改")
     @PreAuthorize("@ss.hasPermission('iot:device:update')")
     @Log(title = "设备定时任务", businessType = BusinessType.UPDATE)
-    @PostMapping("/changeStatus")
-    public R<String> changeStatus(@RequestBody DeviceJob job) throws SchedulerException {
-        this.deviceJobService.changeStatus(job);
+    @PutMapping("/changeStatus")
+    public R<String> changeStatus(Long jobId, Integer status) throws SchedulerException {
+        AssertUtils.notNull(jobId, "jobId为空");
+        AssertUtils.notNull(status, "传入状态为空");
+        this.deviceJobService.changeStatus(jobId, status);
         return R.success("定时任务状态修改成功");
     }
 

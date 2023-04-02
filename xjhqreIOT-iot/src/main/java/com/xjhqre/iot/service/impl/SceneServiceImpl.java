@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.iot.domain.entity.Scene;
@@ -26,7 +27,7 @@ import com.xjhqre.iot.service.SceneTriggerService;
  * @date 2022-01-13
  */
 @Service
-public class SceneServiceImpl implements SceneService {
+public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements SceneService {
 
     @Resource
     private SceneMapper sceneMapper;
@@ -150,5 +151,12 @@ public class SceneServiceImpl implements SceneService {
             this.sceneActionService.remove(wrapper1);
             this.sceneMapper.deleteById(sceneId);
         }
+    }
+
+    @Override
+    public void changeStatus(Long sceneId, Integer status) {
+        Scene scene = this.sceneMapper.selectById(sceneId);
+        scene.setStatus(status);
+        this.sceneMapper.updateById(scene);
     }
 }

@@ -1,6 +1,7 @@
 package com.xjhqre.iot.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
@@ -110,11 +111,11 @@ public class DeviceController extends BaseController {
      * 获取设备属性值
      */
     @PreAuthorize("@ss.hasPermission('iot:device:query')")
-    @RequestMapping(value = "/listThingModelWithLastValue", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/listPropertiesWithLastValue", method = {RequestMethod.POST, RequestMethod.GET})
     @ApiOperation("获取设备属性值")
-    public R<List<ThingsModel>> listThingModelWithLastValue(@RequestParam Long deviceId,
+    public R<List<ThingsModel>> listPropertiesWithLastValue(@RequestParam Long deviceId,
         @RequestParam(required = false) String modelName) {
-        return R.success(this.deviceService.listThingModelWithLastValue(deviceId, modelName));
+        return R.success(this.deviceService.listPropertiesWithLastValue(deviceId, modelName));
     }
 
     /**
@@ -147,6 +148,13 @@ public class DeviceController extends BaseController {
         return R.success(this.deviceService.getStatisticInfo());
     }
 
+    @PreAuthorize("@ss.hasPermission('iot:device:list')")
+    @GetMapping(value = "/getDeviceCount")
+    @ApiOperation("获取各种状态设备数量")
+    public R<Map<String, Integer>> getDeviceCount() {
+        return R.success(this.deviceService.getDeviceCount());
+    }
+
     /**
      * 新增设备
      */
@@ -154,6 +162,7 @@ public class DeviceController extends BaseController {
     @Log(title = "添加设备", businessType = BusinessType.INSERT)
     @PostMapping("/add")
     @ApiOperation("添加设备")
+
     public R<String> add(@Validated(Insert.class) @RequestBody Device device) {
         this.deviceService.add(device);
         return R.success("添加设备成功");

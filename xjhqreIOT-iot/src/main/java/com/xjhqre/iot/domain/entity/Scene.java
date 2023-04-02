@@ -60,6 +60,11 @@ public class Scene extends BaseEntity {
     private String restriction;
 
     /**
+     * 是否启用，1：启动 0：禁用
+     */
+    private Integer status;
+
+    /**
      * 触发器
      */
     @TableField(exist = false)

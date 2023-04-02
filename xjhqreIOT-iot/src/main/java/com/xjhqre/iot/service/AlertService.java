@@ -31,7 +31,7 @@ public interface AlertService extends IService<Alert> {
      * @param productId
      * @return
      */
-    Alert getByProductId(Long productId);
+    List<Alert> getByProductId(Long productId);
 
     /**
      * 添加产品告警设置

@@ -18,6 +18,7 @@ import com.xjhqre.common.annotation.Log;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.utils.AssertUtils;
 import com.xjhqre.iot.domain.entity.Scene;
 import com.xjhqre.iot.service.SceneService;
 
@@ -89,5 +90,15 @@ public class SceneController extends BaseController {
     public R<String> delete(@PathVariable Long[] sceneIds) {
         this.sceneService.delete(sceneIds);
         return R.success("删除场景联动成功");
+    }
+
+    @PreAuthorize("@ss.hasPermission('system:user:update')")
+    @Log(title = "场景联动", businessType = BusinessType.UPDATE)
+    @PostMapping("/changeStatus")
+    public R<String> changeStatus(Long sceneId, Integer status) {
+        AssertUtils.notNull(sceneId, "场景联动id为空");
+        AssertUtils.notNull(status, "传入状态为空");
+        this.sceneService.changeStatus(sceneId, status);
+        return R.success("状态修改成功");
     }
 }

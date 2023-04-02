@@ -75,7 +75,7 @@ public class User extends BaseEntity implements Serializable {
     private String summary;
 
     @ApiModelProperty(value = "帐号状态（1正常 0停用）")
-    private String status;
+    private Integer status;
 
     @ApiModelProperty(value = "删除标志（0代表存在 2代表删除）", hidden = true)
     private String delFlag;

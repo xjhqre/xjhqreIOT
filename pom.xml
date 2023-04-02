@@ -18,6 +18,7 @@
         <module>xjhqreIOT-framework</module>
         <module>xjhqreIOT-system</module>
         <module>xjhqreIOT-quartz</module>
+        <module>xjhqreIOT-emqx</module>
     </modules>
 
     <parent>

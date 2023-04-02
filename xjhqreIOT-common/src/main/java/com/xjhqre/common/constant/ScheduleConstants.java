@@ -31,19 +31,19 @@ public class ScheduleConstants {
         /**
          * 正常
          */
-        NORMAL("1"),
+        NORMAL(1),
         /**
          * 暂停
          */
-        PAUSE("0");
+        PAUSE(0);
 
-        private final String value;
+        private final Integer value;
 
-        Status(String value) {
+        Status(Integer value) {
             this.value = value;
         }
 
-        public String getValue() {
+        public Integer getValue() {
             return this.value;
         }
     }

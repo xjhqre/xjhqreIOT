@@ -73,77 +73,79 @@ public class AlertTriggerAspect {
         Long deviceId = device.getDeviceId();
         Long productId = device.getProductId();
 
-        Alert alert = this.alertService.getByProductId(productId);
-        List<Boolean> flagList = new ArrayList<>();
-        List<ThingsModelValue> message = new ArrayList<>();
-        for (AlertTrigger trigger : alert.getTriggers()) {
-            LambdaQueryWrapper<ThingsModelValue> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.eq(ThingsModelValue::getModelId, trigger.getModelId())
-                .orderByDesc(ThingsModelValue::getCreateTime);
-            ThingsModelValue thingsModelValue = this.thingsModelValueService.list(wrapper1).get(0); // 获取最新的值
-            if (thingsModelValue != null) {
-                String operator = trigger.getOperator();
-                String value = trigger.getValue();
-                String value2 = thingsModelValue.getValue();
-                boolean b;
-                switch (operator) {
-                    case ">":
-                        b = Double.parseDouble(value2) > Double.parseDouble(value);
-                        if (b) {
-                            message.add(thingsModelValue);
-                        }
-                        flagList.add(b);
-                        break;
-                    case ">=":
-                        b = Double.parseDouble(value2) >= Double.parseDouble(value);
-                        if (b) {
-                            message.add(thingsModelValue);
-                        }
-                        flagList.add(b);
-                        break;
-                    case "=":
-                        b = value.equals(value2);
-                        if (b) {
-                            message.add(thingsModelValue);
-                        }
-                        flagList.add(b);
-                        break;
-                    case "!=":
-                        b = !value.equals(value2);
-                        if (b) {
-                            message.add(thingsModelValue);
-                        }
-                        flagList.add(b);
-                        break;
-                    case "<":
-                        b = Double.parseDouble(value2) < Double.parseDouble(value);
-                        if (b) {
-                            message.add(thingsModelValue);
-                        }
-                        flagList.add(b);
-                        break;
-                    case "<=":
-                        b = Double.parseDouble(value2) <= Double.parseDouble(value);
-                        if (b) {
-                            message.add(thingsModelValue);
-                        }
-                        flagList.add(b);
-                        break;
-                    default:
-                        throw new ServiceException("运算符错误");
+        List<Alert> alerts = this.alertService.getByProductId(productId);
+        for (Alert alert : alerts) {
+            List<Boolean> flagList = new ArrayList<>();
+            List<ThingsModelValue> message = new ArrayList<>();
+            for (AlertTrigger trigger : alert.getTriggers()) {
+                LambdaQueryWrapper<ThingsModelValue> wrapper1 = new LambdaQueryWrapper<>();
+                wrapper1.eq(ThingsModelValue::getModelId, trigger.getModelId())
+                    .orderByDesc(ThingsModelValue::getCreateTime);
+                ThingsModelValue thingsModelValue = this.thingsModelValueService.list(wrapper1).get(0); // 获取最新的值
+                if (thingsModelValue != null) {
+                    String operator = trigger.getOperator();
+                    String value = trigger.getValue();
+                    String value2 = thingsModelValue.getValue();
+                    boolean b;
+                    switch (operator) {
+                        case ">":
+                            b = Double.parseDouble(value2) > Double.parseDouble(value);
+                            if (b) {
+                                message.add(thingsModelValue);
+                            }
+                            flagList.add(b);
+                            break;
+                        case ">=":
+                            b = Double.parseDouble(value2) >= Double.parseDouble(value);
+                            if (b) {
+                                message.add(thingsModelValue);
+                            }
+                            flagList.add(b);
+                            break;
+                        case "=":
+                            b = value.equals(value2);
+                            if (b) {
+                                message.add(thingsModelValue);
+                            }
+                            flagList.add(b);
+                            break;
+                        case "!=":
+                            b = !value.equals(value2);
+                            if (b) {
+                                message.add(thingsModelValue);
+                            }
+                            flagList.add(b);
+                            break;
+                        case "<":
+                            b = Double.parseDouble(value2) < Double.parseDouble(value);
+                            if (b) {
+                                message.add(thingsModelValue);
+                            }
+                            flagList.add(b);
+                            break;
+                        case "<=":
+                            b = Double.parseDouble(value2) <= Double.parseDouble(value);
+                            if (b) {
+                                message.add(thingsModelValue);
+                            }
+                            flagList.add(b);
+                            break;
+                        default:
+                            throw new ServiceException("运算符错误");
+                    }
                 }
             }
-        }
-        String restriction = alert.getRestriction(); // any or all
-        if ("any".equals(restriction)) {
-            if (flagList.stream().anyMatch(val -> val)) {
-                // 触发告警，添加告警日志
-                this.addAlertLog(message, deviceId, alert);
-            }
-        } else if ("all".equals(restriction)) {
-            if (flagList.stream().allMatch(val -> val)) {
-                // 触发告警，添加告警日志
-                this.addAlertLog(message, deviceId, alert);
+            String restriction = alert.getRestriction(); // any or all
+            if ("any".equals(restriction)) {
+                if (flagList.stream().anyMatch(val -> val)) {
+                    // 触发告警，添加告警日志
+                    this.addAlertLog(message, deviceId, alert);
+                }
+            } else if ("all".equals(restriction)) {
+                if (flagList.stream().allMatch(val -> val)) {
+                    // 触发告警，添加告警日志
+                    this.addAlertLog(message, deviceId, alert);
+                }
             }
         }
     }

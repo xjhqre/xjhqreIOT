@@ -1,6 +1,7 @@
 package com.xjhqre.iot.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -131,5 +132,7 @@ public interface DeviceService extends IService<Device> {
      * @param deviceId
      * @return
      */
-    List<ThingsModel> listThingModelWithLastValue(Long deviceId, String modelName);
+    List<ThingsModel> listPropertiesWithLastValue(Long deviceId, String modelName);
+
+    Map<String, Integer> getDeviceCount();
 }

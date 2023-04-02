@@ -68,7 +68,7 @@ public class DeviceJob extends BaseEntity {
      * 任务状态（0正常 1暂停）
      */
     @ApiModelProperty(value = "任务状态（0正常 1暂停）")
-    private String status;
+    private Integer status;
 
     /**
      * 设备id

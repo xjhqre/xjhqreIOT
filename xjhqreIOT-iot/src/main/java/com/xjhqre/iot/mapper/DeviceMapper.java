@@ -33,9 +33,10 @@ public interface DeviceMapper extends BaseMapper<Device> {
 
     /**
      * 查询物模型最后一次值
-     * 
+     *
      * @param modelId
+     * @param productId
      * @return
      */
-    String getLastModelValue(@Param("modelId") Long modelId);
+    String getLastModelValue(@Param("modelId") Long modelId, @Param("productId") Long productId);
 }

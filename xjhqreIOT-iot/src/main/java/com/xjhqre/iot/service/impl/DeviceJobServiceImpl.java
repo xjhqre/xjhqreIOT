@@ -113,16 +113,14 @@ public class DeviceJobServiceImpl implements DeviceJobService {
         job.setUpdateBy(SecurityUtils.getUsername());
         job.setUpdateTime(DateUtils.getNowDate());
         this.deviceJobMapper.updateById(job);
-        DeviceJob deviceJob = this.deviceJobMapper.selectById(job.getJobId());
-        Long jobId = deviceJob.getJobId();
-        String jobGroup = deviceJob.getJobGroup();
+        String jobGroup = job.getJobGroup();
         // 判断是否存在
-        JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
+        JobKey jobKey = ScheduleUtils.getJobKey(job.getJobId(), jobGroup);
         if (this.scheduler.checkExists(jobKey)) {
             // 防止创建时存在数据问题 先移除，然后在执行创建操作
             this.scheduler.deleteJob(jobKey);
         }
-        ScheduleUtils.createScheduleJob(this.scheduler, deviceJob);
+        ScheduleUtils.createScheduleJob(this.scheduler, job);
     }
 
     /**
@@ -131,13 +129,13 @@ public class DeviceJobServiceImpl implements DeviceJobService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void changeStatus(DeviceJob job) throws SchedulerException {
-        job.setUpdateTime(DateUtils.getNowDate());
-        job.setUpdateBy(SecurityUtils.getUsername());
-        this.deviceJobMapper.updateById(job);
-        String status = job.getStatus();
-        Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
+    public void changeStatus(Long jobId, Integer status) throws SchedulerException {
+        DeviceJob deviceJob = this.deviceJobMapper.selectById(jobId);
+        deviceJob.setUpdateTime(DateUtils.getNowDate());
+        deviceJob.setUpdateBy(SecurityUtils.getUsername());
+        deviceJob.setStatus(status);
+        this.deviceJobMapper.updateById(deviceJob);
+        String jobGroup = deviceJob.getJobGroup();
         if (ScheduleConstants.Status.NORMAL.getValue().equals(status)) {
             this.scheduler.resumeJob(ScheduleUtils.getJobKey(jobId, jobGroup));
         } else if (ScheduleConstants.Status.PAUSE.getValue().equals(status)) {

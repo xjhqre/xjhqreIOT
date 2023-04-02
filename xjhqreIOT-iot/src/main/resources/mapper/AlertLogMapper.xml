@@ -4,4 +4,26 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.xjhqre.iot.mapper.AlertLogMapper">
 
+    <select id="getNewAlertLogList" resultType="com.xjhqre.iot.domain.entity.AlertLog">
+        SELECT *
+        FROM iot_alert_log
+        ORDER BY create_time DESC
+        LIMIT 3;
+    </select>
+
+    <!-- 获取当天日志数量 -->
+    <select id="getTodayLogCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM iot_alert_log
+        WHERE DATE_FORMAT(create_time, '%Y-%m-%d') = CURDATE();
+    </select>
+
+    <!-- 获取当月日志数量 -->
+    <select id="getMonthLogCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM iot_alert_log ial
+        WHERE YEAR(create_time) = YEAR(CURDATE())
+          AND MONTH(create_time) = MONTH(CURDATE())
+          AND DATE_FORMAT(create_time, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m');
+    </select>
 </mapper>
