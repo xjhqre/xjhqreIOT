@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.iot.domain.entity.SceneTrigger;
 import com.xjhqre.iot.mapper.SceneTriggerMapper;
 import com.xjhqre.iot.service.SceneTriggerService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -16,5 +17,6 @@ import com.xjhqre.iot.service.SceneTriggerService;
  * @since 3月 29, 2023
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class SceneTriggerServiceImpl extends ServiceImpl<SceneTriggerMapper, SceneTrigger>
     implements SceneTriggerService {}

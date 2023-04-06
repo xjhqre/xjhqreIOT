@@ -34,6 +34,7 @@ import com.xjhqre.iot.service.ProductService;
  * @since 2023-1-6
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class DeviceJobServiceImpl implements DeviceJobService {
     @Resource
     private Scheduler scheduler;

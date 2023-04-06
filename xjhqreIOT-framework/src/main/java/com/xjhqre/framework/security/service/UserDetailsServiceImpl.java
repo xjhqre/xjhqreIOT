@@ -16,6 +16,7 @@ import com.xjhqre.common.utils.redis.RedisCache;
 import com.xjhqre.system.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 用户验证处理
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
+@Transactional(rollbackFor = Exception.class)
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired

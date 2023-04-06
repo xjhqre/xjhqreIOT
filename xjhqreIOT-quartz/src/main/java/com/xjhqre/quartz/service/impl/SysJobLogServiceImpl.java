@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.quartz.domain.SysJobLog;
 import com.xjhqre.quartz.mapper.SysJobLogMapper;
 import com.xjhqre.quartz.service.SysJobLogService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * SysJobLogServiceImpl
@@ -21,6 +22,7 @@ import com.xjhqre.quartz.service.SysJobLogService;
  * @since 2023-1-7
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class SysJobLogServiceImpl extends ServiceImpl<SysJobLogMapper, SysJobLog> implements SysJobLogService {
     @Resource
     private SysJobLogMapper jobLogMapper;

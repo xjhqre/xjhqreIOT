@@ -29,6 +29,7 @@ import com.xjhqre.system.domain.vo.RouterVo;
 import com.xjhqre.system.mapper.MenuMapper;
 import com.xjhqre.system.mapper.RoleMenuMapper;
 import com.xjhqre.system.service.MenuService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 菜单 业务层处理
@@ -36,6 +37,7 @@ import com.xjhqre.system.service.MenuService;
  * @author ruoyi
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class MenuServiceImpl implements MenuService {
     @Resource
     private MenuMapper menuMapper;
@@ -292,9 +294,7 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     public int add(Menu menu) {
-        LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Menu::getParentId, menu.getParentId());
-        Integer count = this.menuMapper.selectCount(wrapper);
+        Integer count = this.menuMapper.getMaxId(menu.getParentId());
         menu.setMenuId(menu.getParentId() * 100 + count + 1);
         menu.setCreateBy(SecurityUtils.getUsername());
         menu.setCreateTime(DateUtils.getNowDate());

@@ -34,6 +34,7 @@ import com.xjhqre.quartz.util.ScheduleUtils;
  * @author ruoyi
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> implements SysJobService {
     @Resource
     private Scheduler scheduler;

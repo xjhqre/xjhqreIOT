@@ -15,6 +15,7 @@ import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.iot.domain.entity.AlertLog;
 import com.xjhqre.iot.mapper.AlertLogMapper;
 import com.xjhqre.iot.service.AlertLogService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * AlertLogServiceImpl
@@ -23,6 +24,7 @@ import com.xjhqre.iot.service.AlertLogService;
  * @date 2023-01-2
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> implements AlertLogService {
 
     @Resource

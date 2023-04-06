@@ -15,6 +15,7 @@ import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.iot.domain.entity.DeviceLog;
 import com.xjhqre.iot.mapper.DeviceLogMapper;
 import com.xjhqre.iot.service.DeviceLogService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 设备日志Service业务层处理
@@ -23,6 +24,7 @@ import com.xjhqre.iot.service.DeviceLogService;
  * @since 2023-01-6
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class DeviceLogServiceImpl extends ServiceImpl<DeviceLogMapper, DeviceLog> implements DeviceLogService {
     @Resource
     private DeviceLogMapper deviceLogMapper;

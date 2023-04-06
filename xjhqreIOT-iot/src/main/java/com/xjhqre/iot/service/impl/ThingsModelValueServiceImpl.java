@@ -34,6 +34,7 @@ import com.xjhqre.iot.service.ThingsModelValueService;
  * @since 3月 13, 2023
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMapper, ThingsModelValue>
     implements ThingsModelValueService {
 

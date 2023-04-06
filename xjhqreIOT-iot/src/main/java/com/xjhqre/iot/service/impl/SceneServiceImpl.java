@@ -19,6 +19,7 @@ import com.xjhqre.iot.mapper.SceneMapper;
 import com.xjhqre.iot.service.SceneActionService;
 import com.xjhqre.iot.service.SceneService;
 import com.xjhqre.iot.service.SceneTriggerService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 场景联动Service业务层处理
@@ -27,6 +28,7 @@ import com.xjhqre.iot.service.SceneTriggerService;
  * @date 2022-01-13
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements SceneService {
 
     @Resource

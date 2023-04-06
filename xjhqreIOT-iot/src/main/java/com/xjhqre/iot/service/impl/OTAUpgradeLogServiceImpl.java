@@ -16,6 +16,7 @@ import com.xjhqre.iot.domain.entity.OtaUpgradeLog;
 import com.xjhqre.iot.mapper.OtaUpgradeLogMapper;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.OtaUpgradeLogService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * AlertLogServiceImpl
@@ -24,6 +25,7 @@ import com.xjhqre.iot.service.OtaUpgradeLogService;
  * @date 2023-01-2
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class OTAUpgradeLogServiceImpl extends ServiceImpl<OtaUpgradeLogMapper, OtaUpgradeLog>
     implements OtaUpgradeLogService {
 

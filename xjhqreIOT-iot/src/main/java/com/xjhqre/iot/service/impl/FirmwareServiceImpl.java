@@ -20,6 +20,7 @@ import com.xjhqre.iot.mapper.FirmwareMapper;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.FirmwareService;
 import com.xjhqre.iot.service.ProductService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 产品固件Service业务层处理
@@ -28,6 +29,7 @@ import com.xjhqre.iot.service.ProductService;
  * @date 2021-12-16
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class FirmwareServiceImpl extends ServiceImpl<FirmwareMapper, Firmware> implements FirmwareService {
     @Resource
     private FirmwareMapper firmwareMapper;

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson2.JSON;
@@ -35,6 +36,7 @@ import com.xjhqre.iot.service.ThingsModelService;
  * @date 2021-12-16
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ThingsModelServiceImpl extends ServiceImpl<ThingsModelMapper, ThingsModel> implements ThingsModelService {
 
     @Resource

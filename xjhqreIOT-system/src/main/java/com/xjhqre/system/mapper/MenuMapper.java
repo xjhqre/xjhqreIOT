@@ -58,4 +58,11 @@ public interface MenuMapper extends BaseMapper<Menu> {
     List<Long> selectMenuIdsByRoleId(@Param("roleId") Long roleId);
 
     List<Menu> selectMenuTreeByUserId(@Param("userId") Long userId);
+
+    /**
+     * 获取parentId下的最大menuId
+     * @param parentId
+     * @return
+     */
+    Integer getMaxId(@Param("parentId") Long parentId);
 }
