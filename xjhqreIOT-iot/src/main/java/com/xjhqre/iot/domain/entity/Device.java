@@ -65,12 +65,6 @@ public class Device extends BaseEntity {
     @ApiModelProperty(value = "用户昵称", hidden = true)
     private String userName;
 
-    /**
-     * 设备密钥
-     */
-    @ApiModelProperty(value = "设备密码", hidden = true)
-    private String devicePassword;
-
     /** 固件版本 */
     @ApiModelProperty(value = "固件版本")
     private Double firmwareVersion;

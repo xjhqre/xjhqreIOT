@@ -45,12 +45,6 @@ public class Product extends BaseEntity {
     private String productKey;
 
     /**
-     * 产品秘钥
-     */
-    @ApiModelProperty(value = "产品秘钥", hidden = true)
-    private String productSecret;
-
-    /**
      * 状态（1-未发布，2-已发布，不能修改）
      */
     @ApiModelProperty(value = "状态 1==未发布，2=已发布，不能修改", hidden = true)

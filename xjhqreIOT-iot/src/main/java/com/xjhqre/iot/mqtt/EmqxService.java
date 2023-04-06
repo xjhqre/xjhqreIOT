@@ -1,7 +1,5 @@
 package com.xjhqre.iot.mqtt;
 
-import static com.xjhqre.common.utils.SecurityUtils.getUsername;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -195,7 +193,7 @@ public class EmqxService {
             oldDevice.setLatitude(newDevice.getLatitude());
         }
         oldDevice.setUpdateTime(DateUtils.getNowDate());
-        oldDevice.setUpdateBy(getUsername());
+        // oldDevice.setUpdateBy(getUsername());
         // 更新激活时间
         this.deviceService.updateById(oldDevice);
         // 平台到设备消息

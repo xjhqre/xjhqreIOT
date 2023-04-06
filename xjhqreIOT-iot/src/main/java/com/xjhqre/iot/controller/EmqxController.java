@@ -15,11 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.exception.EmqxException;
-import com.xjhqre.common.utils.AESUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.iot.domain.dto.MqttClientConnectDTO;
 import com.xjhqre.iot.domain.entity.Device;
@@ -167,39 +165,39 @@ public class EmqxController extends BaseController {
         return ntpJson;
     }
 
-    public void verifyPassword(String productKey, String deviceNumber, String username, String encryptPassword) {
-
-        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Product::getProductKey, productKey);
-        Product product = this.productService.getOne(wrapper);
-        String productSecret = product.getProductSecret();
-        Device device = this.deviceService.getByDeviceNumber(deviceNumber);
-
-        String decrypt = AESUtils.decrypt(encryptPassword, productSecret);
-        if (decrypt == null || decrypt.equals("")) {
-            throw new EmqxException("设备认证，设备密码解密失败");
-        }
-        String[] passwordArray = decrypt.split("&");
-        if (passwordArray.length != 2) {
-            // 密码加密格式 password & expireTime
-            throw new EmqxException("设备认证，设备密码格式错误");
-        }
-        String decryptPassword = passwordArray[0];
-        long expireTime = Long.parseLong(passwordArray[1]);
-        // 验证密码
-        if (!decryptPassword.equals(device.getDevicePassword())) {
-            throw new EmqxException("设备认证，设备密码不匹配");
-        }
-        // 验证过期时间
-        if (expireTime < System.currentTimeMillis()) {
-            throw new EmqxException("设备认证，设备密码已过期");
-        }
-        // 设备状态验证 （1-未激活，2-禁用，3-在线，4-离线）
-        if (device.getStatus() == 2) {
-            throw new EmqxException("设备加密认证，设备处于禁用状态");
-        }
-        log.info("-----------设备加密认证成功,clientId: {}&{} ---------------", productKey, deviceNumber);
-    }
+    // public void verifyPassword(String productKey, String deviceNumber, String username, String encryptPassword) {
+    //
+    // LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+    // wrapper.eq(Product::getProductKey, productKey);
+    // Product product = this.productService.getOne(wrapper);
+    // String productSecret = product.getProductSecret();
+    // Device device = this.deviceService.getByDeviceNumber(deviceNumber);
+    //
+    // String decrypt = AESUtils.decrypt(encryptPassword, productSecret);
+    // if (decrypt == null || decrypt.equals("")) {
+    // throw new EmqxException("设备认证，设备密码解密失败");
+    // }
+    // String[] passwordArray = decrypt.split("&");
+    // if (passwordArray.length != 2) {
+    // // 密码加密格式 password & expireTime
+    // throw new EmqxException("设备认证，设备密码格式错误");
+    // }
+    // String decryptPassword = passwordArray[0];
+    // long expireTime = Long.parseLong(passwordArray[1]);
+    // // 验证密码
+    // if (!decryptPassword.equals(device.getDevicePassword())) {
+    // throw new EmqxException("设备认证，设备密码不匹配");
+    // }
+    // // 验证过期时间
+    // if (expireTime < System.currentTimeMillis()) {
+    // throw new EmqxException("设备认证，设备密码已过期");
+    // }
+    // // 设备状态验证 （1-未激活，2-禁用，3-在线，4-离线）
+    // if (device.getStatus() == 2) {
+    // throw new EmqxException("设备加密认证，设备处于禁用状态");
+    // }
+    // log.info("-----------设备加密认证成功,clientId: {}&{} ---------------", productKey, deviceNumber);
+    // }
 
     @ApiOperation("获取设备topic列表")
     @GetMapping("/listDeviceTopic")

@@ -29,8 +29,8 @@ public class DeviceVO extends Device {
     /**
      * 产品秘钥
      */
-    @ApiModelProperty(value = "产品秘钥", hidden = true)
-    private String productSecret;
+    @ApiModelProperty(value = "产品键", hidden = true)
+    private String productKey;
 
     /**
      * 联网方式（1=-wifi、2-蜂窝(2G/3G/4G/5G)、3-以太网、4-其他），用户输入

@@ -126,7 +126,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public void add(Product product) {
         // 判断是否为管理员
         product.setProductKey("K" + RandomUtils.randomString(15));
-        product.setProductSecret("S" + RandomUtils.randomString(15));
         product.setStatus(product.getStatus() == null ? 1 : product.getStatus());
         product.setUserId(SecurityUtils.getUserId());
         product.setCreateTime(DateUtils.getNowDate());

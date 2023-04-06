@@ -170,7 +170,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         BeanUtils.copyProperties(device, deviceVO);
         Long productId = device.getProductId();
         Product product = this.productService.getById(productId);
-        deviceVO.setProductSecret(product.getProductSecret());
+        deviceVO.setProductKey(product.getProductKey());
         deviceVO.setNetworkMethod(product.getNetworkMethod());
         // 物模型转换为对象中的不同类别集合
         // this.setThingsModelValue(deviceVO, false);
@@ -286,7 +286,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         // 添加设备
         device.setCreateTime(DateUtils.getNowDate());
         device.setCreateBy(getUsername());
-        device.setDevicePassword(RandomUtils.randomString(16)); // 16位设备密钥
         device.setDeviceNumber(RandomUtils.randomString(16)); // 16位设备编号
         device.setUserId(sysUser.getUserId());
         device.setUserName(sysUser.getUserName());
