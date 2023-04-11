@@ -2,6 +2,8 @@ package com.xjhqre.system.service;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xjhqre.common.domain.entity.Role;
@@ -128,4 +130,7 @@ public interface UserService extends IService<User> {
 
     boolean registerUser(User user);
 
+    User profile();
+
+    String uploadAvatar(MultipartFile mFile);
 }

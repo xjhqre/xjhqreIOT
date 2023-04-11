@@ -294,8 +294,12 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     public int add(Menu menu) {
-        Integer count = this.menuMapper.getMaxId(menu.getParentId());
-        menu.setMenuId(menu.getParentId() * 100 + count + 1);
+        Long maxId = this.menuMapper.getMaxId(menu.getParentId());
+        if (maxId == null) {
+            menu.setMenuId(menu.getParentId() * 100 + 1);
+        } else {
+            menu.setMenuId(maxId + 1);
+        }
         menu.setCreateBy(SecurityUtils.getUsername());
         menu.setCreateTime(DateUtils.getNowDate());
         return this.menuMapper.insert(menu);

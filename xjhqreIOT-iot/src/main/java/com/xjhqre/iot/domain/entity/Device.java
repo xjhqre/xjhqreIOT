@@ -56,6 +56,19 @@ public class Device extends BaseEntity {
     private String productName;
 
     /**
+     * 分组id
+     */
+    @ApiModelProperty(value = "分组id")
+    @NotNull(groups = {Insert.class, Update.class})
+    private Long groupId;
+
+    /**
+     * 分组名称
+     */
+    @ApiModelProperty(value = "分组名称")
+    private String groupName;
+
+    /**
      * 用户ID
      */
     @ApiModelProperty(value = "用户ID", hidden = true)

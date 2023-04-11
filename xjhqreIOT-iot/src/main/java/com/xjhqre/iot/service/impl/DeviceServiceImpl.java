@@ -96,7 +96,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
                 device.getDeviceName())
             .eq(device.getProductId() != null, Device::getProductId, device.getProductId())
             .like(device.getProductName() != null && !"".equals(device.getProductName()), Device::getProductName,
-                device.getProductName());
+                device.getProductName())
+            .eq(device.getGroupId() != null, Device::getGroupId, device.getGroupId());
 
         if (!SecurityUtils.isAdmin(user.getUserId())) {
             wrapper.eq(Device::getUserId, SecurityUtils.getUserId());

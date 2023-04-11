@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -18,8 +19,11 @@ import com.xjhqre.common.domain.entity.Role;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.OSSUtil;
+import com.xjhqre.common.utils.OSSUtil.FileDirType;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.StringUtils;
+import com.xjhqre.common.utils.uuid.IdUtils;
 import com.xjhqre.system.domain.entity.UserRole;
 import com.xjhqre.system.mapper.UserMapper;
 import com.xjhqre.system.service.RoleService;
@@ -59,8 +63,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             .like(user.getMobile() != null && !"".equals(user.getMobile()), User::getMobile, user.getMobile());
         Page<User> page = this.userMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         for (User record : page.getRecords()) {
-            List<String> roleNames = this.roleService.selectRolesByUserId(record.getUserId()).stream().map(Role::getRoleName)
-                .collect(Collectors.toList());
+            List<String> roleNames = this.roleService.selectRolesByUserId(record.getUserId()).stream()
+                .map(Role::getRoleName).collect(Collectors.toList());
             record.setRoleNames(roleNames);
         }
         return page;
@@ -290,4 +294,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return this.userMapper.insert(user) > 0;
     }
 
+    @Override
+    public User profile() {
+        Long userId = SecurityUtils.getUserId();
+        User user = this.userMapper.selectById(userId);
+        List<Role> roles = this.roleService.selectRolesByUserId(userId);
+        List<Long> roleIds = roles.stream().map(Role::getRoleId).collect(Collectors.toList());
+        user.setRoles(roles);
+        user.setRoleIds(roleIds);
+        return user;
+    }
+
+    @Override
+    public String uploadAvatar(MultipartFile mFile) {
+        // 生成文件编号（唯一）
+        String number = IdUtils.simpleUUID();
+
+        // 上传OSS
+        String pictureUrl = OSSUtil.upload(mFile, FileDirType.AVATAR, number);
+
+        Long userId = SecurityUtils.getUserId();
+        User user = this.userMapper.selectById(userId);
+        user.setAvatar(pictureUrl);
+        this.userMapper.updateById(user);
+        return pictureUrl;
+    }
 }

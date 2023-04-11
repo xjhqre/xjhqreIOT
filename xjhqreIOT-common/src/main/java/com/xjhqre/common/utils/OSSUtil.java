@@ -1,4 +1,4 @@
-package com.xjhqre.framework.utils;
+package com.xjhqre.common.utils;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -16,9 +16,9 @@ import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectResult;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.xjhqre.common.config.OssProperties;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.file.MimeTypeUtils;
-import com.xjhqre.framework.config.properties.OssProperties;
 
 /**
  * OSS上传工具类

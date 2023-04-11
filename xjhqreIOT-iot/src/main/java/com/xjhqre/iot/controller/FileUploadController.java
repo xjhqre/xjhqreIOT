@@ -11,10 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.exception.ServiceException;
+import com.xjhqre.common.utils.OSSUtil;
+import com.xjhqre.common.utils.OSSUtil.FileDirType;
 import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.uuid.IdUtils;
-import com.xjhqre.framework.utils.OSSUtil;
-import com.xjhqre.framework.utils.OSSUtil.FileDirType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

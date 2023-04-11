@@ -64,5 +64,5 @@ public interface MenuMapper extends BaseMapper<Menu> {
      * @param parentId
      * @return
      */
-    Integer getMaxId(@Param("parentId") Long parentId);
+    Long getMaxId(@Param("parentId") Long parentId);
 }

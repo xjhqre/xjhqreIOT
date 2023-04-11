@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xjhqre.common.annotation.Log;
@@ -23,6 +24,7 @@ import com.xjhqre.common.domain.R;
 import com.xjhqre.common.domain.entity.Role;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.enums.BusinessType;
+import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.group.Insert;
 import com.xjhqre.common.group.Update;
 import com.xjhqre.common.utils.DateUtils;
@@ -151,5 +153,29 @@ public class UserController extends BaseController {
         User user = this.userService.getById(userId);
         List<Role> roles = this.roleService.selectRolesByUserId(userId);
         return R.success(roles).add("user", user);
+    }
+
+    /**
+     * 获取用户信息
+     */
+    @ApiOperation(value = "获取用户信息")
+    @PreAuthorize("@ss.hasPermission('system:user:query')")
+    @RequestMapping(value = "/profile", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<User> profile() {
+        return R.success(this.userService.profile());
+    }
+
+    /**
+     * 用户上传头像
+     */
+    @ApiOperation(value = "用户上传头像")
+    @PreAuthorize("@ss.hasPermission('system:user:update')")
+    @RequestMapping(value = "/profile/avatar", method = {RequestMethod.POST, RequestMethod.GET})
+    public R<String> uploadAvatar(@RequestParam("avatarfile") MultipartFile mFile) {
+        if (mFile == null) {
+            throw new ServiceException("上传图片文件为空");
+        }
+
+        return R.success(this.userService.uploadAvatar(mFile));
     }
 }

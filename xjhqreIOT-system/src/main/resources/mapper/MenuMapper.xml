@@ -115,11 +115,10 @@
         order by m.parent_id, m.order_num
     </select>
 
-    <select id="getMaxId" resultType="java.lang.Integer">
+    <select id="getMaxId" resultType="java.lang.Long">
         select menu_id
         from sys_menu
         where parent_id = #{parentId}
         order by menu_id desc limit 1
     </select>
-
 </mapper> 

@@ -1,4 +1,4 @@
-package com.xjhqre.framework.config.properties;
+package com.xjhqre.common.config;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
