@@ -74,7 +74,7 @@ public class SceneController extends BaseController {
     @ApiOperation(value = "修改场景联动")
     @PreAuthorize("@ss.hasPermission('iot:scene:update')")
     @Log(title = "场景联动", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/update", method = {RequestMethod.POST, RequestMethod.GET})
+    @PostMapping(value = "/update")
     public R<String> update(@RequestBody Scene scene) {
         this.sceneService.update(scene);
         return R.success("修改场景联动成功");

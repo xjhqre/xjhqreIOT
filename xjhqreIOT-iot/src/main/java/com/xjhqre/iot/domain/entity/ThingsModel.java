@@ -1,7 +1,5 @@
 package com.xjhqre.iot.domain.entity;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -75,9 +73,13 @@ public class ThingsModel extends BaseEntity {
     @TableField(typeHandler = DataTypeTypeHandler.class)
     private DataType dataType;
 
-    @ApiModelProperty(value = "输入输出参数列表")
-    @TableField(exist = false)
-    private List<ModelParam> paramList;
+    @ApiModelProperty(value = "入参定义")
+    @TableField(typeHandler = DataTypeTypeHandler.class)
+    private DataType inputParam;
+
+    @ApiModelProperty(value = "出参定义")
+    @TableField(typeHandler = DataTypeTypeHandler.class)
+    private DataType outputParam;
 
     /**
      * 删除标志（0代表存在 2代表删除）

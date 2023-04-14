@@ -52,9 +52,11 @@ public interface ThingsModelService extends IService<ThingsModel> {
 
     /**
      * 根据产品id获取物模型列表
-     * 
+     *
      * @param productId
+     * @param type
+     *            属性 服务 事件
      * @return
      */
-    List<ThingsModel> listThingModelByProductId(Long productId);
+    List<ThingsModel> listThingModelByProductId(Long productId, Integer type);
 }

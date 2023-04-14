@@ -11,8 +11,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.xjhqre.common.base.BaseEntity;
-import com.xjhqre.common.group.Insert;
-import com.xjhqre.common.group.Update;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -39,14 +37,14 @@ public class Device extends BaseEntity {
 
     /** 设备名称 */
     @ApiModelProperty(value = "设备名称")
-    @NotBlank
+    @NotBlank(message = "设备名称不能为空")
     private String deviceName;
 
     /**
      * 产品ID
      */
     @ApiModelProperty(value = "产品ID")
-    @NotNull(groups = {Insert.class, Update.class})
+    @NotNull(message = "产品ID不能为空")
     private Long productId;
 
     /**
@@ -59,7 +57,6 @@ public class Device extends BaseEntity {
      * 分组id
      */
     @ApiModelProperty(value = "分组id")
-    @NotNull(groups = {Insert.class, Update.class})
     private Long groupId;
 
     /**

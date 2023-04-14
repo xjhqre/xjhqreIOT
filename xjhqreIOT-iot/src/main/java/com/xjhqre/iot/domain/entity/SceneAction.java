@@ -1,9 +1,13 @@
 package com.xjhqre.iot.domain.entity;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.xjhqre.common.base.BaseEntity;
+import com.xjhqre.iot.domain.model.Enum;
 
 import lombok.Data;
 
@@ -47,7 +51,53 @@ public class SceneAction extends BaseEntity {
     private String deviceName;
 
     /**
-     * 服务调用JSON语句
+     * 物模型id
+     */
+    private Long modelId;
+
+    /**
+     * 物模型编码
+     */
+    private String identifier;
+
+    /**
+     * 参数值
      */
     private String value;
+
+    /**
+     * 服务物模型
+     */
+    @TableField(exist = false)
+    private ThingsModel serviceModel;
+
+    /**
+     * 服务入参类型
+     */
+    @TableField(exist = false)
+    private String type;
+
+    /**
+     * 服务物列表
+     */
+    @TableField(exist = false)
+    private List<ThingsModel> deviceThingModel;
+
+    /**
+     * 服务入参枚举列表
+     */
+    @TableField(exist = false)
+    private List<Enum> enumList;
+
+    /**
+     * 服务布尔型入参真值
+     */
+    @TableField(exist = false)
+    private String trueText;
+
+    /**
+     * 服务布尔型入参假值
+     */
+    @TableField(exist = false)
+    private String falseText;
 }

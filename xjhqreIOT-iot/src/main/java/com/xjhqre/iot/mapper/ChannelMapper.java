@@ -3,15 +3,15 @@ package com.xjhqre.iot.mapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.xjhqre.iot.domain.entity.ModelParam;
+import com.xjhqre.iot.domain.entity.Channel;
 
 /**
  * <p>
- * ModelParamMapper
+ * ChannelMapper
  * </p>
  *
  * @author xjhqre
- * @since 2月 03, 2023
+ * @since 4月 11, 2023
  */
 @Mapper
-public interface ModelParamMapper extends BaseMapper<ModelParam> {}
+public interface ChannelMapper extends BaseMapper<Channel> {}

@@ -22,10 +22,12 @@ import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.redis.RedisCache;
 import com.xjhqre.common.utils.uuid.RandomUtils;
+import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.mapper.ProductMapper;
 import com.xjhqre.iot.service.AlertService;
+import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
 import com.xjhqre.iot.service.ThingsModelService;
 
@@ -50,6 +52,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     ThingsModelService thingsModelService;
     @Resource
     AlertService alertService;
+    @Resource
+    DeviceService deviceService;
 
     /**
      * 项目启动时，加载产品物模型缓存
@@ -116,7 +120,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public Product getDetail(Long productId) {
-        return this.productMapper.selectById(productId);
+        Product product = this.productMapper.selectById(productId);
+        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Device::getProductId, productId);
+        int count = this.deviceService.count(wrapper);
+        product.setDeviceCount(count);
+        return product;
     }
 
     /**

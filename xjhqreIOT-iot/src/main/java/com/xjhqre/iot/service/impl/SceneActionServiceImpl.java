@@ -1,12 +1,16 @@
 package com.xjhqre.iot.service.impl;
 
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.iot.domain.entity.SceneAction;
 import com.xjhqre.iot.mapper.SceneActionMapper;
 import com.xjhqre.iot.service.SceneActionService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -18,4 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class SceneActionServiceImpl extends ServiceImpl<SceneActionMapper, SceneAction> implements SceneActionService {}
+public class SceneActionServiceImpl extends ServiceImpl<SceneActionMapper, SceneAction> implements SceneActionService {
+
+    @Resource
+    private SceneActionMapper sceneActionMapper;
+
+    @Override
+    public List<SceneAction> listBySceneId(Long sceneId) {
+        return this.sceneActionMapper.listBySceneId(sceneId);
+    }
+}

@@ -162,7 +162,6 @@ public class DeviceController extends BaseController {
     @Log(title = "添加设备", businessType = BusinessType.INSERT)
     @PostMapping("/add")
     @ApiOperation("添加设备")
-
     public R<String> add(@Validated(Insert.class) @RequestBody Device device) {
         this.deviceService.add(device);
         return R.success("添加设备成功");

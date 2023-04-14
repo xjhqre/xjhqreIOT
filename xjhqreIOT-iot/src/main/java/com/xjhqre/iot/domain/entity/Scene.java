@@ -49,11 +49,6 @@ public class Scene extends BaseEntity {
     private String userName;
 
     /**
-     * 1：设备触发 2：定时触发
-     */
-    private Integer source;
-
-    /**
      * 条件限制，部分满足或全部满足，值为 any 或者 all
      */
     @JsonProperty("condition")

@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -15,11 +16,12 @@ import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.iot.domain.entity.Scene;
 import com.xjhqre.iot.domain.entity.SceneAction;
 import com.xjhqre.iot.domain.entity.SceneTrigger;
+import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.mapper.SceneMapper;
 import com.xjhqre.iot.service.SceneActionService;
 import com.xjhqre.iot.service.SceneService;
 import com.xjhqre.iot.service.SceneTriggerService;
-import org.springframework.transaction.annotation.Transactional;
+import com.xjhqre.iot.service.ThingsModelService;
 
 /**
  * 场景联动Service业务层处理
@@ -37,6 +39,8 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
     private SceneTriggerService sceneTriggerService;
     @Resource
     private SceneActionService sceneActionService;
+    @Resource
+    private ThingsModelService thingsModelService;
 
     @Override
     public IPage<Scene> find(Scene scene, Integer pageNum, Integer pageSize) {
@@ -57,13 +61,26 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
     @Override
     public Scene getDetail(Long sceneId) {
         Scene scene = this.sceneMapper.selectById(sceneId);
-        LambdaQueryWrapper<SceneTrigger> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SceneTrigger::getSceneId, scene.getSceneId());
-        List<SceneTrigger> triggers = this.sceneTriggerService.list(wrapper);
+        List<SceneTrigger> triggers = this.sceneTriggerService.listBySceneId(sceneId);
+        for (SceneTrigger trigger : triggers) {
+            ThingsModel thingsModel = this.thingsModelService.getById(trigger.getModelId());
+            List<ThingsModel> thingsModelList =
+                this.thingsModelService.listThingModelByProductId(thingsModel.getProductId(), 1);
+            trigger.setDeviceThingModel(thingsModelList);
+        }
         scene.setTriggers(triggers);
-        LambdaQueryWrapper<SceneAction> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.eq(SceneAction::getSceneId, scene.getSceneId());
-        List<SceneAction> actions = this.sceneActionService.list(wrapper1);
+        List<SceneAction> actions = this.sceneActionService.listBySceneId(sceneId);
+        for (SceneAction action : actions) {
+            ThingsModel thingsModel = this.thingsModelService.getById(action.getModelId());
+            List<ThingsModel> thingsModelList =
+                this.thingsModelService.listThingModelByProductId(thingsModel.getProductId(), 2);
+            action.setServiceModel(thingsModel);
+            action.setDeviceThingModel(thingsModelList);
+            action.setType(thingsModel.getInputParam().getType());
+            action.setEnumList(thingsModel.getInputParam().getSpecs().getEnumList());
+            action.setTrueText(thingsModel.getInputParam().getSpecs().getTrueText());
+            action.setFalseText(thingsModel.getInputParam().getSpecs().getFalseText());
+        }
         scene.setActions(actions);
         return scene;
     }
@@ -81,9 +98,8 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
         this.sceneMapper.insert(scene);
         // 触发器
         for (SceneTrigger trigger : scene.getTriggers()) {
-            // Long modelId = trigger.getModelId();
-            // ThingsModel thingsModel = this.thingsModelService.getById(modelId);
-            // trigger.setModelName(thingsModel.getModelName());
+            ThingsModel thingsModel = this.thingsModelService.getById(trigger.getModelId());
+            trigger.setModelName(thingsModel.getModelName());
             trigger.setSceneId(scene.getSceneId());
             trigger.setSceneName(scene.getSceneName());
             trigger.setCreateBy(SecurityUtils.getUsername());
@@ -94,6 +110,8 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
         for (SceneAction action : scene.getActions()) {
             action.setSceneId(scene.getSceneId());
             action.setSceneName(scene.getSceneName());
+            ThingsModel thingsModel = this.thingsModelService.getById(action.getModelId());
+            action.setIdentifier(thingsModel.getIdentifier());
             action.setCreateBy(SecurityUtils.getUsername());
             action.setCreateTime(DateUtils.getNowDate());
         }
@@ -114,9 +132,8 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
         wrapper.eq(SceneTrigger::getSceneId, scene.getSceneId());
         this.sceneTriggerService.remove(wrapper);
         for (SceneTrigger trigger : scene.getTriggers()) {
-            // Long modelId = trigger.getModelId();
-            // ThingsModel thingsModel = this.thingsModelService.getById(modelId);
-            // trigger.setModelName(thingsModel.getModelName());
+            ThingsModel thingsModel = this.thingsModelService.getById(trigger.getModelId());
+            trigger.setModelName(thingsModel.getModelName());
             trigger.setSceneId(scene.getSceneId());
             trigger.setSceneName(scene.getSceneName());
             trigger.setCreateBy(SecurityUtils.getUsername());
@@ -131,6 +148,8 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
         for (SceneAction action : scene.getActions()) {
             action.setSceneId(scene.getSceneId());
             action.setSceneName(scene.getSceneName());
+            ThingsModel thingsModel = this.thingsModelService.getById(action.getModelId());
+            action.setIdentifier(thingsModel.getIdentifier());
             action.setCreateBy(SecurityUtils.getUsername());
             action.setCreateTime(DateUtils.getNowDate());
         }

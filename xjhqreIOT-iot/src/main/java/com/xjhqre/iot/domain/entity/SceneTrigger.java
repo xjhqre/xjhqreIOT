@@ -1,6 +1,9 @@
 package com.xjhqre.iot.domain.entity;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.xjhqre.common.base.BaseEntity;
@@ -70,4 +73,10 @@ public class SceneTrigger extends BaseEntity {
      * 值
      */
     private String value;
+
+    /**
+     * 属性物模型列表
+     */
+    @TableField(exist = false)
+    private List<ThingsModel> deviceThingModel;
 }
