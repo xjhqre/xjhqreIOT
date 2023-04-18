@@ -19,10 +19,14 @@ import lombok.Data;
 public class AlertLog extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
-    /** 告警ID */
-    @ApiModelProperty(value = "告警ID")
+    /** 告警日志ID */
+    @ApiModelProperty(value = "告警日志ID")
     @TableId(value = "alert_log_id", type = IdType.AUTO)
     private Long alertLogId;
+
+    /** 告警ID */
+    @ApiModelProperty(value = "告警ID")
+    private Long alertId;
 
     /** 告警名称 */
     @ApiModelProperty(value = "告警名称")
@@ -43,14 +47,6 @@ public class AlertLog extends BaseEntity {
     /** 设备名称 */
     @ApiModelProperty(value = "设备名称")
     private String deviceName;
-
-    /** 用户ID */
-    @ApiModelProperty(value = "用户ID")
-    private Long userId;
-
-    /** 用户昵称 */
-    @ApiModelProperty(value = "用户昵称")
-    private String userName;
 
     /**
      * 告警数据

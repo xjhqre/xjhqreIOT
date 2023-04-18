@@ -167,7 +167,7 @@ public class EmqxClient {
      *            消息体
      */
     public void publish(int qos, boolean retained, String topic, String pushMessage) {
-        log.info("发布主题" + topic);
+        log.info("发布消息，topic：{}， message： {}， qos：{}， ", topic, pushMessage, qos);
         MqttMessage message = new MqttMessage();
         message.setQos(qos);
         message.setRetained(retained);

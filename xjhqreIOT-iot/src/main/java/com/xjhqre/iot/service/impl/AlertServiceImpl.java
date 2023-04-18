@@ -83,7 +83,6 @@ public class AlertServiceImpl extends ServiceImpl<AlertMapper, Alert> implements
             List<AlertTrigger> alertTriggers = this.alertTriggerService.list(wrapper1);
             alert.setTriggers(alertTriggers);
         }
-
         return alerts;
     }
 

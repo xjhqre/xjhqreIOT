@@ -8,7 +8,10 @@ import org.springframework.beans.BeanUtils;
 
 import com.xjhqre.common.constant.ScheduleConstants;
 import com.xjhqre.common.utils.DateUtils;
+import com.xjhqre.common.utils.SpringUtils;
 import com.xjhqre.iot.domain.entity.DeviceJob;
+import com.xjhqre.iot.domain.model.thingsModels.ModelIdAndValue;
+import com.xjhqre.iot.mqtt.EmqxService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,30 +44,13 @@ public class QuartzJob implements Job {
      */
     private void doExecute(DeviceJob deviceJob) {
         log.info("执行定时任务：{}", deviceJob);
-        //// 设备定时任务
-        // System.out.println("------------------------执行定时任务-----------------------------");
-        // List<Action> actions = JSON.parseArray(deviceJob.getActions(), Action.class);
-        // List<ModelIdAndValue> properties = new ArrayList<>();
-        // List<ModelIdAndValue> functions = new ArrayList<>();
-        // for (Action action : actions) {
-        // ModelIdAndValue model = new ModelIdAndValue();
-        // model.setModelId(action.getModelId());
-        // model.setValue(action.getValue());
-        // if (action.getType() == 1) {
-        // properties.add(model);
-        // } else if (action.getType() == 2) {
-        // functions.add(model);
-        // }
-        // }
-        // EmqxService emqxService = SpringUtils.getBean(EmqxService.class);
-        //// 发布属性
-        // if (properties.size() > 0) {
-        // // emqxService.publishProperty(deviceJob.getProductId(), deviceJob.getDeviceNumber(), properties);
-        // }
-        //// 发布功能
-        // if (functions.size() > 0) {
-        // // emqxService.publishFunction(deviceJob.getProductId(), deviceJob.getDeviceNumber(), functions);
-        // }
+        // 设备定时任务
+        ModelIdAndValue modelIdAndValue = new ModelIdAndValue();
+        modelIdAndValue.setIdentifier(deviceJob.getIdentifier());
+        modelIdAndValue.setValue(deviceJob.getValue());
+        EmqxService emqxService = SpringUtils.getBean(EmqxService.class);
+        // 调用设备服务
+        emqxService.callService(deviceJob.getProductKey(), deviceJob.getDeviceNumber(), modelIdAndValue);
     }
 
     /**

@@ -31,4 +31,12 @@ public interface ThingsModelValueService extends IService<ThingsModelValue> {
      * @param message
      */
     void add(String productKey, String deviceNum, String message);
+
+    /**
+     * 获取物模型最新的值
+     * 
+     * @param modelId
+     * @return
+     */
+    ThingsModelValue getNewValue(Long modelId);
 }

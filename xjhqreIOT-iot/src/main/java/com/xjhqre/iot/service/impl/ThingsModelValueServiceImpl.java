@@ -18,8 +18,6 @@ import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.entity.ThingsModelValue;
 import com.xjhqre.iot.mapper.ThingsModelValueMapper;
-import com.xjhqre.iot.service.AlertLogService;
-import com.xjhqre.iot.service.AlertService;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
 import com.xjhqre.iot.service.ThingsModelService;
@@ -45,15 +43,11 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
     @Resource
     private ThingsModelService thingsModelService;
     @Resource
-    private AlertService alertService;
-    @Resource
-    private AlertLogService alertLogService;
-    @Resource
-    private ThingsModelValueService thingsModelValueService;
+    private ThingsModelValueMapper thingsModelValueMapper;
 
     /**
      * 查询设备物模型值列表
-     * 
+     *
      * @param thingsModelValue
      * @return
      */
@@ -83,7 +77,7 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
 
     /**
      * 添加物模型值
-     * 
+     *
      * @param productKey
      * @param deviceNum
      * @param message
@@ -93,20 +87,17 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
     public void add(String productKey, String deviceNum, String message) {
 
         // 根据设备编号查询设备信息
-        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Device::getDeviceNumber, deviceNum);
-        Device device = this.deviceService.getOne(wrapper);
+        Device device = this.deviceService.getByDeviceNumber(deviceNum);
 
-        LambdaQueryWrapper<Product> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.eq(Product::getProductKey, productKey);
-        Product product = this.productService.getOne(wrapper1);
+        Product product = this.productService.getByKey(productKey);
 
         List<ThingsModelValue> thingsModelValues = JSON.parseArray(message, ThingsModelValue.class);
         thingsModelValues = thingsModelValues.stream().filter(vo -> StringUtils.isNotBlank(vo.getValue())).peek(vo -> {
             String identifier = vo.getIdentifier();
-            LambdaQueryWrapper<ThingsModel> wrapper2 = new LambdaQueryWrapper<>();
-            wrapper2.eq(ThingsModel::getProductId, product.getProductId()).eq(ThingsModel::getIdentifier, identifier);
-            ThingsModel thingsModel = this.thingsModelService.getOne(wrapper2);
+            // 根据产品id和物模型标识符查询物模型
+            LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(ThingsModel::getProductId, product.getProductId()).eq(ThingsModel::getIdentifier, identifier);
+            ThingsModel thingsModel = this.thingsModelService.getOne(wrapper);
             vo.setModelId(thingsModel.getModelId());
             vo.setModelName(thingsModel.getModelName());
             vo.setDeviceId(device.getDeviceId());
@@ -123,7 +114,10 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
 
         // 保存物模型值
         this.saveBatch(thingsModelValues);
+    }
 
-        // TODO 场景联动、告警规则匹配处理
+    @Override
+    public ThingsModelValue getNewValue(Long modelId) {
+        return this.thingsModelValueMapper.getNewValue(modelId);
     }
 }

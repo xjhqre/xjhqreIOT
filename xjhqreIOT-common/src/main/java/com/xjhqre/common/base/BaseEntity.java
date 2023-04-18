@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -43,6 +44,7 @@ public class BaseEntity implements Serializable {
 
     /** 请求参数 */
     @TableField(exist = false)
+    @JsonIgnore
     @ApiModelProperty(value = "请求参数", hidden = true)
     private Map<String, Object> params;
 }

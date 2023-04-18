@@ -12,11 +12,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +26,10 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.StringUtils;
+import com.xjhqre.iot.constant.LogTypeConstant;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceLog;
 import com.xjhqre.iot.domain.entity.Product;
-import com.xjhqre.iot.domain.entity.ThingsModelValue;
-import com.xjhqre.iot.domain.model.NtpModel;
 import com.xjhqre.iot.domain.model.Topic;
 import com.xjhqre.iot.domain.model.thingsModels.ModelIdAndValue;
 import com.xjhqre.iot.service.DeviceLogService;
@@ -55,28 +56,35 @@ public class EmqxService {
     private ThingsModelValueService thingsModelValueService;
     @Resource
     private OtaUpgradeLogService otaUpgradeLogService;
+    @Resource
+    private ApplicationContext applicationContext;
+    private EmqxService proxy;
 
     /**
      * 设备发布的主题，客户端订阅，格式：/productKey/deviceNumber/功能名/请求方式
      */
     private static final String prefix = "/+/+/";
-    String sInfoTopic = prefix + "info/post";
-    String sNtpTopic = prefix + "ntp/post";
-    String sPropertyTopic = prefix + "property/post";
-    String sFunctionTopic = prefix + "function/post";
-    String sEventTopic = prefix + "event/post";
-    String sShadowPropertyTopic = prefix + "property-offline/post";
-    String sShadowFunctionTopic = prefix + "function-offline/post";
-    String sOtaTopic = "/ota/get"; // 浏览器发布，后台/设备订阅
+    String sInfoTopic = prefix + "info/post"; // 上报设备信息
+    String sNtpTopic = prefix + "ntp/post"; // 设备同步时间请求
+    String sPropertyTopic = prefix + "property/post"; // 上报设备属性
+    String sServiceTopic = prefix + "service/post"; // 设备响应功能调用
+    String sEventTopic = prefix + "event/post"; // 上报设备事件
+    String sOtaTopic = prefix + "/ota/post_ply"; // 设备响应OTA升级
 
     /**
      * 客户端发布的主题，设备订阅
      */
-    String pStatusTopic = "/status/get";
-    String pInfoTopic = "/info/get";
-    String pNtpTopic = "/ntp/get";
-    String pPropertyTopic = "/property/get";
-    String pFunctionTopic = "/function/get";
+    // String pStatusTopic = "/status/get";
+    // String pInfoTopic = "/info/get";
+    // String pNtpTopic = "/ntp/get";
+    // String pPropertyTopic = "/property/get";
+    // String pFunctionTopic = "/function/get";
+    String pServiceTopic = "/service/get"; // 客户端发送设备服务调用请求
+
+    @PostConstruct
+    public void init() {
+        this.proxy = this.applicationContext.getBean(EmqxService.class);
+    }
 
     /**
      * 订阅主题
@@ -85,23 +93,19 @@ public class EmqxService {
      * @throws MqttException
      */
     public void subscribe(MqttAsyncClient client) throws MqttException {
-        // 订阅设备信息
+        // 订阅设备上报信息事件
         client.subscribe(this.sInfoTopic, 1);
-        // 订阅时钟同步
+        // 订阅设备上报时钟同步请求
         client.subscribe(this.sNtpTopic, 1);
-        // 订阅设备属性
+        // 订阅设备上报属性
         client.subscribe(this.sPropertyTopic, 1);
-        // 订阅设备功能
-        client.subscribe(this.sFunctionTopic, 1);
-        // 订阅设备事件
+        // 订阅设备响应服务调用事件
+        client.subscribe(this.sServiceTopic, 1);
+        // 订阅设备上报事件
         client.subscribe(this.sEventTopic, 1);
-        // 订阅属性（影子模式）
-        client.subscribe(this.sShadowPropertyTopic, 1);
-        // 订阅功能（影子模式）
-        client.subscribe(this.sShadowFunctionTopic, 1);
-        // 订阅ota
+        // 订阅设备响应ota升级事件
         client.subscribe(this.sOtaTopic, 1);
-        log.info("mqtt订阅了设备信息和物模型主题");
+        log.info("mqtt订阅主题完成");
     }
 
     /**
@@ -115,19 +119,6 @@ public class EmqxService {
     @Async
     public void subscribeCallback(String topic, MqttMessage mqttMessage) {
 
-        // 测试线程池使用
-        log.info("====>>>>线程名--{}", Thread.currentThread().getName());
-        // 模拟耗时操作
-        // Thread.sleep(1000);
-        // subscribe后得到的消息会执行到这里面
-        /*
-        message：
-        {
-            "id": "temperature",  物模型标识符
-            "value": "27.43",  // 值
-            "remark": ""
-        }
-         */
         String message = new String(mqttMessage.getPayload());
         log.info("接收消息主题 : " + topic);
         log.info("接收消息Qos : " + mqttMessage.getQos());
@@ -140,30 +131,25 @@ public class EmqxService {
         switch (type) {
             case "info":
                 this.updateDeviceInfo(productKey, deviceNum, message);
-                break;
-            case "ntp":
-                this.publishNtp(productKey, deviceNum, message);
+                this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.INFO_REPORTING);
                 break;
             case "property":
-                this.getProperty(productKey, deviceNum, message);
-                break;
-            case "function":
-                this.updateFunction(productKey, deviceNum, message);
+                // 解决内部调用，aop失效问题
+                this.proxy.getProperty(productKey, deviceNum, message);
+                this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.ATTRIBUTE_REPORTING);
                 break;
             case "event":
                 this.getEvent(deviceNum, message);
+                this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.EVENT_REPORTING);
                 break;
-            case "ota":
+            case "ota": // ota升级反馈
                 this.getOta(deviceNum, message);
+                this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.CALL_OTA);
                 break;
-            // case "property-offline":
-            // this.updateProperty(productKey, deviceNum, message, true);
-            // break;
-            // case "function-offline":
-            // this.updateFunction(productKey, deviceNum, message, true);
-            // break;
+            case "service":
+                this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.SERVICE_CALL);
+                break;
         }
-        this.recordDeviceLog(topic, message);
     }
 
     /**
@@ -194,36 +180,17 @@ public class EmqxService {
         }
         oldDevice.setUpdateTime(DateUtils.getNowDate());
         // oldDevice.setUpdateBy(getUsername());
-        // 更新激活时间
         this.deviceService.updateById(oldDevice);
-        // 平台到设备消息
-        this.publishStatus(productKey, deviceNum, 3, oldDevice.getIsShadow(), newDevice.getRssi());
+        //// 平台到设备消息
+        // this.publishStatus(productKey, deviceNum, 3, oldDevice.getIsShadow(), newDevice.getRssi());
     }
 
     /**
-     * 更新后台设备属性
+     * 接收物模型值
      *
      */
-    private void getProperty(String productKey, String deviceNum, String message) {
-        try {
-            this.thingsModelValueService.add(productKey, deviceNum, message);
-        } catch (Exception e) {
-            log.error("接收属性数据，解析数据时异常 message={}", e.getMessage());
-        }
-    }
-
-    /**
-     * 上报功能
-     *
-     * @param message
-     */
-    private void updateFunction(String productKey, String deviceNum, String message) {
-        try {
-            List<ThingsModelValue> thingsModelItemBases = JSON.parseArray(message, ThingsModelValue.class);
-            this.deviceService.reportDeviceThingsModelValue(productKey, deviceNum, thingsModelItemBases, 2, message);
-        } catch (Exception e) {
-            log.error("接收功能，解析数据时异常 message={}", e.getMessage());
-        }
+    public void getProperty(String productKey, String deviceNum, String message) {
+        this.thingsModelValueService.add(productKey, deviceNum, message);
     }
 
     /**
@@ -234,108 +201,95 @@ public class EmqxService {
 
     // 异步记录设备日志
     @Async("scheduledExecutorService")
-    void recordDeviceLog(String topic, String message) {
+    void recordDeviceLog(String topic, String message, int qos, Integer logType) {
         String[] topicItem = topic.substring(1).split("/");
         String deviceNum = topicItem[1];
-        log.info("线程：{}, 记录设备日志：", Thread.currentThread().getName());
-        List<ThingsModelValue> thingsModelValueList = JSON.parseArray(message, ThingsModelValue.class);
         Device device = this.deviceService.getByDeviceNumber(deviceNum);
-        for (ThingsModelValue thingsModelValue : thingsModelValueList) {
-            if (StringUtils.isBlank(thingsModelValue.getValue())) {
-                continue;
-            }
-            // 添加到设备日志
-            DeviceLog deviceLog = new DeviceLog();
-            deviceLog.setModelId(thingsModelValue.getModelId());
-            deviceLog.setModelName(thingsModelValue.getModelName());
-            deviceLog.setIdentifier(thingsModelValue.getIdentifier());
-            deviceLog.setProductId(thingsModelValue.getProductId());
-            deviceLog.setProductName(thingsModelValue.getProductName());
-            deviceLog.setRouter(topic);
-            deviceLog.setDeviceId(device.getDeviceId());
-            deviceLog.setDeviceName(device.getDeviceName());
-            deviceLog.setLogValue(thingsModelValue.getValue());
-            deviceLog.setRemark(thingsModelValue.getRemark());
-            deviceLog.setLogType(thingsModelValue.getType());
-            deviceLog.setUserId(device.getUserId());
-            deviceLog.setUserName(device.getUserName());
-            deviceLog.setCreateTime(DateUtils.getNowDate());
-            this.deviceLogService.save(deviceLog);
-        }
+        // 添加到设备日志
+        DeviceLog deviceLog = new DeviceLog();
+        deviceLog.setProductId(device.getProductId());
+        deviceLog.setProductName(device.getProductName());
+        deviceLog.setRouter(topic);
+        deviceLog.setDeviceId(device.getDeviceId());
+        deviceLog.setDeviceName(device.getDeviceName());
+        deviceLog.setMessage(message);
+        deviceLog.setLogType(logType);
+        deviceLog.setQos(qos);
+        deviceLog.setCreateTime(DateUtils.getNowDate());
+        this.deviceLogService.save(deviceLog);
     }
 
-    /**
-     * 1.发布设备状态
-     */
-    public void publishStatus(String productKey, String deviceNum, int deviceStatus, int isShadow, int rssi) {
-        String message = "{\"status\":" + deviceStatus + ",\"isShadow\":" + isShadow + ",\"rssi\":" + rssi + "}";
-        this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pStatusTopic, message);
-    }
+    /// **
+    // * 1.发布设备状态
+    // */
+    // public void publishStatus(String productKey, String deviceNum, int deviceStatus, int isShadow, int rssi) {
+    // String message = "{\"status\":" + deviceStatus + ",\"isShadow\":" + isShadow + ",\"rssi\":" + rssi + "}";
+    // this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pStatusTopic, message);
+    // }
+
+    /// **
+    // * 2.发布设备信息
+    // */
+    // public void publishInfo(String productKey, String deviceNum) {
+    // this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pInfoTopic, "");
+    // }
+
+    /// **
+    // * 3.发布时钟同步信息
+    // *
+    // * @param message
+    // */
+    // private void publishNtp(String productKey, String deviceNum, String message) {
+    // NtpModel ntpModel = JSON.parseObject(message, NtpModel.class);
+    // ntpModel.setServerRecvTime(System.currentTimeMillis());
+    // ntpModel.setServerSendTime(System.currentTimeMillis());
+    // this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pNtpTopic,
+    // JSON.toJSONString(ntpModel));
+    // }
+
+    /// **
+    // * 发布属性
+    // */
+    // public void publishProperty(String productKey, String deviceNum, List<ModelIdAndValue> thingsList) {
+    // if (thingsList == null) {
+    // this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pPropertyTopic, "");
+    // } else {
+    // this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pPropertyTopic,
+    // JSON.toJSONString(thingsList));
+    // }
+    // }
 
     /**
-     * 2.发布设备信息
+     * 调用设备服务
      */
-    public void publishInfo(String productKey, String deviceNum) {
-        this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pInfoTopic, "");
-    }
-
-    /**
-     * 3.发布时钟同步信息
-     *
-     * @param message
-     */
-    private void publishNtp(String productKey, String deviceNum, String message) {
-        NtpModel ntpModel = JSON.parseObject(message, NtpModel.class);
-        ntpModel.setServerRecvTime(System.currentTimeMillis());
-        ntpModel.setServerSendTime(System.currentTimeMillis());
-        this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pNtpTopic,
-            JSON.toJSONString(ntpModel));
-    }
-
-    /**
-     * 4.发布属性
-     */
-    public void publishProperty(String productKey, String deviceNum, List<ModelIdAndValue> thingsList) {
-        if (thingsList == null) {
-            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pPropertyTopic, "");
+    public void callService(String productKey, String deviceNum, ModelIdAndValue modelIdAndValue) {
+        if (modelIdAndValue == null) {
+            this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pServiceTopic, "");
         } else {
-            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pPropertyTopic,
-                JSON.toJSONString(thingsList));
+            this.emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + this.pServiceTopic,
+                JSON.toJSONString(modelIdAndValue));
         }
     }
 
-    /**
-     * 5.发布功能
-     */
-    public void publishFunction(String productKey, String deviceNum, List<ModelIdAndValue> thingsList) {
-        if (thingsList == null) {
-            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pFunctionTopic, "");
-        } else {
-            this.emqxClient.publish(1, true, "/" + productKey + "/" + deviceNum + this.pFunctionTopic,
-                JSON.toJSONString(thingsList));
-        }
-
-    }
-
-    /**
-     * 设备数据同步
-     *
-     * @param deviceNumber
-     *            设备编号
-     * @return 设备
-     */
-    public Device deviceSynchronization(String deviceNumber) {
-        Device device = this.deviceService.getByDeviceNumber(deviceNumber);
-        Product product = this.productService.getById(device.getProductId());
-        // 1-未激活，2-禁用，3-在线，4-离线
-        if (device.getStatus() == 3) {
-            device.setStatus(4);
-            this.deviceService.updateById(device);
-            // 发布设备信息
-            this.publishInfo(product.getProductKey(), device.getDeviceNumber());
-        }
-        return device;
-    }
+    /// **
+    // * 设备数据同步
+    // *
+    // * @param deviceNumber
+    // * 设备编号
+    // * @return 设备
+    // */
+    // public Device deviceSynchronization(String deviceNumber) {
+    // Device device = this.deviceService.getByDeviceNumber(deviceNumber);
+    // Product product = this.productService.getById(device.getProductId());
+    // // 1-未激活，2-禁用，3-在线，4-离线
+    // if (device.getStatus() == 3) {
+    // device.setStatus(4);
+    // this.deviceService.updateById(device);
+    // // 发布设备信息
+    // this.publishInfo(product.getProductKey(), device.getDeviceNumber());
+    // }
+    // return device;
+    // }
 
     /**
      * 查询设备订阅的topic列表

@@ -13,11 +13,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.entity.Device;
+import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.entity.Scene;
 import com.xjhqre.iot.domain.entity.SceneAction;
 import com.xjhqre.iot.domain.entity.SceneTrigger;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.mapper.SceneMapper;
+import com.xjhqre.iot.service.DeviceService;
+import com.xjhqre.iot.service.ProductService;
 import com.xjhqre.iot.service.SceneActionService;
 import com.xjhqre.iot.service.SceneService;
 import com.xjhqre.iot.service.SceneTriggerService;
@@ -41,6 +45,10 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
     private SceneActionService sceneActionService;
     @Resource
     private ThingsModelService thingsModelService;
+    @Resource
+    private DeviceService deviceService;
+    @Resource
+    private ProductService productService;
 
     @Override
     public IPage<Scene> find(Scene scene, Integer pageNum, Integer pageSize) {
@@ -108,6 +116,10 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
         this.sceneTriggerService.saveBatch(scene.getTriggers());
         // 动作
         for (SceneAction action : scene.getActions()) {
+            Device device = this.deviceService.getById(action.getDeviceId());
+            action.setDeviceNumber(device.getDeviceNumber());
+            Product product = this.productService.getById(device.getProductId());
+            action.setProductKey(product.getProductKey());
             action.setSceneId(scene.getSceneId());
             action.setSceneName(scene.getSceneName());
             ThingsModel thingsModel = this.thingsModelService.getById(action.getModelId());
@@ -146,6 +158,10 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
         wrapper2.eq(SceneAction::getSceneId, scene.getSceneId());
         this.sceneActionService.remove(wrapper2);
         for (SceneAction action : scene.getActions()) {
+            Device device = this.deviceService.getById(action.getDeviceId());
+            action.setDeviceNumber(device.getDeviceNumber());
+            Product product = this.productService.getById(device.getProductId());
+            action.setProductKey(product.getProductKey());
             action.setSceneId(scene.getSceneId());
             action.setSceneName(scene.getSceneName());
             ThingsModel thingsModel = this.thingsModelService.getById(action.getModelId());

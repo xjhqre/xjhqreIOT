@@ -6,7 +6,10 @@ import org.quartz.SchedulerException;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xjhqre.common.exception.TaskException;
+import com.xjhqre.iot.domain.dto.DeviceJobAddDTO;
+import com.xjhqre.iot.domain.dto.DeviceJobUpdateDTO;
 import com.xjhqre.iot.domain.entity.DeviceJob;
+import com.xjhqre.iot.domain.vo.DeviceJobVO;
 
 /**
  * DeviceJobService
@@ -19,25 +22,25 @@ public interface DeviceJobService {
     /**
      * 分页查询设备定时任务
      */
-    IPage<DeviceJob> find(DeviceJob deviceJob, Integer pageNum, Integer pageSize);
+    IPage<DeviceJobVO> find(DeviceJob deviceJob, Integer pageNum, Integer pageSize);
 
     /**
      * 获取设备定时任务详情
      *
      */
-    DeviceJob getDetail(Long jobId);
+    DeviceJobVO getDetail(Long jobId);
 
     /**
      * 新增任务
      *
      */
-    void add(DeviceJob job) throws SchedulerException, TaskException;
+    void add(DeviceJobAddDTO job) throws SchedulerException, TaskException;
 
     /**
      * 更新任务
      *
      */
-    void update(DeviceJob job) throws SchedulerException, TaskException;
+    void update(DeviceJobUpdateDTO job) throws SchedulerException, TaskException;
 
     /**
      * 任务调度状态修改

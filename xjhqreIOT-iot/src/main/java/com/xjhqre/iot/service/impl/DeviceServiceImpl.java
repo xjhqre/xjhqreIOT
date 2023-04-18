@@ -31,6 +31,7 @@ import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.http.HttpUtils;
 import com.xjhqre.common.utils.ip.IpUtils;
 import com.xjhqre.common.utils.uuid.RandomUtils;
+import com.xjhqre.iot.constant.LogTypeConstant;
 import com.xjhqre.iot.domain.entity.Alert;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceLog;
@@ -512,28 +513,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     }
 
     /**
-     * 记录设备日志
-     * 
-     * @param type
-     * @param message
-     * @param device
-     * @param product
-     */
-    private void recordDeviceLog(int type, String message, Device device, Product product) {
-        DeviceLog deviceLog = new DeviceLog();
-        deviceLog.setDeviceId(device.getDeviceId());
-        deviceLog.setDeviceName(device.getDeviceName());
-        deviceLog.setProductId(product.getProductId());
-        deviceLog.setProductName(product.getProductName());
-        deviceLog.setLogValue(message);
-        deviceLog.setLogType(type);
-        deviceLog.setUserId(device.getUserId());
-        deviceLog.setUserName(device.getUserName());
-        deviceLog.setCreateTime(DateUtils.getNowDate());
-        this.deviceLogService.save(deviceLog);
-    }
-
-    /**
      * @param device
      *            设备状态和定位更新
      * @return 结果
@@ -565,18 +544,16 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         DeviceLog deviceLog = new DeviceLog();
         deviceLog.setDeviceId(device.getDeviceId());
         deviceLog.setDeviceName(device.getDeviceName());
-        deviceLog.setUserId(device.getUserId());
-        deviceLog.setUserName(device.getUserName());
         deviceLog.setCreateTime(DateUtils.getNowDate());
         deviceLog.setCreateBy(getUsername());
         if (device.getStatus() == 3) {
-            deviceLog.setLogValue("1");
+            // deviceLog.setLogValue("1");
             deviceLog.setRemark("设备上线");
-            deviceLog.setLogType(5);
+            deviceLog.setLogType(LogTypeConstant.DEVICE_ONLINE);
         } else if (device.getStatus() == 4) {
-            deviceLog.setLogValue("0");
+            // deviceLog.setLogValue("0");
             deviceLog.setRemark("设备离线");
-            deviceLog.setLogType(6);
+            deviceLog.setLogType(LogTypeConstant.DEVICE_OFFLINE);
         }
         this.deviceLogService.save(deviceLog);
     }

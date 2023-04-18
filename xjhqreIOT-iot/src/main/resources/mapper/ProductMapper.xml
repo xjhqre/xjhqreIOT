@@ -36,4 +36,16 @@
         from iot_things_model
         where product_id = #{productId}
     </select>
+
+    <select id="getKeyById" resultType="java.lang.String">
+        select product_key
+        from iot_product
+        where product_id = #{productId}
+    </select>
+
+    <select id="getByKey" resultType="com.xjhqre.iot.domain.entity.Product">
+        select *
+        from iot_product
+        where product_key = #{productKey}
+    </select>
 </mapper>

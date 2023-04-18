@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xjhqre.iot.mapper.ThingsModelValueMapper">
+
+    <select id="getNewValue" resultType="com.xjhqre.iot.domain.entity.ThingsModelValue">
+        select *
+        from iot_things_model_value
+        where model_id = #{modelId}
+        order by create_time desc
+        limit 1
+    </select>
+</mapper>

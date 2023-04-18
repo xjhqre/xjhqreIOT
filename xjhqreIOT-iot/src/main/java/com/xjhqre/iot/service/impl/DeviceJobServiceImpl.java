@@ -1,5 +1,6 @@
 package com.xjhqre.iot.service.impl;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -9,6 +10,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,13 +21,19 @@ import com.xjhqre.common.constant.ScheduleConstants;
 import com.xjhqre.common.exception.TaskException;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.SecurityUtils;
+import com.xjhqre.iot.domain.dto.DeviceJobAddDTO;
+import com.xjhqre.iot.domain.dto.DeviceJobUpdateDTO;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceJob;
+import com.xjhqre.iot.domain.entity.Product;
+import com.xjhqre.iot.domain.entity.ThingsModel;
+import com.xjhqre.iot.domain.vo.DeviceJobVO;
 import com.xjhqre.iot.mapper.DeviceJobMapper;
 import com.xjhqre.iot.quartz.ScheduleUtils;
 import com.xjhqre.iot.service.DeviceJobService;
 import com.xjhqre.iot.service.DeviceService;
 import com.xjhqre.iot.service.ProductService;
+import com.xjhqre.iot.service.ThingsModelService;
 
 /**
  * 设备定时任务serviceImpl层
@@ -41,9 +49,11 @@ public class DeviceJobServiceImpl implements DeviceJobService {
     @Resource
     private DeviceService deviceService;
     @Resource
-    private ProductService productService;
-    @Resource
     private DeviceJobMapper deviceJobMapper;
+    @Resource
+    private ThingsModelService thingsModelService;
+    @Resource
+    private ProductService productService;
 
     /**
      * 项目启动时，初始化定时器 主要是防止手动修改数据库导致未同步到定时任务处理（注：不能手动修改数据库ID和任务组名，否则会导致脏数据）
@@ -61,19 +71,25 @@ public class DeviceJobServiceImpl implements DeviceJobService {
      * 分页查询设备定时任务
      */
     @Override
-    public IPage<DeviceJob> find(DeviceJob deviceJob, Integer pageNum, Integer pageSize) {
+    public IPage<DeviceJobVO> find(DeviceJob deviceJob, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<DeviceJob> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(deviceJob.getDeviceId() != null, DeviceJob::getDeviceId, deviceJob.getDeviceId())
-            .like(deviceJob.getDeviceName() != null && !"".equals(deviceJob.getDeviceName()), DeviceJob::getDeviceName,
-                deviceJob.getDeviceName())
+            .like(deviceJob.getDeviceNumber() != null && !"".equals(deviceJob.getDeviceNumber()),
+                DeviceJob::getDeviceNumber, deviceJob.getDeviceNumber())
             .eq(deviceJob.getJobGroup() != null && !"".equals(deviceJob.getJobGroup()), DeviceJob::getJobGroup,
                 deviceJob.getJobGroup())
-            .eq(deviceJob.getStatus() != null && !"".equals(deviceJob.getStatus()), DeviceJob::getStatus,
-                deviceJob.getStatus())
+            .eq(deviceJob.getStatus() != null, DeviceJob::getStatus, deviceJob.getStatus())
             .eq(deviceJob.getJobId() != null, DeviceJob::getJobId, deviceJob.getJobId())
             .like(deviceJob.getJobName() != null && !"".equals(deviceJob.getJobName()), DeviceJob::getJobName,
                 deviceJob.getJobName());
-        return this.deviceJobMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        return this.deviceJobMapper.selectPage(new Page<>(pageNum, pageSize), wrapper).convert(item -> {
+            DeviceJobVO deviceJobVO = new DeviceJobVO();
+            BeanUtils.copyProperties(item, deviceJobVO);
+            ThingsModel thingsModel = this.thingsModelService.getById(deviceJobVO.getModelId());
+            deviceJobVO.setActionName(thingsModel.getModelName());
+            return deviceJobVO;
+        });
+
     }
 
     /**
@@ -81,25 +97,50 @@ public class DeviceJobServiceImpl implements DeviceJobService {
      *
      */
     @Override
-    public DeviceJob getDetail(Long jobId) {
-        return this.deviceJobMapper.selectById(jobId);
+    public DeviceJobVO getDetail(Long jobId) {
+        DeviceJob deviceJob = this.deviceJobMapper.selectById(jobId);
+        Long modelId = deviceJob.getModelId();
+        ThingsModel thingsModel = this.thingsModelService.getById(modelId);
+
+        DeviceJobVO deviceJobVO = new DeviceJobVO();
+        BeanUtils.copyProperties(deviceJob, deviceJobVO);
+
+        deviceJobVO.setServiceModel(thingsModel);
+        deviceJobVO.setType(thingsModel.getInputParam().getType());
+        deviceJobVO.setEnumList(thingsModel.getInputParam().getSpecs().getEnumList());
+        deviceJobVO.setTrueText(thingsModel.getInputParam().getSpecs().getTrueText());
+        deviceJobVO.setFalseText(thingsModel.getInputParam().getSpecs().getFalseText());
+        return deviceJobVO;
     }
 
     /**
      * 新增任务
      *
-     * @param deviceJob
+     * @param dto
      *            调度信息 调度信息
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void add(DeviceJob deviceJob) throws SchedulerException, TaskException {
-        Device device = this.deviceService.getById(deviceJob.getDeviceId());
+    public void add(DeviceJobAddDTO dto) throws SchedulerException, TaskException {
+        Device device = this.deviceService.getById(dto.getDeviceId());
+        Product product = this.productService.getById(device.getProductId());
+        ThingsModel thingsModel = this.thingsModelService.getById(dto.getModelId());
+        DeviceJob deviceJob = new DeviceJob();
+        deviceJob.setJobName(dto.getJobName());
+        deviceJob.setJobGroup("DEFAULT");
+        deviceJob.setCronExpression(dto.getCronExpression());
+        deviceJob.setMisfirePolicy("0");
+        deviceJob.setConcurrent("1");
+        deviceJob.setStatus(dto.getStatus());
+        deviceJob.setDeviceId(device.getDeviceId());
         deviceJob.setDeviceNumber(device.getDeviceNumber());
-        deviceJob.setProductId(device.getProductId());
-        deviceJob.setProductName(device.getProductName());
+        deviceJob.setProductId(product.getProductId());
+        deviceJob.setProductKey(product.getProductKey());
+        deviceJob.setModelId(dto.getModelId());
+        deviceJob.setIdentifier(thingsModel.getIdentifier());
+        deviceJob.setValue(dto.getValue());
         deviceJob.setCreateBy(SecurityUtils.getUsername());
-        deviceJob.setCreateTime(DateUtils.getNowDate());
+        deviceJob.setCreateTime(new Date());
         this.deviceJobMapper.insert(deviceJob);
         ScheduleUtils.createScheduleJob(this.scheduler, deviceJob);
     }
@@ -110,18 +151,27 @@ public class DeviceJobServiceImpl implements DeviceJobService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(DeviceJob job) throws SchedulerException, TaskException {
-        job.setUpdateBy(SecurityUtils.getUsername());
-        job.setUpdateTime(DateUtils.getNowDate());
-        this.deviceJobMapper.updateById(job);
-        String jobGroup = job.getJobGroup();
+    public void update(DeviceJobUpdateDTO job) throws SchedulerException, TaskException {
+        ThingsModel thingsModel = this.thingsModelService.getById(job.getModelId());
+        DeviceJob deviceJob = new DeviceJob();
+        deviceJob.setJobId(job.getJobId());
+        deviceJob.setJobName(job.getJobName());
+        deviceJob.setCronExpression(job.getCronExpression());
+        deviceJob.setStatus(job.getStatus());
+        deviceJob.setModelId(job.getModelId());
+        deviceJob.setValue(job.getValue());
+        deviceJob.setIdentifier(thingsModel.getIdentifier());
+        deviceJob.setUpdateBy(SecurityUtils.getUsername());
+        deviceJob.setUpdateTime(new Date());
+
+        this.deviceJobMapper.updateById(deviceJob);
         // 判断是否存在
-        JobKey jobKey = ScheduleUtils.getJobKey(job.getJobId(), jobGroup);
+        JobKey jobKey = ScheduleUtils.getJobKey(deviceJob.getJobId(), "DEFAULT");
         if (this.scheduler.checkExists(jobKey)) {
             // 防止创建时存在数据问题 先移除，然后在执行创建操作
             this.scheduler.deleteJob(jobKey);
         }
-        ScheduleUtils.createScheduleJob(this.scheduler, job);
+        ScheduleUtils.createScheduleJob(this.scheduler, this.deviceJobMapper.selectById(deviceJob.getJobId()));
     }
 
     /**

@@ -53,4 +53,14 @@ public interface ProductService extends IService<Product> {
      * 批量删除产品
      */
     void delete(Long[] productIds);
+
+    /**
+     * 根据id获取key
+     * 
+     * @param productId
+     * @return
+     */
+    String getKeyById(Long productId);
+
+    Product getByKey(String productKey);
 }

@@ -118,15 +118,15 @@ public class DeviceController extends BaseController {
         return R.success(this.deviceService.listPropertiesWithLastValue(deviceId, modelName));
     }
 
-    /**
-     * 设备数据同步
-     */
-    @PreAuthorize("@ss.hasPermission('iot:device:query')")
-    @GetMapping(value = "/synchronization/{deviceNumber}")
-    @ApiOperation("设备数据同步")
-    public R<Device> deviceSynchronization(@PathVariable("deviceNumber") String deviceNumber) {
-        return R.success(this.emqxService.deviceSynchronization(deviceNumber));
-    }
+    /// **
+    // * 设备数据同步
+    // */
+    // @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    // @GetMapping(value = "/synchronization/{deviceNumber}")
+    // @ApiOperation("设备数据同步")
+    // public R<Device> deviceSynchronization(@PathVariable("deviceNumber") String deviceNumber) {
+    // return R.success(this.emqxService.deviceSynchronization(deviceNumber));
+    // }
 
     /**
      * 根据设备编号详细信息

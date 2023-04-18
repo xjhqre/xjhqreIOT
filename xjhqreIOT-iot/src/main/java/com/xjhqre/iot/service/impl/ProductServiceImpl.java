@@ -189,4 +189,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 删除产品
         this.productMapper.deleteBatchIds(Arrays.asList(productIds));
     }
+
+    @Override
+    public String getKeyById(Long productId) {
+        return this.productMapper.getKeyById(productId);
+    }
+
+    @Override
+    public Product getByKey(String productKey) {
+        return this.productMapper.getByKey(productKey);
+    }
 }

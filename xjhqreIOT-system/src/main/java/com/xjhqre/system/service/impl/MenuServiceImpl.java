@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -29,7 +30,6 @@ import com.xjhqre.system.domain.vo.RouterVo;
 import com.xjhqre.system.mapper.MenuMapper;
 import com.xjhqre.system.mapper.RoleMenuMapper;
 import com.xjhqre.system.service.MenuService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 菜单 业务层处理
@@ -63,7 +63,7 @@ public class MenuServiceImpl implements MenuService {
             .eq(menu.getMenuId() != null, Menu::getMenuId, menu.getMenuId())
             .like(menu.getMenuName() != null && !"".equals(menu.getMenuName()), Menu::getMenuName, menu.getMenuName())
             .eq(menu.getParentId() != null, Menu::getParentId, menu.getParentId())
-            .eq(menu.getStatus() != null, Menu::getStatus, menu.getStatus());
+            .eq(menu.getStatus() != null, Menu::getStatus, menu.getStatus()).orderByAsc(Menu::getOrderNum);
         return this.menuMapper.selectList(wrapper);
     }
 

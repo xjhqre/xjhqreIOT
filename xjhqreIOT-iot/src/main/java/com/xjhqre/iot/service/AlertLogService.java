@@ -10,7 +10,7 @@ import com.xjhqre.iot.domain.entity.AlertLog;
  * 设备告警Service接口
  * 
  * @author xjhqre
- * @date 2022-01-13
+ * @date 2023-01-13
  */
 public interface AlertLogService extends IService<AlertLog> {
 

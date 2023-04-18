@@ -51,6 +51,16 @@ public class SceneAction extends BaseEntity {
     private String deviceName;
 
     /**
+     * 设备编码
+     */
+    private String deviceNumber;
+
+    /**
+     * 产品键
+     */
+    private String productKey;
+
+    /**
      * 物模型id
      */
     private Long modelId;

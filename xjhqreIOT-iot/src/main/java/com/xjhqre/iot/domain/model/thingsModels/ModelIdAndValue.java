@@ -16,9 +16,9 @@ import lombok.NoArgsConstructor;
 public class ModelIdAndValue {
 
     /**
-     * 物模型id
+     * 物模型标识符
      */
-    private Long modelId;
+    private String identifier;
 
     /** 物模型值 */
     private String value;

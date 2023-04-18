@@ -27,21 +27,6 @@ public class DeviceLog extends BaseEntity {
     private Long logId;
 
     /**
-     * 物模型Id
-     */
-    @ApiModelProperty(value = "物模型Id")
-    private Long modelId;
-
-    // 物模型标识符
-    private String identifier;
-
-    /**
-     * 物模型名称
-     */
-    @ApiModelProperty(value = "物模型名称")
-    private String modelName;
-
-    /**
      * 类型（1=属性上报，2=事件上报，3=调用功能，4=设备升级，5=设备上线，6=设备离线）
      */
     @ApiModelProperty(value = "类型（1=属性上报，2=事件上报，3=调用功能，4=设备升级，5=设备上线，6=设备离线）")
@@ -51,7 +36,7 @@ public class DeviceLog extends BaseEntity {
      * 日志值
      */
     @ApiModelProperty(value = "日志值")
-    private String logValue;
+    private String message;
 
     /**
      * 产品ID
@@ -84,14 +69,8 @@ public class DeviceLog extends BaseEntity {
     private String router;
 
     /**
-     * 用户ID
+     * 服务质量
      */
-    @ApiModelProperty(value = "用户ID")
-    private Long userId;
-
-    /**
-     * 用户昵称
-     */
-    @ApiModelProperty(value = "用户昵称")
-    private String userName;
+    @ApiModelProperty(value = "服务质量")
+    private Integer qos;
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -15,7 +16,6 @@ import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.iot.domain.entity.DeviceLog;
 import com.xjhqre.iot.mapper.DeviceLogMapper;
 import com.xjhqre.iot.service.DeviceLogService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 设备日志Service业务层处理
@@ -38,12 +38,6 @@ public class DeviceLogServiceImpl extends ServiceImpl<DeviceLogMapper, DeviceLog
         wrapper.eq(deviceLog.getDeviceId() != null, DeviceLog::getDeviceId, deviceLog.getDeviceId())
             .like(deviceLog.getDeviceName() != null && !"".equals(deviceLog.getDeviceName()), DeviceLog::getDeviceName,
                 deviceLog.getDeviceName())
-            .eq(deviceLog.getIdentifier() != null && !"".equals(deviceLog.getIdentifier()), DeviceLog::getIdentifier,
-                deviceLog.getIdentifier())
-            .eq(deviceLog.getUserId() != null, DeviceLog::getUserId, deviceLog.getUserId())
-            .like(deviceLog.getUserName() != null && !"".equals(deviceLog.getUserName()), DeviceLog::getUserName,
-                deviceLog.getUserName())
-            .eq(deviceLog.getModelId() != null, DeviceLog::getModelId, deviceLog.getModelId())
             .eq(deviceLog.getLogType() != null, DeviceLog::getLogType, deviceLog.getLogType());
         return this.deviceLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }

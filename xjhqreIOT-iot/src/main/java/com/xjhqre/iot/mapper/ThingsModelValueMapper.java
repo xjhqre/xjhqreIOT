@@ -1,6 +1,7 @@
 package com.xjhqre.iot.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xjhqre.iot.domain.entity.ThingsModelValue;
@@ -12,4 +13,6 @@ import com.xjhqre.iot.domain.entity.ThingsModelValue;
  * @date 2021-12-16
  */
 @Mapper
-public interface ThingsModelValueMapper extends BaseMapper<ThingsModelValue> {}
+public interface ThingsModelValueMapper extends BaseMapper<ThingsModelValue> {
+    ThingsModelValue getNewValue(@Param("modelId") Long modelId);
+}

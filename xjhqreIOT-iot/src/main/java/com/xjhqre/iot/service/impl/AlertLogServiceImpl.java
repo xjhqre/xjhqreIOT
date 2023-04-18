@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -15,7 +16,6 @@ import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.iot.domain.entity.AlertLog;
 import com.xjhqre.iot.mapper.AlertLogMapper;
 import com.xjhqre.iot.service.AlertLogService;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * AlertLogServiceImpl
@@ -39,9 +39,6 @@ public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> i
         wrapper.eq(alertLog.getAlertLogId() != null, AlertLog::getAlertLogId, alertLog.getAlertLogId())
             .like(alertLog.getAlertName() != null && !"".equals(alertLog.getAlertName()), AlertLog::getAlertName,
                 alertLog.getAlertName())
-            .like(alertLog.getUserName() != null && !"".equals(alertLog.getUserName()), AlertLog::getUserName,
-                alertLog.getUserName())
-            .eq(alertLog.getUserId() != null, AlertLog::getUserId, alertLog.getUserId())
             .like(alertLog.getProductName() != null && !"".equals(alertLog.getProductName()), AlertLog::getProductName,
                 alertLog.getProductName())
             .like(alertLog.getDeviceName() != null && !"".equals(alertLog.getDeviceName()), AlertLog::getDeviceName,

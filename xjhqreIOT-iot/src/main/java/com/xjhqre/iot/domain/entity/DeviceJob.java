@@ -83,28 +83,31 @@ public class DeviceJob extends BaseEntity {
     private String deviceNumber;
 
     /**
-     * 设备名称
-     */
-    @ApiModelProperty(value = "设备名称")
-    private String deviceName;
-
-    /**
-     * 执行动作
-     */
-    @ApiModelProperty(value = "执行动作")
-    private String actions;
-
-    /**
      * 产品ID
      */
     @ApiModelProperty(value = "产品ID")
     private Long productId;
 
     /**
-     * 产品名称
+     * 产品键
      */
-    @ApiModelProperty(value = "产品名称")
-    private String productName;
+    @ApiModelProperty(value = "产品键")
+    private String productKey;
+
+    /**
+     * 服务物模型id
+     */
+    private Long modelId;
+
+    /**
+     * 服务物模型标识符
+     */
+    private String identifier;
+
+    /**
+     * 值
+     */
+    private String value;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public Date getNextValidTime() {

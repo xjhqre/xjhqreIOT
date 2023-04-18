@@ -85,6 +85,7 @@ mybatis-plus:
     db-config:
       # 雪花算法生成 ID
       id-type: ASSIGN_ID
+  type-handlers-package: com.xjhqre.iot.mybatisConfig
 
 # 日志配置
 logging:

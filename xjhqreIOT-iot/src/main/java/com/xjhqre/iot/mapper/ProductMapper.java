@@ -57,4 +57,8 @@ public interface ProductMapper extends BaseMapper<Product> {
      * @return 结果
      */
     int thingsCountInProduct(@Param("productId") Long productId);
+
+    String getKeyById(@Param("productId") Long productId);
+
+    Product getByKey(@Param("productKey") String productKey);
 }
