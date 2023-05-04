@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.code.kaptcha.Producer;
 import com.xjhqre.common.base.BaseController;
 import com.xjhqre.common.constant.CacheConstants;
-import com.xjhqre.common.constant.ConfigConstant;
+import com.xjhqre.common.constant.ConfigConstants;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.utils.redis.RedisCache;
@@ -65,7 +65,7 @@ public class CaptchaController extends BaseController {
         BufferedImage image = null;
 
         // 生成验证码
-        String captchaType = this.configService.getByConfigKey(ConfigConstant.CAPTCHA_TYPE);
+        String captchaType = this.configService.getByConfigKey(ConfigConstants.CAPTCHA_TYPE);
         if ("math".equals(captchaType)) {
             String capText = this.captchaProducerMath.createText();
             capStr = capText.substring(0, capText.lastIndexOf("@"));

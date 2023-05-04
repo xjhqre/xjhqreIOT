@@ -63,4 +63,6 @@ public interface ProductService extends IService<Product> {
     String getKeyById(Long productId);
 
     Product getByKey(String productKey);
+
+    Product getByDeviceId(Long deviceId);
 }

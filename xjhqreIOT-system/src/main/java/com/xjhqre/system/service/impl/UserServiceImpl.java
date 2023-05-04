@@ -15,12 +15,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.constant.Constants;
+import com.xjhqre.common.constant.FileDirConstants;
 import com.xjhqre.common.domain.entity.Role;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.OSSUtil;
-import com.xjhqre.common.utils.OSSUtil.FileDirType;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.common.utils.uuid.IdUtils;
@@ -311,7 +311,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String number = IdUtils.simpleUUID();
 
         // 上传OSS
-        String pictureUrl = OSSUtil.upload(mFile, FileDirType.AVATAR, number);
+        String pictureUrl = OSSUtil.upload(mFile, FileDirConstants.COMMON, number);
 
         Long userId = SecurityUtils.getUserId();
         User user = this.userMapper.selectById(userId);

@@ -12,7 +12,7 @@ WORKDIR /home/xjhqreIOT
 
 # 将targer目录下的jar包复制到docker容器/home/springboot目录下面目录下面
 ADD ./target/xjhqreIOT-admin-0.0.1-SNAPSHOT.jar /home/xjhqreIOT/xjhqreIOT-admin.jar
-EXPOSE 8080
+EXPOSE 8082
 
 ENV JAVA_OPTS="-Xmx150m -Djasypt.encryptor.password=xjhqre"
 # 执行命令

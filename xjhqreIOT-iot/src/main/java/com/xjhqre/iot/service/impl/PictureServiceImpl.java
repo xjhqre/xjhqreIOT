@@ -13,13 +13,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xjhqre.common.constant.FileDirConstants;
 import com.xjhqre.common.domain.dto.PictureDTO;
 import com.xjhqre.common.domain.entity.Picture;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.ImageUtil;
 import com.xjhqre.common.utils.OSSUtil;
-import com.xjhqre.common.utils.OSSUtil.FileDirType;
 import com.xjhqre.common.utils.SecurityUtils;
 import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.uuid.IdUtils;
@@ -87,19 +87,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         pictureDTO.setNumber(number);
         pictureDTO.setName(mFile.getOriginalFilename());
 
-        FileDirType fileDirType;
+        String fileDirType = FileDirConstants.getFileDirTypeMap(pictureDTO.getType());
         Integer type = pictureDTO.getType();
-        if (type == 1) {
-            fileDirType = FileDirType.AVATAR;
-        } else if (type == 2) {
-            fileDirType = FileDirType.PRODUCT;
-        } else if (type == 3) {
-            fileDirType = FileDirType.SCREENSHOT;
-        } else if (type == 4) {
-            fileDirType = FileDirType.DEVICE;
-        } else {
-            fileDirType = FileDirType.PICTURE;
-        }
 
         // 上传OSS
         String pictureUrl = OSSUtil.upload(mFile, fileDirType, number + extension);

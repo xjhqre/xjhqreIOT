@@ -55,7 +55,7 @@ public abstract class AssertUtils {
     }
 
     public static void notEmpty(@Nullable String text, String message) {
-        if (StringUtils.isEmpty(text)) {
+        if (StringUtils.isBlank(text)) {
             throw new ServiceException(message);
         }
     }

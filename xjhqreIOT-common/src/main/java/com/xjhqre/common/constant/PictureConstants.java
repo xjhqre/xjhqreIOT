@@ -8,11 +8,10 @@ package com.xjhqre.common.constant;
  * @author xjhqre
  * @since 10月 24, 2022
  */
-public class PictureConstant {
+public class PictureConstants {
 
     // TODO 绝对路径
     public static final String UPLOAD_PATH = "G:\\workspace\\xjhqreBBS\\upload\\";
-
 
     // 待审核，用户提交后图片的状态。
     public static final Integer TO_BE_REVIEWED = 0;

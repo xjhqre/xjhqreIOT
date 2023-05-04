@@ -2,6 +2,7 @@ package com.xjhqre.framework.config;
 
 import java.io.IOException;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -34,6 +35,15 @@ public class DruidConfig {
         DruidDataSource dataSource = DruidDataSourceBuilder.create().build();
         return druidProperties.dataSource(dataSource);
     }
+
+    /*
+     * 解决druid 日志报错：discard long time none received connection:xxx
+     * */
+    @PostConstruct
+    public void setProperties(){
+        System.setProperty("druid.mysql.usePingMethod","false");
+    }
+
 
     // @Bean
     // @ConfigurationProperties("spring.datasource.druid.slave")

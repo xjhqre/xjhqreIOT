@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.xjhqre.common.constant.CacheConstants;
 import com.xjhqre.common.domain.entity.User;
@@ -16,7 +17,6 @@ import com.xjhqre.common.utils.redis.RedisCache;
 import com.xjhqre.system.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 用户验证处理

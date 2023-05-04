@@ -1,5 +1,6 @@
 package com.xjhqre.iot.service.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,17 +62,18 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
                 ThingsModelValue::getIdentifier, thingsModelValue.getIdentifier())
             .eq(thingsModelValue.getDeviceId() != null, ThingsModelValue::getDeviceId, thingsModelValue.getDeviceId())
             .eq(thingsModelValue.getDeviceName() != null && !"".equals(thingsModelValue.getDeviceName()),
-                ThingsModelValue::getDeviceName, thingsModelValue.getDeviceName())
-            .orderByDesc(ThingsModelValue::getCreateTime);
+                ThingsModelValue::getDeviceName, thingsModelValue.getDeviceName());
+        Date startTime = new Date();
         if (dateRange != null) {
             if (dateRange == 1) {
-                wrapper.last("and create_time > date_sub(date_add(now(), interval 8 hour), interval 1 hour) ");
+                startTime = DateUtils.addHours(startTime, -1);
             } else if (dateRange == 2) {
-                wrapper.last("and create_time > date_sub(date_add(now(), interval 8 hour), interval 1 day) ");
+                startTime = DateUtils.addDays(startTime, -1);
             } else if (dateRange == 3) {
-                wrapper.last("and create_time > date_sub(date_add(now(), interval 8 hour), interval 7 day) ");
+                startTime = DateUtils.addDays(startTime, -7);
             }
         }
+        wrapper.gt(ThingsModelValue::getCreateTime, startTime).orderByDesc(ThingsModelValue::getCreateTime);
         return this.list(wrapper);
     }
 

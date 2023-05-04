@@ -43,7 +43,8 @@ public class AlertLogServiceImpl extends ServiceImpl<AlertLogMapper, AlertLog> i
                 alertLog.getProductName())
             .like(alertLog.getDeviceName() != null && !"".equals(alertLog.getDeviceName()), AlertLog::getDeviceName,
                 alertLog.getDeviceName())
-            .eq(alertLog.getProductId() != null, AlertLog::getProductId, alertLog.getProductId());
+            .eq(alertLog.getProductId() != null, AlertLog::getProductId, alertLog.getProductId())
+                .orderByDesc(AlertLog::getCreateTime);
         return this.alertLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

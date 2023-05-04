@@ -69,6 +69,13 @@ public class ProductController extends BaseController {
         return R.success(this.productService.getDetail(productId));
     }
 
+    @PreAuthorize("@ss.hasPermission('iot:product:query')")
+    @RequestMapping(value = "/getByDeviceId", method = {RequestMethod.POST, RequestMethod.GET})
+    @ApiOperation("根据设备id获取产品")
+    public R<Product> getByDeviceId(Long deviceId) {
+        return R.success(this.productService.getByDeviceId(deviceId));
+    }
+
     /**
      * 新增产品
      */
@@ -76,6 +83,7 @@ public class ProductController extends BaseController {
     @Log(title = "产品", businessType = BusinessType.INSERT)
     @PostMapping("/add")
     @ApiOperation("添加产品")
+
     public R<String> add(@Validated(Insert.class) @RequestBody Product product) {
         this.productService.add(product);
         return R.success("添加产品成功", "添加产品成功");

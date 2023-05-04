@@ -76,11 +76,6 @@ public interface DeviceService extends IService<Device> {
     void updateDeviceStatus(String deviceId, Integer status);
 
     /**
-     * 重置设备状态
-     */
-    void resetDeviceStatus(String deviceNum);
-
-    /**
      * 删除设备
      */
     void delete(List<Long> deviceIds);
@@ -120,13 +115,6 @@ public interface DeviceService extends IService<Device> {
     void updateDeviceStatusAndLocation(Device device, String ipAddress);
 
     /**
-     * 生成设备唯一编号
-     *
-     * @return 结果
-     */
-    String generationDeviceNum();
-
-    /**
      * 查询设备属性记录
      * 
      * @param deviceId
@@ -135,4 +123,6 @@ public interface DeviceService extends IService<Device> {
     List<ThingsModel> listPropertiesWithLastValue(Long deviceId, String modelName);
 
     Map<String, Integer> getDeviceCount();
+
+    List<ThingsModel> listDeviceService(Long deviceId);
 }

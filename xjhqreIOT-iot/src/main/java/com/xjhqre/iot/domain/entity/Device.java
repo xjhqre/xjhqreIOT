@@ -1,5 +1,6 @@
 package com.xjhqre.iot.domain.entity;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.validation.constraints.NotBlank;
@@ -121,14 +122,14 @@ public class Device extends BaseEntity {
     private Double latitude;
 
     /** 激活时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "激活时间", hidden = true)
     private Date activeTime;
 
     /** 最后上线时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "最后上线时间", hidden = true)
-    private Date lastOnlineTime;
+    private LocalDateTime lastOnlineTime;
 
     /** 图片地址 */
     @ApiModelProperty(value = "图片地址")

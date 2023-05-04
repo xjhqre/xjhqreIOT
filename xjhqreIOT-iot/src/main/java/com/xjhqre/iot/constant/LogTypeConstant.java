@@ -31,4 +31,6 @@ public class LogTypeConstant {
     // OTA升级
     public static final Integer CALL_OTA = 7;
 
+    // 定时任务
+    public static final Integer TIMED_TASK = 8;
 }

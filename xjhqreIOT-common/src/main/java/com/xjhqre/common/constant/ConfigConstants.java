@@ -8,7 +8,7 @@ package com.xjhqre.common.constant;
  * @author xjhqre
  * @since 11月 11, 2022
  */
-public class ConfigConstant {
+public class ConfigConstants {
 
     /**
      * 验证码开关

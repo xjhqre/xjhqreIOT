@@ -199,4 +199,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public Product getByKey(String productKey) {
         return this.productMapper.getByKey(productKey);
     }
+
+    @Override
+    public Product getByDeviceId(Long deviceId) {
+        Device device = this.deviceService.getById(deviceId);
+        return this.getById(device.getProductId());
+    }
 }

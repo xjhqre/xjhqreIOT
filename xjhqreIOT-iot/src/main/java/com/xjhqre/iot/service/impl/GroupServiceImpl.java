@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.xjhqre.iot.domain.entity.Device;
+import com.xjhqre.iot.service.DeviceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,8 @@ import com.xjhqre.iot.service.GroupService;
 public class GroupServiceImpl implements GroupService {
     @Resource
     private GroupMapper groupMapper;
+    @Resource
+    private DeviceService deviceService;
 
     @Override
     public IPage<Group> find(Group group, Integer pageNum, Integer pageSize) {
@@ -89,10 +93,18 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void updateDeviceGroups(UpdateDeviceGroupsDTO dto) {
+        Group group = groupMapper.selectById(dto.getGroupId());
         // 删除分组下的所有关联设备
         this.groupMapper.deleteDeviceGroupByGroupIds(Collections.singletonList(dto.getGroupId()));
         // 分组下添加关联设备
         this.groupMapper.insertDeviceGroups(dto.getGroupId(), dto.getDeviceIdList());
+        // 设备更新分组信息
+        for (Long deviceId : dto.getDeviceIdList()) {
+            Device device = deviceService.getById(deviceId);
+            device.setGroupId(group.getGroupId());
+            device.setGroupName(group.getGroupName());
+            deviceService.updateById(device);
+        }
     }
 
     /**

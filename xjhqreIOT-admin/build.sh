@@ -4,7 +4,7 @@
 IMG_SERVER="0.0.0.0"
 IMG_NAME="xjhqreiot"
 IMG_VERSION="0.0.1"
-IMG_PORT="8080"
+IMG_PORT="8082"
 # RUN_EVN="$5"
 #IMG_PATH="$5"
 

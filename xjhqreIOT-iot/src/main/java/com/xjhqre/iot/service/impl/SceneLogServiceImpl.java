@@ -30,7 +30,8 @@ public class SceneLogServiceImpl extends ServiceImpl<SceneLogMapper, SceneLog> i
     public IPage<SceneLog> find(SceneLog sceneLog, Integer pageNum, Integer pageSize) {
         LambdaQueryWrapper<SceneLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(sceneLog.getSceneName() != null && !"".equals(sceneLog.getSceneName()), SceneLog::getSceneName,
-            sceneLog.getSceneName()).eq(sceneLog.getSceneId() != null, SceneLog::getSceneId, sceneLog.getSceneId());
+            sceneLog.getSceneName()).eq(sceneLog.getSceneId() != null, SceneLog::getSceneId, sceneLog.getSceneId())
+                .orderByDesc(SceneLog::getCreateTime);
         return this.sceneLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 }

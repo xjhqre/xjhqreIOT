@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.xjhqre.iot.domain.model.Topic;
+import com.xjhqre.iot.mqtt.EmqxService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,7 +31,6 @@ import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.vo.DeviceVO;
-import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.DeviceService;
 
 import io.swagger.annotations.Api;
@@ -118,16 +119,6 @@ public class DeviceController extends BaseController {
         return R.success(this.deviceService.listPropertiesWithLastValue(deviceId, modelName));
     }
 
-    /// **
-    // * 设备数据同步
-    // */
-    // @PreAuthorize("@ss.hasPermission('iot:device:query')")
-    // @GetMapping(value = "/synchronization/{deviceNumber}")
-    // @ApiOperation("设备数据同步")
-    // public R<Device> deviceSynchronization(@PathVariable("deviceNumber") String deviceNumber) {
-    // return R.success(this.emqxService.deviceSynchronization(deviceNumber));
-    // }
-
     /**
      * 根据设备编号详细信息
      */
@@ -192,18 +183,6 @@ public class DeviceController extends BaseController {
     }
 
     /**
-     * 重置设备状态
-     */
-    @PreAuthorize("@ss.hasPermission('iot:device:update')")
-    @Log(title = "重置设备状态", businessType = BusinessType.UPDATE)
-    @RequestMapping(value = "/reset", method = {RequestMethod.POST, RequestMethod.GET})
-    @ApiOperation("重置设备状态")
-    public R<String> resetDeviceStatus(@RequestParam String deviceNumber) {
-        this.deviceService.resetDeviceStatus(deviceNumber);
-        return R.success("重置设备状态成功");
-    }
-
-    /**
      * 删除设备
      */
     @PreAuthorize("@ss.hasPermission('iot:device:delete')")
@@ -215,13 +194,17 @@ public class DeviceController extends BaseController {
         return R.success("删除设备成功");
     }
 
-    /**
-     * 生成设备编号
-     */
-    @PreAuthorize("@ss.hasPermission('iot:device:update')")
-    @RequestMapping(value = "/generator", method = {RequestMethod.POST, RequestMethod.GET})
-    @ApiOperation("生成设备编号")
-    public R<String> generatorDeviceNum() {
-        return R.success(this.deviceService.generationDeviceNum());
+    @PreAuthorize("@ss.hasPermission('iot:device:query')")
+    @ApiOperation("查询设备服务")
+    @GetMapping(value = "/listDeviceService")
+    public R<List<ThingsModel>> listDeviceService(Long deviceId) {
+        return R.success(this.deviceService.listDeviceService(deviceId));
     }
+
+        @ApiOperation("获取设备topic列表")
+    @GetMapping("/listDeviceTopic")
+    public List<Topic> listDeviceTopic(@RequestParam Long deviceId) {
+        return this.emqxService.listDeviceTopic(deviceId);
+    }
+
 }

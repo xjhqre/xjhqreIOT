@@ -1,11 +1,3 @@
-# /***********************************************************
-#  * author: xiaoY [物美智能 wumei-smart]
-#  * create: 2022-05-10
-#  * email：qimint@outlook.com
-#  * source:https://github.com/kerwincui/wumei-smart
-#  * board:raspberry 4b
-#  ***********************************************************/
-
 import json
 import paho.mqtt.client as mqtt
 import random
@@ -13,11 +5,6 @@ import requests
 import threading  # 导入线程模块，用作定时器
 import time
 
-from aes import AesCryptor
-
-#################################################################
-# 需要连接好外部网络
-#################################################################
 
 # 作为python的AES的iv,应该为16位，字节型数据
 iv = b"wumei-smart-open"

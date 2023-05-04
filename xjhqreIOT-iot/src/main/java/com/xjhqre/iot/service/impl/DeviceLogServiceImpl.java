@@ -38,7 +38,8 @@ public class DeviceLogServiceImpl extends ServiceImpl<DeviceLogMapper, DeviceLog
         wrapper.eq(deviceLog.getDeviceId() != null, DeviceLog::getDeviceId, deviceLog.getDeviceId())
             .like(deviceLog.getDeviceName() != null && !"".equals(deviceLog.getDeviceName()), DeviceLog::getDeviceName,
                 deviceLog.getDeviceName())
-            .eq(deviceLog.getLogType() != null, DeviceLog::getLogType, deviceLog.getLogType());
+            .eq(deviceLog.getLogType() != null, DeviceLog::getLogType, deviceLog.getLogType())
+                .orderByDesc(DeviceLog::getCreateTime);
         return this.deviceLogMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

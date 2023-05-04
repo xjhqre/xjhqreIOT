@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.xjhqre.common.constant.FileDirConstants;
 import com.xjhqre.common.domain.R;
 import com.xjhqre.common.exception.ServiceException;
 import com.xjhqre.common.utils.OSSUtil;
-import com.xjhqre.common.utils.OSSUtil.FileDirType;
 import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.uuid.IdUtils;
 
@@ -34,27 +34,26 @@ public class FileUploadController {
 
     @ApiOperation(value = "上传文件")
     @PostMapping(value = "/add")
-    public R<Map<String, String>> add(@RequestParam("file") MultipartFile mFile) {
+    public R<Map<String, Object>> add(@RequestParam("file") MultipartFile mFile) {
         if (mFile == null) {
             throw new ServiceException("上传文件为空");
         }
 
         String extension = FileTypeUtils.getExtension(mFile.getOriginalFilename());
 
-        if (!extension.equals(".bin")) {
-            throw new ServiceException("上传文件格式不支持！");
-        }
-
         // 生成文件编号（唯一）
         String number = IdUtils.simpleUUID();
 
         // 上传OSS
-        String fileUrl = OSSUtil.upload(mFile, FileDirType.FIRMWARE, number + extension);
+        String fileUrl = OSSUtil.upload(mFile, FileDirConstants.COMMON, number + extension);
 
-        Map<String, String> retmap = new HashMap<>();
+        long fileSize = mFile.getSize();
+
+        Map<String, Object> retmap = new HashMap<>();
         retmap.put("name", number + extension);
         retmap.put("originalName", mFile.getOriginalFilename());
         retmap.put("url", fileUrl);
+        retmap.put("fileSize", fileSize);
 
         return R.success(retmap);
     }

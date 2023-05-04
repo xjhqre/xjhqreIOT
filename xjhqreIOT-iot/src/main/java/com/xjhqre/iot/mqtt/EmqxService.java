@@ -149,6 +149,8 @@ public class EmqxService {
             case "service":
                 this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.SERVICE_CALL);
                 break;
+            default:
+                break;
         }
     }
 
@@ -172,12 +174,15 @@ public class EmqxService {
         Device newDevice = JSON.parseObject(message, Device.class);
 
         // 未采用设备定位则清空定位，定位方式(1=ip自动定位，2=设备上报定位，3=自定义)
-        if (newDevice.getLongitude() != null) {
-            oldDevice.setLongitude(newDevice.getLongitude());
+        if (oldDevice.getLocationWay() == 2) {
+            if (newDevice.getLongitude() != null) {
+                oldDevice.setLongitude(newDevice.getLongitude());
+            }
+            if (newDevice.getLatitude() != null) {
+                oldDevice.setLatitude(newDevice.getLatitude());
+            }
         }
-        if (newDevice.getLatitude() != null) {
-            oldDevice.setLatitude(newDevice.getLatitude());
-        }
+
         oldDevice.setUpdateTime(DateUtils.getNowDate());
         // oldDevice.setUpdateBy(getUsername());
         this.deviceService.updateById(oldDevice);

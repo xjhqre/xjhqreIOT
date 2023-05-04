@@ -58,7 +58,8 @@ public class SceneServiceImpl extends ServiceImpl<SceneMapper, Scene> implements
                 scene.getSceneName())
             .eq(scene.getUserId() != null, Scene::getUserId, scene.getUserId())
             .like(scene.getUserName() != null && !"".equals(scene.getUserName()), Scene::getUserName,
-                scene.getUserName());
+                scene.getUserName())
+                .orderByDesc(Scene::getCreateTime);
         return this.sceneMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
     }
 

@@ -36,20 +36,20 @@ spring:
     # 连接超时时间 2s
     timeout: 2000
   # 邮箱服务设置
-  mail:
-    host: smtp.qq.com #这个是QQ邮箱的，发件人邮箱的 SMTP 服务器地址, 必须准确, 不同邮件服务器地址不同, 一般(只是一般, 绝非绝对)格式为: smtp.xxx.com，可以百度
-    username: 859425698@qq.com #qq邮箱
-    password: ENC(s/5BB05S8Mp9qfgr5A2O3/G0B0A6iT4/uqU1x0ZeQrk=)  #qq邮箱授权码
-    protocol: smtp #发送邮件协议
-    default-encoding: utf-8
-    port: 587
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-      mail.smtp.starttls.required: true
-      mail.smtp.socketFactory.port: 465
-      mail.smtp.socketFactory.class: javax.net.ssl.SSLSocketFactory
-      mail.smtp.socketFactory.fallback: false
+  #  mail:
+  #    host: smtp.qq.com #这个是QQ邮箱的，发件人邮箱的 SMTP 服务器地址, 必须准确, 不同邮件服务器地址不同, 一般(只是一般, 绝非绝对)格式为: smtp.xxx.com，可以百度
+  #    username: 859425698@qq.com #qq邮箱
+  #    password: ENC(s/5BB05S8Mp9qfgr5A2O3/G0B0A6iT4/uqU1x0ZeQrk=)  #qq邮箱授权码
+  #    protocol: smtp #发送邮件协议
+  #    default-encoding: utf-8
+  #    port: 587
+  #    properties:
+  #      mail.smtp.auth: true
+  #      mail.smtp.starttls.enable: true
+  #      mail.smtp.starttls.required: true
+  #      mail.smtp.socketFactory.port: 465
+  #      mail.smtp.socketFactory.class: javax.net.ssl.SSLSocketFactory
+  #      mail.smtp.socketFactory.fallback: false
   rabbitmq:
     ####连接地址
     host: 116.62.103.149
@@ -89,15 +89,12 @@ mybatis-plus:
 
 # 日志配置
 logging:
-  #  level:
-  #    config: classpath:log4j2-spring.xml
-  #    com.xjhqre.admin: debug
   level:
     com.xjhqre.admin: debug
 
 # 端口号
 server:
-  port: 8080
+  port: 8081
 
 # token配置
 token:

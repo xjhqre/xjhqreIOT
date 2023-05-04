@@ -3,21 +3,18 @@ package com.xjhqre.iot.service.impl;
 import static com.xjhqre.common.utils.SecurityUtils.getLoginUser;
 import static com.xjhqre.common.utils.SecurityUtils.getUsername;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.xjhqre.iot.constant.DeviceStatusConstant;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -42,7 +39,6 @@ import com.xjhqre.iot.domain.entity.ThingsModelValue;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.vo.DeviceVO;
 import com.xjhqre.iot.mapper.DeviceMapper;
-import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.AlertLogService;
 import com.xjhqre.iot.service.AlertService;
 import com.xjhqre.iot.service.DeviceLogService;
@@ -74,8 +70,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     private DeviceLogService deviceLogService;
     @Resource
     private ProductService productService;
-    @Resource
-    private EmqxService emqxService;
     @Resource
     private AlertLogService alertLogService;
     @Resource
@@ -219,12 +213,12 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         // 在线设备数量
         deviceWrapper = new LambdaQueryWrapper<>();
-        deviceWrapper.eq(Device::getStatus, 3);
+        deviceWrapper.eq(Device::getStatus, DeviceStatusConstant.ON_LINE);
         Integer onlineDeviceCount = this.deviceMapper.selectCount(deviceWrapper);
 
         // 离线设备数量
         deviceWrapper = new LambdaQueryWrapper<>();
-        deviceWrapper.eq(Device::getStatus, 4);
+        deviceWrapper.eq(Device::getStatus, DeviceStatusConstant.OFF_LINE);
         Integer offlineDeviceCount = this.deviceMapper.selectCount(deviceWrapper);
 
         // 查询告警配置数量
@@ -297,10 +291,7 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         device.setNetworkIp(user.getLoginIp());
         // 定位方式, 1=ip自动定位，2=设备上报定位，3=自定义
         Integer locationWay = device.getLocationWay();
-        if (locationWay == 1) {
-            // 根据用户ip地址定位
-            this.setLocation(user.getLoginIp(), device);
-        } else if (locationWay == 2) {
+        if (locationWay != 3) {
             // 设备上报经纬度定位，不在此设置位置
             device.setAddress(null);
             device.setLatitude(null);
@@ -332,27 +323,16 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Override
     public void updateDeviceStatus(String deviceId, Integer status) {
         Device device = this.deviceMapper.selectById(deviceId);
-        if (status == 2) { // 禁用设备
-            device.setStatus(2);
+        if (Objects.equals(status, DeviceStatusConstant.DISABLED)) { // 禁用设备
+            device.setStatus(DeviceStatusConstant.DISABLED);
         } else { // 启动设备
             if (device.getActiveTime() != null) { // 已经激活过，设置为离线状态
-                device.setStatus(3);
+                device.setStatus(DeviceStatusConstant.OFF_LINE);
             } else { // 未激活
-                device.setStatus(1); // 设置未激活状态
+                device.setStatus(DeviceStatusConstant.NOT_ACTIVE); // 设置未激活状态
             }
         }
         this.deviceMapper.updateById(device);
-    }
-
-    /**
-     * 重置设备状态，在线状态重置为离线
-     */
-    @Override
-    public void resetDeviceStatus(String deviceNum) {
-        // -- 设备状态（1-未激活，2-禁用，3-在线，4-离线）
-        LambdaUpdateWrapper<Device> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Device::getDeviceNumber, deviceNum).eq(Device::getStatus, 3).set(Device::getStatus, 4);
-        this.deviceMapper.update(null, wrapper);
     }
 
     /**
@@ -375,24 +355,6 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
             this.alertLogService.deleteByDeviceId(device.getDeviceId());
             // 删除设备
             this.deviceMapper.deleteById(device.getDeviceId());
-        }
-    }
-
-    /**
-     * 生成设备编号
-     */
-    @Override
-    public String generationDeviceNum() {
-        // 设备编号：D + userId + 10位随机字母和数字
-        User user = getLoginUser().getUser();
-        String number = "D" + user.getUserId().toString() + RandomUtils.randomString(10);
-        LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Device::getDeviceNumber, number);
-        Integer count = this.deviceMapper.selectCount(wrapper);
-        if (count == 0) {
-            return number;
-        } else {
-            return this.generationDeviceNum();
         }
     }
 
@@ -431,22 +393,22 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         // 激活设备
         LambdaQueryWrapper<Device> wrapper = new LambdaQueryWrapper<>();
-        wrapper.ne(Device::getStatus, 1);
+        wrapper.eq(Device::getStatus, DeviceStatusConstant.NOT_ACTIVE);
         int activateDeviceCount = this.count(wrapper);
 
         // 在线设备
         wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Device::getStatus, 3);
+        wrapper.eq(Device::getStatus, DeviceStatusConstant.ON_LINE);
         int onlineDeviceCount = this.count(wrapper);
 
         // 禁用设备
         wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Device::getStatus, 2);
+        wrapper.eq(Device::getStatus, DeviceStatusConstant.DISABLED);
         int disableDeviceCount = this.count(wrapper);
 
         // 离线设备
         wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Device::getStatus, 4);
+        wrapper.eq(Device::getStatus, DeviceStatusConstant.OFF_LINE);
         int offlineDeviceCount = this.count(wrapper);
 
         Map<String, Integer> retMap = new HashMap<>();
@@ -456,6 +418,14 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         retMap.put("disableDeviceCount", disableDeviceCount);
         retMap.put("offlineDeviceCount", offlineDeviceCount);
         return retMap;
+    }
+
+    @Override
+    public List<ThingsModel> listDeviceService(Long deviceId) {
+        Device device = this.deviceMapper.selectById(deviceId);
+        LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ThingsModel::getProductId, device.getProductId()).eq(ThingsModel::getType, 2);
+        return this.thingsModelService.list(wrapper);
     }
 
     /**
@@ -518,16 +488,16 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
      * @return 结果
      */
     @Override
-    public void updateDeviceStatusAndLocation(Device device, String ipAddress) {
+    public void updateDeviceStatusAndLocation(Device device, String ip) {
         // 设置自动定位和状态
-        if (!"".equals(ipAddress)) {
+        if (!"".equals(ip)) {
             if (device.getActiveTime() == null) {
                 device.setActiveTime(DateUtils.getNowDate());
             }
             // 定位方式(1=ip自动定位，2=设备定位，3=自定义)
             if (device.getLocationWay() == 1) {
-                device.setNetworkIp(ipAddress);
-                this.setLocation(ipAddress, device);
+                device.setNetworkIp(ip);
+                this.setLocation(ip, device);
             } else if (device.getLocationWay() == 2) {
                 // 设备上报经纬度定位，不在此设置位置
                 device.setAddress(null);

@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.constant.CacheConstants;
-import com.xjhqre.common.constant.ConfigConstant;
+import com.xjhqre.common.constant.ConfigConstants;
 import com.xjhqre.common.constant.Constants;
 import com.xjhqre.common.constant.UserConstants;
 import com.xjhqre.common.exception.ServiceException;
@@ -100,7 +100,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public boolean selectCaptchaEnabled() {
-        String captchaEnabled = this.getByConfigKey(ConfigConstant.CAPTCHA_ENABLED);
+        String captchaEnabled = this.getByConfigKey(ConfigConstants.CAPTCHA_ENABLED);
         if (StringUtils.isEmpty(captchaEnabled)) {
             return true;
         }
@@ -114,7 +114,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public boolean selectPictureAuditEnabled() {
-        String pictureAudit = this.getByConfigKey(ConfigConstant.PICTURE_AUDIT);
+        String pictureAudit = this.getByConfigKey(ConfigConstants.PICTURE_AUDIT);
         if (StringUtils.isEmpty(pictureAudit)) {
             return true;
         }
@@ -128,7 +128,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public boolean selectEsSearch() {
-        String esSearch = this.getByConfigKey(ConfigConstant.ES_SEARCH);
+        String esSearch = this.getByConfigKey(ConfigConstants.ES_SEARCH);
         if (StringUtils.isEmpty(esSearch)) {
             return true;
         }
