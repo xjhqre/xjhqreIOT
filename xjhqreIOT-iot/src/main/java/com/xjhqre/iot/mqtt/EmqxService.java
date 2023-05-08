@@ -24,19 +24,17 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.xjhqre.common.utils.AssertUtils;
 import com.xjhqre.common.utils.DateUtils;
 import com.xjhqre.common.utils.StringUtils;
 import com.xjhqre.iot.constant.LogTypeConstant;
+import com.xjhqre.iot.domain.dto.CallServiceDTO;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.DeviceLog;
 import com.xjhqre.iot.domain.entity.Product;
 import com.xjhqre.iot.domain.model.Topic;
 import com.xjhqre.iot.domain.model.thingsModels.ModelIdAndValue;
-import com.xjhqre.iot.service.DeviceLogService;
-import com.xjhqre.iot.service.DeviceService;
-import com.xjhqre.iot.service.OtaUpgradeLogService;
-import com.xjhqre.iot.service.ProductService;
-import com.xjhqre.iot.service.ThingsModelValueService;
+import com.xjhqre.iot.service.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,11 +67,12 @@ public class EmqxService {
     String sPropertyTopic = prefix + "property/post"; // 上报设备属性
     String sServiceTopic = prefix + "service/post"; // 设备响应功能调用
     String sEventTopic = prefix + "event/post"; // 上报设备事件
-    String sOtaTopic = prefix + "/ota/post_ply"; // 设备响应OTA升级
+    String sOtaTopic = prefix + "ota/post"; // 设备响应OTA升级
 
     /**
      * 客户端发布的主题，设备订阅
      */
+    String pOtaTopic = "/ota/get"; // 发布ota升级主题
     // String pStatusTopic = "/status/get";
     // String pInfoTopic = "/info/get";
     // String pNtpTopic = "/ntp/get";
@@ -146,9 +145,6 @@ public class EmqxService {
                 this.getOta(deviceNum, message);
                 this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.CALL_OTA);
                 break;
-            case "service":
-                this.recordDeviceLog(topic, message, mqttMessage.getQos(), LogTypeConstant.SERVICE_CALL);
-                break;
             default:
                 break;
         }
@@ -168,8 +164,10 @@ public class EmqxService {
      * 设备发布设备信息，客户端接收并更新
      */
     private void updateDeviceInfo(String productKey, String deviceNum, String message) {
+        log.info("com.xjhqre.iot.mqtt.EmqxService.updateDeviceInfo: {}, {}, {}", productKey, deviceNum, message);
         // 设备实体
         Device oldDevice = this.deviceService.getByDeviceNumber(deviceNum);
+        AssertUtils.notNull(oldDevice, "没有对应编号的设备");
         // 上报设备信息
         Device newDevice = JSON.parseObject(message, Device.class);
 
@@ -265,6 +263,13 @@ public class EmqxService {
     // }
 
     /**
+     * 发布ota升级指令
+     */
+    public void publishOta(String productKey, String deviceNum, String message) {
+        emqxClient.publish(1, false, "/" + productKey + "/" + deviceNum + pOtaTopic, message);
+    }
+
+    /**
      * 调用设备服务
      */
     public void callService(String productKey, String deviceNum, ModelIdAndValue modelIdAndValue) {
@@ -312,7 +317,7 @@ public class EmqxService {
             log.info("sendGet - {}", url);
             URL realUrl = new URL(url);
             URLConnection connection = realUrl.openConnection();
-            String authString = "admin:xjhqre";
+            String authString = "admin:xjh.8778957";
             byte[] authEncBytes = Base64.getEncoder().encode(authString.getBytes());
             String authStringEnc = new String(authEncBytes);
             connection.setRequestProperty("Authorization", "Basic " + authStringEnc);
@@ -349,5 +354,14 @@ public class EmqxService {
             .filter(topic -> StringUtils.contains(topic.getTopic(), device.getDeviceNumber())
                 && StringUtils.contains(topic.getTopic(), product.getProductKey()))
             .collect(Collectors.toList());
+    }
+
+    public void sendCommand(CallServiceDTO dto) {
+        ModelIdAndValue modelIdAndValue = JSON.parseObject(dto.getMessage(), ModelIdAndValue.class);
+        // 发布消息
+        callService(dto.getProductKey(), dto.getDeviceNumber(), modelIdAndValue);
+        // 记录设备日志
+        String topic = "/" + dto.getProductKey() + "/" + dto.getDeviceNumber() + "/service/get";
+        recordDeviceLog(topic, JSON.toJSONString(modelIdAndValue), 1, LogTypeConstant.SERVICE_CALL);
     }
 }

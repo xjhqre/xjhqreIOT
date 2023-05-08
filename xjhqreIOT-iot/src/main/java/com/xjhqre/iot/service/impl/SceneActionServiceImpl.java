@@ -31,4 +31,9 @@ public class SceneActionServiceImpl extends ServiceImpl<SceneActionMapper, Scene
     public List<SceneAction> listBySceneId(Long sceneId) {
         return this.sceneActionMapper.listBySceneId(sceneId);
     }
+
+    @Override
+    public List<SceneAction> listByDeviceId(Long deviceId) {
+        return sceneActionMapper.listByDeviceId(deviceId);
+    }
 }

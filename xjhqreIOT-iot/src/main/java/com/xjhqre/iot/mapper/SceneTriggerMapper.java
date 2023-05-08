@@ -19,4 +19,6 @@ import com.xjhqre.iot.domain.entity.SceneTrigger;
 @Mapper
 public interface SceneTriggerMapper extends BaseMapper<SceneTrigger> {
     List<SceneTrigger> listBySceneId(@Param("sceneId") Long sceneId);
+
+    List<SceneTrigger> listByDeviceId(@Param("deviceId") Long deviceId);
 }

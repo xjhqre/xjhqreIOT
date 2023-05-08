@@ -44,7 +44,8 @@ public class LoginInfoServiceImpl extends ServiceImpl<LoginInfoMapper, LoginInfo
             .eq(loginInfo.getStatus() != null && !"".equals(loginInfo.getStatus()), LoginInfo::getStatus,
                 loginInfo.getStatus())
             .like(loginInfo.getUserName() != null && !"".equals(loginInfo.getUserName()), LoginInfo::getUserName,
-                loginInfo.getUserName());
+                loginInfo.getUserName())
+                .orderByDesc(LoginInfo::getLoginTime);
         return this.loginInfoMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
     }
 

@@ -66,7 +66,7 @@ spring:
   # mqtt 配置
   mqtt:
     username: admin                            # 账号
-    password: xjhqre                           # 密码
+    password: xjh.8778957                      # 密码
     host-url: tcp://1.15.88.204:1883           # mqtt连接tcp地址
     client-id: ${random.int}                   # ${random.int} 客户端Id，不能相同，采用随机数 ${random.value}
     default-topic: test                        # 默认主题
@@ -79,7 +79,8 @@ mybatis-plus:
   configuration:
     #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 日志打印到控制台
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl  # 关闭日志打印
   #    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config:
@@ -90,7 +91,7 @@ mybatis-plus:
 # 日志配置
 logging:
   level:
-    com.xjhqre.admin: debug
+    com.xjhqre.admin: info
 
 # 端口号
 server:

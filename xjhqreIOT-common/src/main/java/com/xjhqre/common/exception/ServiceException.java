@@ -10,6 +10,7 @@ import lombok.Data;
  */
 @Data
 public class ServiceException extends RuntimeException {
+    private static final long serialVersionUID = -1749641505040698921L;
     // 错误码
     private Integer code;
 

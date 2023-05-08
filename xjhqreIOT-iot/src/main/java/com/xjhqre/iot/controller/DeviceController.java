@@ -5,20 +5,10 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import com.xjhqre.iot.domain.model.Topic;
-import com.xjhqre.iot.mqtt.EmqxService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xjhqre.common.annotation.Log;
@@ -27,10 +17,12 @@ import com.xjhqre.common.domain.R;
 import com.xjhqre.common.enums.BusinessType;
 import com.xjhqre.common.group.Insert;
 import com.xjhqre.common.group.Update;
+import com.xjhqre.iot.domain.dto.UpgradeDeviceDTO;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.vo.DeviceVO;
+import com.xjhqre.iot.mqtt.EmqxService;
 import com.xjhqre.iot.service.DeviceService;
 
 import io.swagger.annotations.Api;
@@ -201,10 +193,16 @@ public class DeviceController extends BaseController {
         return R.success(this.deviceService.listDeviceService(deviceId));
     }
 
-        @ApiOperation("获取设备topic列表")
-    @GetMapping("/listDeviceTopic")
-    public List<Topic> listDeviceTopic(@RequestParam Long deviceId) {
-        return this.emqxService.listDeviceTopic(deviceId);
+    @ApiOperation("升级设备固件")
+    @PostMapping("/upgradeDevice")
+    public void upgradeDevice(@RequestBody UpgradeDeviceDTO dto) {
+        this.deviceService.upgradeDevice(dto);
+    }
+
+    @ApiOperation("设备上传照片")
+    @PostMapping("/uploadPhoto")
+    public void uploadPhoto(@RequestParam String deviceNumber, @RequestParam("file") MultipartFile file) {
+        this.deviceService.uploadPhoto(deviceNumber, file);
     }
 
 }

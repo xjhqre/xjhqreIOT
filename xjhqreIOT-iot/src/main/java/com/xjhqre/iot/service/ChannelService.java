@@ -22,4 +22,6 @@ public interface ChannelService extends IService<Channel> {
     void delete(List<Long> channelIds);
 
     Channel getDetail(Long channelId);
+
+    List<Channel> listByDeviceId(Long deviceId);
 }

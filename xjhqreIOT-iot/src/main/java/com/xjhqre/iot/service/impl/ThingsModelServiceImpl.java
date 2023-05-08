@@ -95,7 +95,7 @@ public class ThingsModelServiceImpl extends ServiceImpl<ThingsModelMapper, Thing
         LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ThingsModel::getIdentifier, thingsModel.getIdentifier()).eq(ThingsModel::getProductId,
             thingsModel.getProductId());
-        AssertUtils.isNull(this.thingsModelMapper.selectOne(wrapper), "标识符重复");
+        AssertUtils.isNull(this.thingsModelMapper.selectOne(wrapper), "产品下物模型标识符重复");
 
         thingsModel.setCreateTime(DateUtils.getNowDate());
         thingsModel.setCreateBy(getUsername());
@@ -124,7 +124,7 @@ public class ThingsModelServiceImpl extends ServiceImpl<ThingsModelMapper, Thing
         wrapper.eq(ThingsModel::getIdentifier, thingsModel.getIdentifier())
             .eq(ThingsModel::getProductId, thingsModel.getProductId())
             .ne(ThingsModel::getModelId, thingsModel.getModelId());
-        AssertUtils.isNull(this.thingsModelMapper.selectOne(wrapper), "标识符重复");
+        AssertUtils.isNull(this.thingsModelMapper.selectOne(wrapper), "产品下物模型标识符重复");
 
         thingsModel.setUpdateTime(DateUtils.getNowDate());
         thingsModel.setUpdateBy(SecurityUtils.getUsername());

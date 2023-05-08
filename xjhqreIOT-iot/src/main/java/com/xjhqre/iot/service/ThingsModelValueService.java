@@ -39,4 +39,6 @@ public interface ThingsModelValueService extends IService<ThingsModelValue> {
      * @return
      */
     ThingsModelValue getNewValue(Long modelId);
+
+    void deleteByDeviceId(Long deviceId);
 }

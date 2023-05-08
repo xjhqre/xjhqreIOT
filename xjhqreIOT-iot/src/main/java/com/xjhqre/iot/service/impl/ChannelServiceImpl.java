@@ -78,4 +78,9 @@ public class ChannelServiceImpl extends ServiceImpl<ChannelMapper, Channel> impl
     public Channel getDetail(Long channelId) {
         return this.channelMapper.selectById(channelId);
     }
+
+    @Override
+    public List<Channel> listByDeviceId(Long deviceId) {
+        return channelMapper.listByDeviceId(deviceId);
+    }
 }

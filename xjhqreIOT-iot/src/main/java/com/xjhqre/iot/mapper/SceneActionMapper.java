@@ -19,4 +19,7 @@ import com.xjhqre.iot.domain.entity.SceneAction;
 @Mapper
 public interface SceneActionMapper extends BaseMapper<SceneAction> {
     List<SceneAction> listBySceneId(@Param("sceneId") Long sceneId);
+
+    List<SceneAction> listByDeviceId(@Param("deviceId") Long deviceId);
+
 }

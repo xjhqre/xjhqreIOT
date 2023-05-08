@@ -45,7 +45,8 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
             .eq(operLog.getBusinessType() != null, OperLog::getBusinessType, operLog.getBusinessType())
             .eq(operLog.getMethod() != null && !"".equals(operLog.getMethod()), OperLog::getMethod, operLog.getMethod())
             .eq(operLog.getStatus() != null, OperLog::getStatus, operLog.getStatus())
-            .like(operLog.getTitle() != null && !"".equals(operLog.getTitle()), OperLog::getTitle, operLog.getTitle());
+            .like(operLog.getTitle() != null && !"".equals(operLog.getTitle()), OperLog::getTitle, operLog.getTitle())
+                .orderByDesc(OperLog::getOperTime);
         return this.operLogMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
     }
 

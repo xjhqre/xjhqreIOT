@@ -8,44 +8,39 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
-import com.xjhqre.iot.constant.DeviceStatusConstant;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xjhqre.common.constant.Constants;
+import com.xjhqre.common.constant.FileDirConstants;
+import com.xjhqre.common.constant.FileTypeConstants;
 import com.xjhqre.common.domain.entity.User;
 import com.xjhqre.common.domain.model.LoginUser;
-import com.xjhqre.common.utils.BaiduMapUtils;
-import com.xjhqre.common.utils.DateUtils;
-import com.xjhqre.common.utils.SecurityUtils;
-import com.xjhqre.common.utils.StringUtils;
+import com.xjhqre.common.exception.ServiceException;
+import com.xjhqre.common.utils.*;
+import com.xjhqre.common.utils.file.FileTypeUtils;
 import com.xjhqre.common.utils.http.HttpUtils;
 import com.xjhqre.common.utils.ip.IpUtils;
+import com.xjhqre.common.utils.uuid.IdUtils;
 import com.xjhqre.common.utils.uuid.RandomUtils;
+import com.xjhqre.iot.constant.DeviceStatusConstant;
 import com.xjhqre.iot.constant.LogTypeConstant;
-import com.xjhqre.iot.domain.entity.Alert;
-import com.xjhqre.iot.domain.entity.Device;
-import com.xjhqre.iot.domain.entity.DeviceLog;
-import com.xjhqre.iot.domain.entity.Product;
-import com.xjhqre.iot.domain.entity.Scene;
-import com.xjhqre.iot.domain.entity.ThingsModel;
-import com.xjhqre.iot.domain.entity.ThingsModelValue;
+import com.xjhqre.iot.constant.OtaStatusConstant;
+import com.xjhqre.iot.domain.dto.UpgradeDeviceDTO;
+import com.xjhqre.iot.domain.entity.*;
 import com.xjhqre.iot.domain.model.DeviceStatistic;
 import com.xjhqre.iot.domain.vo.DeviceVO;
 import com.xjhqre.iot.mapper.DeviceMapper;
-import com.xjhqre.iot.service.AlertLogService;
-import com.xjhqre.iot.service.AlertService;
-import com.xjhqre.iot.service.DeviceLogService;
-import com.xjhqre.iot.service.DeviceService;
-import com.xjhqre.iot.service.ProductService;
-import com.xjhqre.iot.service.SceneService;
-import com.xjhqre.iot.service.ThingsModelValueService;
+import com.xjhqre.iot.mqtt.EmqxService;
+import com.xjhqre.iot.service.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,6 +73,16 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     private ThingsModelValueService thingsModelValueService;
     @Resource
     private SceneService sceneService;
+    @Resource
+    private SceneActionService sceneActionService;
+    @Resource
+    private SceneTriggerService sceneTriggerService;
+    @Resource
+    private ChannelService channelService;
+    @Resource
+    private EmqxService emqxService;
+    @Resource
+    private DeviceFileService deviceFileService;
 
     @Override
     public IPage<DeviceVO> find(Device device, Integer pageNum, Integer pageSize) {
@@ -285,6 +290,8 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         device.setUserId(sysUser.getUserId());
         device.setUserName(sysUser.getUserName());
         device.setRssi(0);
+        device.setUpgradeStatus(OtaStatusConstant.UPGRADE_SUCCESSFUL); // 默认升级成功
+        device.setFirmwareVersion(1.0); // 默认版本1.0
         Product product = this.productService.getById(device.getProductId());
         device.setImgUrl(product.getImgUrl());
         User user = getLoginUser().getUser();
@@ -342,15 +349,25 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
     @Override
     public void delete(List<Long> deviceIds) {
         List<Device> devices = this.deviceMapper.selectBatchIds(deviceIds);
-        // TODO 校验场景联动是否使用
+
         for (Device device : devices) {
-            // 删除设备分组。 租户、管理员和设备所有者
+            // 检查场景联动
+            List<SceneAction> sceneActionList = sceneActionService.listByDeviceId(device.getDeviceId());
+            AssertUtils.isEmpty(sceneActionList, "该设备已在场景联动中使用，请先删除场景联动");
+            List<SceneTrigger> sceneTriggerList = sceneTriggerService.listByDeviceId(device.getDeviceId());
+            AssertUtils.isEmpty(sceneTriggerList, "该设备已在场景联动中使用，请先删除场景联动");
+            // 删除设备视频通道
+            List<Channel> channelList = channelService.listByDeviceId(device.getDeviceId());
+            AssertUtils.isEmpty(channelList, "该设备已在视频监控中使用");
+            // 删除设备分组
             this.deviceMapper.deleteDeviceGroupByDeviceId(device.getDeviceId());
             // 删除定时任务
             this.deviceJobService.deleteJobByDeviceId(Collections.singletonList(device.getDeviceId()));
             // 批量删除设备日志
             // this.logService.deleteDeviceLogByDeviceNumber(device.getDeviceNumber());
             this.deviceLogService.deleteDeviceLogByDeviceId(device.getDeviceId());
+            // 删除设备物模型值日志
+            this.thingsModelValueService.deleteByDeviceId(device.getDeviceId());
             // 删除设备告警记录
             this.alertLogService.deleteByDeviceId(device.getDeviceId());
             // 删除设备
@@ -375,8 +392,11 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
 
         return thingsModelList.stream().peek(thingsModel -> {
             // 设置最新的物模型值
-            String value = this.deviceMapper.getLastModelValue(thingsModel.getModelId(), thingsModel.getProductId());
-            thingsModel.setLastValue(value);
+            ThingsModelValue thingsModelValue = this.deviceMapper.getLastModelValue(thingsModel.getModelId(), deviceId);
+            if (thingsModelValue != null) {
+                thingsModel.setLastValue(thingsModelValue.getValue());
+                thingsModel.setCreateTime(thingsModelValue.getCreateTime());
+            }
         }).collect(Collectors.toList());
 
     }
@@ -426,6 +446,58 @@ public class DeviceServiceImpl extends ServiceImpl<DeviceMapper, Device> impleme
         LambdaQueryWrapper<ThingsModel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ThingsModel::getProductId, device.getProductId()).eq(ThingsModel::getType, 2);
         return this.thingsModelService.list(wrapper);
+    }
+
+    /**
+     * 升级设备固件
+     * 
+     * @param dto
+     */
+    @Override
+    public void upgradeDevice(UpgradeDeviceDTO dto) {
+        // 修改设备升级状态
+        Device device = deviceMapper.selectById(dto.getDeviceId());
+        device.setUpgradeStatus(OtaStatusConstant.UPGRADING);
+        deviceMapper.updateById(device);
+
+        // 发送设备升级指令
+        Product product = productService.getByDeviceId(device.getDeviceId());
+        emqxService.publishOta(product.getProductKey(), device.getDeviceNumber(), JSON.toJSONString(dto));
+    }
+
+    /**
+     * 设备上传图片
+     *
+     * @param deviceNumber
+     * @param file
+     */
+    @Override
+    public void uploadPhoto(String deviceNumber, MultipartFile file) {
+        if (file == null) {
+            throw new ServiceException("上传文件为空");
+        }
+
+        String extension = FileTypeUtils.getExtension(file.getOriginalFilename());
+
+        // 生成文件编号（唯一）
+        String number = IdUtils.simpleUUID();
+
+        // 上传OSS
+        String fileUrl = OSSUtil.upload(file, FileDirConstants.COMMON, number + extension);
+
+        long fileSize = file.getSize();
+
+        Device device = this.getByDeviceNumber(deviceNumber);
+
+        DeviceFile deviceFile = new DeviceFile();
+        deviceFile.setDeviceId(device.getDeviceId());
+        deviceFile.setFileName(file.getOriginalFilename());
+        deviceFile.setFileUrl(fileUrl);
+        deviceFile.setFileSize(fileSize);
+        deviceFile.setFileType(FileTypeConstants.PICTURE);
+        deviceFile.setCreateTime(new Date());
+        deviceFile.setUpdateTime(new Date());
+        deviceFileService.save(deviceFile);
     }
 
     /**

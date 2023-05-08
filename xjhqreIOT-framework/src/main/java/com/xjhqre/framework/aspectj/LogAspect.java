@@ -1,6 +1,7 @@
 package com.xjhqre.framework.aspectj;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -76,6 +77,7 @@ public class LogAspect {
 
             // *========数据库日志=========*//
             OperLog operLog = new OperLog();
+            operLog.setOperTime(new Date());
             // ordinal：返回枚举对象在枚举类中的序号。从0开始。
             operLog.setStatus(BusinessStatus.SUCCESS.ordinal());
             // 请求的地址

@@ -32,4 +32,9 @@ public class SceneTriggerServiceImpl extends ServiceImpl<SceneTriggerMapper, Sce
     public List<SceneTrigger> listBySceneId(Long sceneId) {
         return this.sceneTriggerMapper.listBySceneId(sceneId);
     }
+
+    @Override
+    public List<SceneTrigger> listByDeviceId(Long deviceId) {
+        return sceneTriggerMapper.listByDeviceId(deviceId);
+    }
 }

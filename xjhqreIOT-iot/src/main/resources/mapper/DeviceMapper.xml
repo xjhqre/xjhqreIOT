@@ -30,13 +30,13 @@
     </select>
 
     <!-- 查询物模型最新的值 -->
-    <select id="getLastModelValue" resultType="java.lang.String">
-        select value
+    <select id="getLastModelValue" resultType="com.xjhqre.iot.domain.entity.ThingsModelValue">
+        select *
         from iot_things_model_value
         where model_id = #{modelId}
           and log_id in (SELECT max(log_id)
                          FROM iot_things_model_value
-                         where product_id = #{productId}
+                         where device_id = #{deviceId}
                          GROUP BY identifier)
     </select>
 

@@ -71,6 +71,8 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
                 startTime = DateUtils.addDays(startTime, -1);
             } else if (dateRange == 3) {
                 startTime = DateUtils.addDays(startTime, -7);
+            } else {
+                startTime = DateUtils.addYears(startTime, -10);
             }
         }
         wrapper.gt(ThingsModelValue::getCreateTime, startTime).orderByDesc(ThingsModelValue::getCreateTime);
@@ -121,5 +123,12 @@ public class ThingsModelValueServiceImpl extends ServiceImpl<ThingsModelValueMap
     @Override
     public ThingsModelValue getNewValue(Long modelId) {
         return this.thingsModelValueMapper.getNewValue(modelId);
+    }
+
+    @Override
+    public void deleteByDeviceId(Long deviceId) {
+        LambdaQueryWrapper<ThingsModelValue> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ThingsModelValue::getDeviceId, deviceId);
+        thingsModelValueMapper.delete(wrapper);
     }
 }

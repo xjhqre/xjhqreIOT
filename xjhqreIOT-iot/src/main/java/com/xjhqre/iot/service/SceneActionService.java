@@ -15,4 +15,6 @@ import com.xjhqre.iot.domain.entity.SceneAction;
  */
 public interface SceneActionService extends IService<SceneAction> {
     List<SceneAction> listBySceneId(Long sceneId);
+
+    List<SceneAction> listByDeviceId(Long deviceId);
 }

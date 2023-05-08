@@ -3,8 +3,11 @@ package com.xjhqre.iot.service;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xjhqre.iot.domain.dto.UpgradeDeviceDTO;
 import com.xjhqre.iot.domain.entity.Device;
 import com.xjhqre.iot.domain.entity.ThingsModel;
 import com.xjhqre.iot.domain.entity.ThingsModelValue;
@@ -125,4 +128,8 @@ public interface DeviceService extends IService<Device> {
     Map<String, Integer> getDeviceCount();
 
     List<ThingsModel> listDeviceService(Long deviceId);
+
+    void upgradeDevice(UpgradeDeviceDTO dto);
+
+    void uploadPhoto(String deviceNumber, MultipartFile file);
 }

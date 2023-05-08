@@ -10,4 +10,10 @@
         from iot_scene_trigger
         where scene_id = #{sceneId}
     </select>
+
+    <select id="listByDeviceId" resultType="com.xjhqre.iot.domain.entity.SceneTrigger">
+        select *
+        from iot_scene_trigger
+        where device_id = #{deviceId}
+    </select>
 </mapper>

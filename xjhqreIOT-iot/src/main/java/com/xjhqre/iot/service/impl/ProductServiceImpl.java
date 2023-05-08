@@ -162,8 +162,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             AssertUtils.isTrue(deviceCount == 0, "取消发布失败，请先删除产品下的设备");
         } else if (status == 2) {
             // 产品下必须包含物模型
-            int thingsCount = this.productMapper.thingsCountInProduct(productId);
-            AssertUtils.isTrue(thingsCount != 0, "发布失败，请先添加产品的物模型");
+            // int thingsCount = this.productMapper.thingsCountInProduct(productId);
+            // AssertUtils.isTrue(thingsCount != 0, "发布失败，请先添加产品的物模型");
         } else {
             throw new ServiceException("状态更新失败,状态值有误");
         }

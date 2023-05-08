@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xjhqre.iot.domain.entity.Device;
+import com.xjhqre.iot.domain.entity.ThingsModelValue;
 
 /**
  * 设备Mapper接口
@@ -35,8 +36,8 @@ public interface DeviceMapper extends BaseMapper<Device> {
      * 查询物模型最后一次值
      *
      * @param modelId
-     * @param productId
+     * @param deviceId
      * @return
      */
-    String getLastModelValue(@Param("modelId") Long modelId, @Param("productId") Long productId);
+    ThingsModelValue getLastModelValue(@Param("modelId") Long modelId, @Param("deviceId") Long deviceId);
 }
